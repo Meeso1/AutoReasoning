@@ -11,12 +11,31 @@ public partial class MainForm : Form
 		Title = "My Eto Form";
 		MinimumSize = new Size(200, 200);
 
+		// Create a drawable canvas for custom drawing
+		var canvas = new Drawable
+		{
+			Size = new Size(200, 200),
+			BackgroundColor = Colors.White
+		};
+
+		// Handle the Paint event to draw on the canvas
+		canvas.Paint += (sender, e) => 
+		{
+			e.Graphics.FillEllipse(Colors.SkyBlue, 50, 50, 100, 100);
+			using (var pen = new Pen(Colors.DarkBlue, 2))
+			{
+				e.Graphics.DrawEllipse(pen, 50, 50, 100, 100);
+			}
+		};
+
 		Content = new StackLayout
 		{
 			Padding = 10,
+			Spacing = 10, // Add spacing between elements
 			Items =
 			{
 				"Hello World!",
+				canvas,
 				// add more controls here
 			}
 		};
