@@ -1,0 +1,75 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
+
+namespace Logic.States;
+
+public static partial class FormulaTokenizer
+{
+    public static bool TryTokenize(
+        string input, 
+        out List<Token> tokens,
+        [NotNullWhen(false)] out IReadOnlyList<string>? errors)
+    {
+        tokens = [];
+        errors = null;
+
+        int currentPos = 0;
+        foreach (var match in (ValidTokensRegex().Matches(input) as IReadOnlyList<Match>)!)
+        {
+            // Skip whitespace since regex also matches any whitespace sequences
+            if (match.Value.Trim().Length == 0)
+            {
+                currentPos += match.Length;
+                continue;
+            }
+
+            var type = GetTokenType(match);
+
+            tokens.Add(new Token(type, match.Value, currentPos));
+            currentPos += match.Length;
+        }
+
+        // Check if we've consumed the entire input
+        if (currentPos < input.Length)
+        {
+            var invalidToken = input.Substring(currentPos, Math.Min(10, input.Length - currentPos));
+            errors = [$"Invalid token at position {currentPos}: '{invalidToken}'"];
+            return false;
+        }
+
+        return true;
+    }
+
+    private static TokenType GetTokenType(Match match)
+    {
+        if (match.Groups[1].Success) return TokenType.OpenParen;
+        if (match.Groups[2].Success) return TokenType.CloseParen;
+        if (match.Groups[3].Success) return TokenType.True;
+        if (match.Groups[4].Success) return TokenType.False;
+        if (match.Groups[5].Success) return TokenType.Not;
+        if (match.Groups[6].Success) return TokenType.And;
+        if (match.Groups[7].Success) return TokenType.Or;
+        if (match.Groups[8].Success) return TokenType.Implies;
+        if (match.Groups[9].Success) return TokenType.Equivalent;
+        return TokenType.Identifier;
+    }
+
+    [GeneratedRegex(@"\s+|(\()|(\))|(\btrue\b)|(\bfalse\b)|(\bnot\b)|(\band\b)|(\bor\b)|(\bimplies\b)|(\bequivalent\b)|([a-zA-Z_][a-zA-Z0-9_]*)")]
+    private static partial Regex ValidTokensRegex();
+}
+
+public enum TokenType
+{
+    OpenParen,
+    CloseParen,
+    True,
+    False,
+    Not,
+    And,
+    Or,
+    Implies,
+    Equivalent,
+    Identifier
+}
+
+public sealed record Token(TokenType Type, string Value, int Position);
