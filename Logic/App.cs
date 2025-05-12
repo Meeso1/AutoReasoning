@@ -1,5 +1,5 @@
-﻿using Logic.Model;
-using Logic.Model.Models;
+﻿using Logic.Problem;
+using Logic.Problem.Models;
 using Logic.Queries;
 
 namespace Logic;
@@ -9,39 +9,39 @@ namespace Logic;
 /// </summary>
 public sealed class App
 {
-    private readonly ModelDefinitionParser _modelParser = new();
-    private ModelSpecificStuff? _modelDependent;
+    private readonly ProblemDefinitionParser _problemParser = new();
+    private ProblemSpecificStuff? _problemDependent;
 
     public SetModelResult SetModel(string definition)
     {
-        if (!_modelParser.TryParse(definition, out var model, out var errors))
+        if (!_problemParser.TryParse(definition, out var problem, out var errors))
         {
             return new SetModelResult(false, errors);
         }
 
-        _modelDependent = new(model, new QueryParser(model), new QueryEvaluator(model));
+        _problemDependent = new(problem, new QueryParser(problem), new QueryEvaluator(problem));
         return new SetModelResult(true, []);
     }
 
     public EvaluateQueryResult EvaluateQuery(string queryString)
     {
-        if (_modelDependent is null)
+        if (_problemDependent is null)
         {
             return new(null, false,
                 ["Model needs to be set before queries can be evaluated"]);
         }
         
-        if (!_modelDependent.QueryParser.TryParse(queryString, out var query, out var errors))
+        if (!_problemDependent.QueryParser.TryParse(queryString, out var query, out var errors))
         {
             return new(null, false, errors);
         }
 
-        var result = _modelDependent.Evaluator.Evaluate(query);
+        var result = _problemDependent.Evaluator.Evaluate(query);
         return new(result, true, []);
     }
 
-    private sealed record ModelSpecificStuff(
-        ModelDefinition Model, 
+    private sealed record ProblemSpecificStuff(
+        ProblemDefinition Problem, 
         QueryParser QueryParser, 
         QueryEvaluator Evaluator);
 }

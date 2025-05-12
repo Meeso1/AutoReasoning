@@ -1,7 +1,18 @@
-﻿namespace Logic.Queries.Models;
+﻿using Logic.Problem.Models;
+using Logic.States.Models;
 
-public abstract record Query;
+namespace Logic.Queries.Models;
 
-public sealed record AlwaysReachableWithCostQuery(int CostLimit) : Query;
+public enum QueryType
+{
+    Necessarily,
+    Possibly
+}
 
-public sealed record AlwaysReachableQuery() : Query;
+public abstract record Query(QueryType Type, ActionProgram Program);
+
+public sealed record ExecutableQuery(QueryType Type, ActionProgram Program) : Query(Type, Program);
+
+public sealed record AccessibleQuery(QueryType Type, ActionProgram Program, StateGroup States) : Query(Type, Program);
+
+public sealed record AffordableQuery(QueryType Type, ActionProgram Program, int CostLimit) : Query(Type, Program);

@@ -1,27 +1,42 @@
 ﻿using System.Diagnostics;
-using Logic.Model.Models;
+using Logic.Problem.Models;
 using Logic.Queries.Models;
 
-namespace Logic;
+namespace Logic.Queries;
 
-public sealed class QueryEvaluator(ModelDefinition model)
+/// <summary>
+/// 	Class that evaluates queries for one given problem
+/// </summary>
+/// <remarks>
+/// 	Can cache problem-specific data - if a new problem is specified, a new instance of the evaluator will be created
+/// </remarks>
+/// <param name="problem">
+/// 	Problem definition
+/// </param>
+public sealed class QueryEvaluator(ProblemDefinition problem)
 {
     public bool Evaluate(Query query)
     {
         return query switch
         {
-            AlwaysReachableWithCostQuery q => EvaluateAlwaysReachableWithCost(q),
-            AlwaysReachableQuery q => EvaluateAlwaysReachable(q),
+            ExecutableQuery q => EvaluateExecutable(q),
+            AccessibleQuery q => EvaluateAccessible(q),
+            AffordableQuery q => EvaluateAffordable(q),
             _ => throw new UnreachableException($"Query type not implemented: {query.GetType()}")
         };
     }
 
-    private bool EvaluateAlwaysReachableWithCost(AlwaysReachableWithCostQuery query)
+    private bool EvaluateExecutable(ExecutableQuery query)
     {
         throw new NotImplementedException();
     }
 
-    private bool EvaluateAlwaysReachable(AlwaysReachableQuery query)
+    private bool EvaluateAccessible(AccessibleQuery query)
+    {
+        throw new NotImplementedException();
+    }
+
+    private bool EvaluateAffordable(AffordableQuery query)
     {
         throw new NotImplementedException();
     }
