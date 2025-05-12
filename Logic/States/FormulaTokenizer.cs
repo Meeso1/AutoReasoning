@@ -5,12 +5,18 @@ namespace Logic.States;
 
 public static partial class FormulaTokenizer
 {
+    public static IReadOnlyList<string> ReservedIdentifiers { get; } = new List<string>
+    {
+        "with", "budget", "necessarily", "possibly", "executable", "affordable", "accessible"
+    };
+
     public static bool TryTokenize(
-        string input, 
+        string input,
         out List<Token> tokens,
         [NotNullWhen(false)] out IReadOnlyList<string>? errors)
     {
         tokens = [];
+        var errorList = new List<string>();
         errors = null;
 
         int currentPos = 0;
@@ -25,6 +31,14 @@ public static partial class FormulaTokenizer
 
             var type = GetTokenType(match);
 
+            // Check if identifier is in the reserved list
+            if (type == TokenType.Identifier && ReservedIdentifiers.Contains(match.Value))
+            {
+                errorList.Add($"'{match.Value}' at position {currentPos} cannot be used as an identifier - it is a reserved keyword");
+                errors = errorList;
+                return false;
+            }
+
             tokens.Add(new Token(type, match.Value, currentPos));
             currentPos += match.Length;
         }
@@ -33,7 +47,14 @@ public static partial class FormulaTokenizer
         if (currentPos < input.Length)
         {
             var invalidToken = input.Substring(currentPos, Math.Min(10, input.Length - currentPos));
-            errors = [$"Invalid token at position {currentPos}: '{invalidToken}'"];
+            errorList.Add($"Invalid token at position {currentPos}: '{invalidToken}'");
+            errors = errorList;
+            return false;
+        }
+
+        if (errorList.Count > 0)
+        {
+            errors = errorList;
             return false;
         }
 
