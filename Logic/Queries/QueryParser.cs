@@ -31,10 +31,10 @@ public sealed class QueryParser(ProblemDefinition problem)
     /// 	True if parsing was successful, false otherwise
     /// </returns>
     public bool TryParse(
-        string input, 
-        [NotNullWhen(true)] out Query? query, 
+        string input,
+        [NotNullWhen(true)] out Query? query,
         [NotNullWhen(false)] out IReadOnlyList<string>? errors)
     {
         throw new NotImplementedException();
-    }   
+    }
 }

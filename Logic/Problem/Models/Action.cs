@@ -25,10 +25,10 @@ public sealed record ActionCondition(Formula Condition);
 /// 	(from `impossible [action] if [not condition]`)
 /// </param>
 public sealed record Action(
-	string Name, 
-	IReadOnlyList<ActionEffect> Effects, 
-	IReadOnlyList<ActionRelease> Releases,
-	IReadOnlyList<ActionCondition> Conditions
+    string Name,
+    IReadOnlyList<ActionEffect> Effects,
+    IReadOnlyList<ActionRelease> Releases,
+    IReadOnlyList<ActionCondition> Conditions
 );
 
 public sealed record ActionProgram(IReadOnlyList<Action> Actions);

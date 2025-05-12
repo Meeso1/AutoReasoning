@@ -24,8 +24,8 @@ public sealed class ProblemDefinitionParser
     /// 	True if parsing was successful, false otherwise
     /// </returns>
     public bool TryParse(
-        string definition, 
-        [NotNullWhen(true)] out ProblemDefinition? problem, 
+        string definition,
+        [NotNullWhen(true)] out ProblemDefinition? problem,
         [NotNullWhen(false)] out IReadOnlyList<string>? errors)
     {
         throw new NotImplementedException();

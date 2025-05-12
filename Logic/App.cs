@@ -30,7 +30,7 @@ public sealed class App
             return new(null, false,
                 ["Model needs to be set before queries can be evaluated"]);
         }
-        
+
         if (!_problemDependent.QueryParser.TryParse(queryString, out var query, out var errors))
         {
             return new(null, false, errors);
@@ -41,8 +41,8 @@ public sealed class App
     }
 
     private sealed record ProblemSpecificStuff(
-        ProblemDefinition Problem, 
-        QueryParser QueryParser, 
+        ProblemDefinition Problem,
+        QueryParser QueryParser,
         QueryEvaluator Evaluator);
 }
 

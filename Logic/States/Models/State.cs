@@ -18,28 +18,28 @@ public sealed record State(IReadOnlyDictionary<Fluent, bool> FluentValues);
 /// </remarks>
 public sealed record StateGroup(IReadOnlyList<IReadOnlyDictionary<Fluent, bool>> SpecifiedFluentGroups)
 {
-	public bool Contains(State state)
-	{
-		return SpecifiedFluentGroups.Any(group => IsSubsetOf(group, state.FluentValues));
-	}
+    public bool Contains(State state)
+    {
+        return SpecifiedFluentGroups.Any(group => IsSubsetOf(group, state.FluentValues));
+    }
 
-	private static bool IsSubsetOf(
-		IReadOnlyDictionary<Fluent, bool> specifiedFluents, 
-		IReadOnlyDictionary<Fluent, bool> state)
-	{
-		foreach (var key in specifiedFluents.Keys)
-		{
-			if (!state.ContainsKey(key))
-			{
-				throw new UnreachableException("State does not specify one of the fluents");
-			}
+    private static bool IsSubsetOf(
+        IReadOnlyDictionary<Fluent, bool> specifiedFluents,
+        IReadOnlyDictionary<Fluent, bool> state)
+    {
+        foreach (var key in specifiedFluents.Keys)
+        {
+            if (!state.ContainsKey(key))
+            {
+                throw new UnreachableException("State does not specify one of the fluents");
+            }
 
-			if (specifiedFluents[key] != state[key])
-			{
-				return false;
-			}
-		}
+            if (specifiedFluents[key] != state[key])
+            {
+                return false;
+            }
+        }
 
-		return true;
-	}
+        return true;
+    }
 }
