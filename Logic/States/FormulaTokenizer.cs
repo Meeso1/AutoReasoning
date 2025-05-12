@@ -22,6 +22,14 @@ public static partial class FormulaTokenizer
         int currentPos = 0;
         foreach (var match in (ValidTokensRegex().Matches(input) as IReadOnlyList<Match>)!)
         {
+            // Check if new match starts right after the previous match
+            if (currentPos < match.Index)
+            {
+                errorList.Add($"Unexpected character at position {currentPos}: '{input[currentPos..Math.Min(currentPos + 5, input.Length)]}'");
+                errors = errorList;
+                return false;
+            }
+
             // Skip whitespace since regex also matches any whitespace sequences
             if (match.Value.Trim().Length == 0)
             {

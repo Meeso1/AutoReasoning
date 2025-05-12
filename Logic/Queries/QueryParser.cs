@@ -196,7 +196,7 @@ public sealed class QueryParser(ProblemDefinition problem)
             return false;
         }
 
-        if (!_formulaParser.TryParse(split[0], problem.Fluents.Keys.ToList(), out var formula, out errors))
+        if (!_formulaParser.TryParse(split[0], problem.Fluents, out var formula, out errors))
         {
             return false;
         }
