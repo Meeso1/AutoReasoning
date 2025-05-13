@@ -49,11 +49,14 @@ public sealed class FormulaReducer
 
     private StateGroup ReduceNot(StateGroup validStates, Not not)
     {
+        // validStates - the reduction of not.Formula
         throw new NotImplementedException();
     }
 
     private StateGroup ReduceAnd(StateGroup validStates, And and)
     { 
+        // New state group is a set of every combination of the left and right side set elements
+        // During combination of two elements if the same fluent has different values in both the combination is invalid and shouldnt be created
         throw new NotImplementedException(); 
     }
 
