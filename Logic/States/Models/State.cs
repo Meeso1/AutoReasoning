@@ -16,7 +16,7 @@ public sealed record State(IReadOnlyDictionary<Fluent, bool> FluentValues);
 /// 	The state is contained in the group, if there exists a dictionary in the list, 
 /// 	for which all fluent values that it specifies match fluent values in the state
 /// </remarks>
-public sealed record StateGroup(IReadOnlyList<IReadOnlyDictionary<Fluent, bool>> SpecifiedFluentGroups)
+public sealed record StateGroup(IReadOnlySet<IReadOnlyDictionary<Fluent, bool>> SpecifiedFluentGroups)
 {
     public bool Contains(State state)
     {
@@ -41,5 +41,10 @@ public sealed record StateGroup(IReadOnlyList<IReadOnlyDictionary<Fluent, bool>>
         }
 
         return true;
+    }
+
+    public static StateGroup Union(StateGroup group_a, StateGroup group_b)
+    {
+        return new StateGroup(group_a.SpecifiedFluentGroups.Union(group_b.SpecifiedFluentGroups).ToHashSet());
     }
 }
