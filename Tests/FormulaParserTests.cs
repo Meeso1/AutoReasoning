@@ -46,7 +46,6 @@ public sealed class FormulaParserTests
         Assert.Null(errors);
     }
 
-    // Test parsing fluent references
     [Fact]
     public void TryParse_ValidFluent_ReturnsTrue()
     {
@@ -207,5 +206,17 @@ public sealed class FormulaParserTests
         Assert.Null(formula);
         Assert.NotNull(errors);
         Assert.Contains(errors, e => e.Contains("closing parenthesis"));
+    }
+
+    [Fact]
+    public void TryParse_EmptyBrackets_ReturnsFalse()
+    {
+        bool result = _parser.TryParse("()", _fluents, out var formula, out var errors);
+
+        Assert.False(result);
+        Assert.Null(formula);
+        Assert.NotNull(errors);
+        Assert.NotEmpty(errors);
+        Assert.Contains(errors, e => e.Contains("Unexpected token ')'"));
     }
 }

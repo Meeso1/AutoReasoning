@@ -19,6 +19,7 @@ public sealed class FormulaReducer
     /// </returns>
     public StateGroup Reduce(Formula formula)
     {
-        throw new NotImplementedException();
+        // TODO: Implement
+        return new StateGroup([]);
     }
 }

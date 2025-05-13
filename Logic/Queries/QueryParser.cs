@@ -189,7 +189,7 @@ public sealed class QueryParser(ProblemDefinition problem)
     {
         query = null;
 
-        var split = remainingInput.ToLowerInvariant().Split(" with ", 2, StringSplitOptions.RemoveEmptyEntries);
+        var split = remainingInput.Split(" with ", 2, StringSplitOptions.RemoveEmptyEntries);
         if (split.Length != 2)
         {
             errors = ["Accessible query must be of form: <type> accessible <condition> with <program>"];
@@ -219,7 +219,7 @@ public sealed class QueryParser(ProblemDefinition problem)
     {
         query = null;
 
-        var split = remainingInput.ToLowerInvariant().Split(" with budget ", 2, StringSplitOptions.RemoveEmptyEntries);
+        var split = remainingInput.Split(" with budget ", 2, StringSplitOptions.RemoveEmptyEntries);
         if (split.Length != 2)
         {
             errors = ["Affordable query must contain a budget specification, as \"with budget <budget>\" (where <budget> is a non-negative integer)"];
