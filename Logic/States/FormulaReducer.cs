@@ -11,6 +11,9 @@ public sealed class FormulaReducer
     /// <summary>
     /// 	Reduces a formula to its simplest form
     /// </summary>
+    /// <param name="validStates">
+    ///     A StateGroup of all valid states in the whole problem
+    /// </param>
     /// <param name="formula">
     /// 	Formula to reduce
     /// </param>
