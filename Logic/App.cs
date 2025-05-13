@@ -1,6 +1,7 @@
 ﻿using Logic.Problem;
 using Logic.Problem.Models;
 using Logic.Queries;
+using Logic.States;
 
 namespace Logic;
 
@@ -19,7 +20,13 @@ public sealed class App
             return new SetModelResult(false, errors);
         }
 
-        _problemDependent = new(problem, new QueryParser(problem), new QueryEvaluator(problem));
+        _problemDependent = new(
+            problem,
+            new QueryParser(
+                problem,
+                new FormulaReducer(),
+                new FormulaParser(new FormulaTokenizer())),
+            new QueryEvaluator(problem));
         return new SetModelResult(true, []);
     }
 

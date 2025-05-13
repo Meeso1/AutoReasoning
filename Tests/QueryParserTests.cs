@@ -1,6 +1,7 @@
 using Logic.Problem.Models;
 using Logic.Queries;
 using Logic.Queries.Models;
+using Logic.States;
 using Logic.States.Models;
 using Action = Logic.Problem.Models.Action;
 
@@ -24,12 +25,19 @@ public sealed class QueryParserTests
         InitialStates = new StateGroup([]),
         ValidStates = new StateGroup([]),
     };
+    private readonly QueryParser _parser;
+
+    public QueryParserTests()
+    {
+        _parser = new QueryParser(
+            _problemDefinition,
+            new FormulaReducer(), new FormulaParser(new FormulaTokenizer()));
+    }
 
     [Fact]
     public void TryParse_EmptyQuery_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("", out var query, out var errors);
+        var result = _parser.TryParse("", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -41,8 +49,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_MultipleLines_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("query\nquery", out var query, out var errors);
+        var result = _parser.TryParse("query\nquery", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -54,8 +61,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_InvalidQueryType_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("query", out var query, out var errors);
+        var result = _parser.TryParse("query", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -67,8 +73,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_UnspecifiedQueryKind_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("necessarily", out var query, out var errors);
+        var result = _parser.TryParse("necessarily", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -80,8 +85,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_InvalidQueryKind_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("necessarily query", out var query, out var errors);
+        var result = _parser.TryParse("necessarily query", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -93,8 +97,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_ExecutableQueryWithNoProgram_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("necessarily executable", out var query, out var errors);
+        var result = _parser.TryParse("necessarily executable", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -106,8 +109,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_ExecutableQueryWithInvalidAction_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("necessarily executable act1, unknown1, unknown2", out var query, out var errors);
+        var result = _parser.TryParse("necessarily executable act1, unknown1, unknown2", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -119,8 +121,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_ExecutableQueryWithValidProgram_ReturnsTrue()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("necessarily executable act1, act2", out var query, out var errors);
+        var result = _parser.TryParse("necessarily executable act1, act2", out var query, out var errors);
 
         Assert.True(result);
         Assert.NotNull(query);
@@ -135,8 +136,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AccessibleQueryWithInvalidStructure_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("necessarily accessible (A and B) act1, act2", out var query, out var errors);
+        var result = _parser.TryParse("necessarily accessible (A and B) act1, act2", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -148,8 +148,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AccessibleQueryWithEmptyFormula_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("necessarily accessible with act1, act2", out var query, out var errors);
+        var result = _parser.TryParse("necessarily accessible with act1, act2", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -161,8 +160,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AccessibleQueryWithInvalidFormula_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("necessarily accessible (A and B with act1, act2", out var query, out var errors);
+        var result = _parser.TryParse("necessarily accessible (A and B with act1, act2", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -174,8 +172,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AccessibleQueryWithEmptyProgram_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("necessarily accessible (A and B) with", out var query, out var errors);
+        var result = _parser.TryParse("necessarily accessible (A and B) with", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -187,8 +184,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AccessibleQueryWithInvalidAction_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse(
+        var result = _parser.TryParse(
             "necessarily accessible (A and B) with act1, unknown1, unknown2",
             out var query,
             out var errors);
@@ -203,8 +199,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AccessibleQueryWithValidProgram_ReturnsTrue()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("possibly accessible (A and B) with act1, act2", out var query, out var errors);
+        var result = _parser.TryParse("possibly accessible (A and B) with act1, act2", out var query, out var errors);
 
         Assert.True(result);
         Assert.NotNull(query);
@@ -221,8 +216,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AffordableQueryWithInvalidStructure_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse(
+        var result = _parser.TryParse(
             "necessarily affordable act1, act2 with 100",
             out var query,
             out var errors);
@@ -237,8 +231,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AffordableQueryWithInvalidCost_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse(
+        var result = _parser.TryParse(
             "necessarily affordable act1, act2 with budget something",
             out var query,
             out var errors);
@@ -253,8 +246,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AffordableQueryWithEmptyProgram_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("necessarily affordable with budget 100", out var query, out var errors);
+        var result = _parser.TryParse("necessarily affordable with budget 100", out var query, out var errors);
 
         Assert.False(result);
         Assert.Null(query);
@@ -266,8 +258,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AffordableQueryWithInvalidAction_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse(
+        var result = _parser.TryParse(
             "necessarily affordable act1, unknown1, unknown2 with budget 100",
             out var query,
             out var errors);
@@ -282,8 +273,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_WithNegativeBudget_ReturnsFalse()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse(
+        var result = _parser.TryParse(
             "necessarily affordable act1, act2 with budget -100",
             out var query,
             out var errors);
@@ -298,8 +288,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AffordableQueryWithValidProgram_ReturnsTrue()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse(
+        var result = _parser.TryParse(
             "necessarily affordable act1, act2 with budget 100",
             out var query,
             out var errors);
@@ -319,8 +308,7 @@ public sealed class QueryParserTests
     [Fact]
     public void TryParse_AffordableQueryWithZeroBudget_ReturnsTrue()
     {
-        var parser = new QueryParser(_problemDefinition);
-        var result = parser.TryParse("necessarily affordable act1, act2 with budget 0", out var query, out var errors);
+        var result = _parser.TryParse("necessarily affordable act1, act2 with budget 0", out var query, out var errors);
 
         Assert.True(result);
         Assert.NotNull(query);

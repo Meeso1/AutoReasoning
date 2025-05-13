@@ -8,7 +8,7 @@ public sealed class FormulaTokenizerTests
     public void BasicTokens_ShouldBeRecognized()
     {
         var input = "( ) true false not and or implies equivalent var1";
-        var success = FormulaTokenizer.TryTokenize(input, out var tokens, out _);
+        var success = new FormulaTokenizer().TryTokenize(input, out var tokens, out _);
 
         Assert.True(success);
         Assert.Equal(10, tokens.Count);
@@ -29,7 +29,7 @@ public sealed class FormulaTokenizerTests
     public void ValidIdentifiers_ShouldBeRecognized()
     {
         var input = "x y z _var var1 var_2 longVariableName";
-        var success = FormulaTokenizer.TryTokenize(input, out var tokens, out _);
+        var success = new FormulaTokenizer().TryTokenize(input, out var tokens, out _);
 
         Assert.True(success);
         Assert.Equal(7, tokens.Count);
@@ -44,7 +44,7 @@ public sealed class FormulaTokenizerTests
     public void ComplexFormula_ShouldTokenizeCorrectly()
     {
         var input = "(x and y) or (not z implies w)";
-        var success = FormulaTokenizer.TryTokenize(input, out var tokens, out _);
+        var success = new FormulaTokenizer().TryTokenize(input, out var tokens, out _);
 
         Assert.True(success);
         Assert.Equal(12, tokens.Count);
@@ -71,7 +71,7 @@ public sealed class FormulaTokenizerTests
     public void WhitespaceHandling_ShouldBeCorrect()
     {
         var input = "   (  x   and\t\ty )  \n  ";
-        var success = FormulaTokenizer.TryTokenize(input, out var tokens, out _);
+        var success = new FormulaTokenizer().TryTokenize(input, out var tokens, out _);
 
         Assert.True(success);
         Assert.Equal(5, tokens.Count);
@@ -89,13 +89,13 @@ public sealed class FormulaTokenizerTests
     public void EmptyInput_ShouldReturnEmptyTokens()
     {
         var input = "";
-        var success = FormulaTokenizer.TryTokenize(input, out var tokens, out _);
+        var success = new FormulaTokenizer().TryTokenize(input, out var tokens, out _);
 
         Assert.True(success);
         Assert.Empty(tokens);
 
         input = "   \t\n   ";
-        success = FormulaTokenizer.TryTokenize(input, out tokens, out _);
+        success = new FormulaTokenizer().TryTokenize(input, out tokens, out _);
 
         Assert.True(success);
         Assert.Empty(tokens);
@@ -105,7 +105,7 @@ public sealed class FormulaTokenizerTests
     public void InvalidTokens_ShouldReturnError()
     {
         var input = "x and #invalid";
-        var success = FormulaTokenizer.TryTokenize(input, out var tokens, out var errors);
+        var success = new FormulaTokenizer().TryTokenize(input, out var tokens, out var errors);
 
         Assert.False(success);
         Assert.NotNull(errors);
@@ -126,7 +126,7 @@ public sealed class FormulaTokenizerTests
     public void ReservedIdentifiers_ShouldReturnError(string reserved)
     {
         var input = $"x and {reserved}";
-        var success = FormulaTokenizer.TryTokenize(input, out _, out var errors);
+        var success = new FormulaTokenizer().TryTokenize(input, out _, out var errors);
 
         Assert.False(success);
         Assert.NotNull(errors);
@@ -139,7 +139,7 @@ public sealed class FormulaTokenizerTests
     public void TokenPositions_ShouldBeCorrect()
     {
         var input = "x and y";
-        var success = FormulaTokenizer.TryTokenize(input, out var tokens, out _);
+        var success = new FormulaTokenizer().TryTokenize(input, out var tokens, out _);
 
         Assert.True(success);
         Assert.Equal(3, tokens.Count);

@@ -5,7 +5,7 @@ namespace Tests;
 
 public sealed class FormulaParserTests
 {
-    private readonly FormulaParser _parser = new();
+    private readonly FormulaParser _parser = new(new FormulaTokenizer());
     private readonly Dictionary<string, Fluent> _fluents = new()
     {
         ["A"] = new Fluent("A", true),

@@ -16,10 +16,13 @@ namespace Logic.Queries;
 /// <param name="problem">
 /// 	Problem definition
 /// </param>
-public sealed class QueryParser(ProblemDefinition problem)
+public sealed class QueryParser(
+    ProblemDefinition problem,
+    FormulaReducer reducer,
+    FormulaParser parser
+)
 {
-    private readonly FormulaParser _formulaParser = new();
-    private readonly FormulaReducer _formulaReducer = new();
+
 
     /// <summary>
     /// 	Parses and validates a query
@@ -196,7 +199,7 @@ public sealed class QueryParser(ProblemDefinition problem)
             return false;
         }
 
-        if (!_formulaParser.TryParse(split[0], problem.Fluents, out var formula, out errors))
+        if (!parser.TryParse(split[0], problem.Fluents, out var formula, out errors))
         {
             return false;
         }
@@ -206,7 +209,7 @@ public sealed class QueryParser(ProblemDefinition problem)
             return false;
         }
 
-        var stateGroup = _formulaReducer.Reduce(formula);
+        var stateGroup = reducer.Reduce(formula);
         query = new AccessibleQuery(queryType, program, stateGroup);
         return true;
     }

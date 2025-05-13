@@ -6,7 +6,7 @@ namespace Logic.States;
 /// <summary>
 /// 	Class that parses and validates formulas
 /// </summary>
-public sealed class FormulaParser
+public sealed class FormulaParser(FormulaTokenizer tokenizer)
 {
     /// <summary>
     /// 	Parse and validate a formula
@@ -34,7 +34,7 @@ public sealed class FormulaParser
     {
         formula = null;
 
-        if (!FormulaTokenizer.TryTokenize(input, out var tokens, out errors))
+        if (!tokenizer.TryTokenize(input, out var tokens, out errors))
         {
             return false;
         }

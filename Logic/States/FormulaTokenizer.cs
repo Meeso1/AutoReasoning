@@ -3,14 +3,14 @@ using System.Text.RegularExpressions;
 
 namespace Logic.States;
 
-public static partial class FormulaTokenizer
+public sealed partial class FormulaTokenizer
 {
-    public static IReadOnlyList<string> ReservedIdentifiers { get; } = new List<string>
-    {
+    public IReadOnlyList<string> ReservedIdentifiers { get; } =
+    [
         "with", "budget", "necessarily", "possibly", "executable", "affordable", "accessible"
-    };
+    ];
 
-    public static bool TryTokenize(
+    public bool TryTokenize(
         string input,
         out List<Token> tokens,
         [NotNullWhen(false)] out IReadOnlyList<string>? errors)
