@@ -14,9 +14,11 @@ public sealed record State(IReadOnlyDictionary<Fluent, bool> FluentValues);
 /// <param name="SpecifiedFluentGroups">List of dictionaries, each specifying some of the fluent values</param>
 /// <remarks>
 /// 	The state is contained in the group, if there exists a dictionary in the list, 
-/// 	for which all fluent values that it specifies match fluent values in the state
+/// 	for which all fluent values that it specifies match fluent values in the state.
+/// 	This implicitly represents OR between all the conditions (dictionaries).
+/// 	That means that a single empty dictionary represents True, and a empty list represents False.
 /// </remarks>
-public sealed record StateGroup(IReadOnlySet<IReadOnlyDictionary<Fluent, bool>> SpecifiedFluentGroups)
+public sealed record StateGroup(IReadOnlyList<IReadOnlyDictionary<Fluent, bool>> SpecifiedFluentGroups)
 {
     public bool Contains(State state)
     {
@@ -41,10 +43,5 @@ public sealed record StateGroup(IReadOnlySet<IReadOnlyDictionary<Fluent, bool>> 
         }
 
         return true;
-    }
-
-    public static StateGroup Union(StateGroup group_a, StateGroup group_b)
-    {
-        return new StateGroup(group_a.SpecifiedFluentGroups.Union(group_b.SpecifiedFluentGroups).ToHashSet());
     }
 }
