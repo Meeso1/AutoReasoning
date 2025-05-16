@@ -7,6 +7,7 @@ namespace AutoReasoningGUI
     public partial class Form1 : Form
     {
         private List<Fluent> _fluents = new List<Fluent>();
+        private List<string> _actionNames = new List<string>();
         private Form2 form2;
         public Form1()
         {
@@ -31,11 +32,9 @@ namespace AutoReasoningGUI
             fluentName = string.Concat(fluentName.Where(c => !char.IsWhiteSpace(c)));
             var isInertial = this.isInertialCheckBox.Checked;
             var newFluent = new Fluent(fluentName, isInertial);
-            //var isInertialString = isInertial ? "INERTIAL" : "NOT INERTIAL";
             if (!_fluents.Contains(newFluent) && fluentName != "")
             {
                 _fluents.Add(newFluent);
-                //this.fluentCheckedListBox.Items.Add($"{fluentName} {isInertialString}");
                 this.fluentTextBox.Text = null;
                 this.isInertialCheckBox.Checked = true;
                 UpdateFluentList();
@@ -55,7 +54,23 @@ namespace AutoReasoningGUI
 
         private void addActionButton_Click(object sender, EventArgs e)
         {
+            var actionName = this.actionTextBox.Text;
+            actionName = string.Concat(actionName.Where(c => !char.IsWhiteSpace(c)));
+            if (!_actionNames.Contains(actionName) && actionName != "")
+            {
+                _actionNames.Add(actionName);
+                this.actionTextBox.Text = null;
+                UpdateActionList();
+            }
+        }
 
+        private void UpdateActionList()
+        {
+            this.actionCheckedListBox.Items.Clear();
+            foreach (string action in _actionNames)
+            {
+                this.actionCheckedListBox.Items.Add(action);
+            }
         }
 
         private void contFluentsActions_SplitterMoved(object sender, SplitterEventArgs e)
@@ -88,6 +103,18 @@ namespace AutoReasoningGUI
                 }
             }
             UpdateFluentList();
+        }
+
+        private void removeActionsButton_Click(object sender, EventArgs e)
+        {
+            for (int i = actionCheckedListBox.Items.Count - 1; i >= 0; i--)
+            {
+                if (actionCheckedListBox.GetItemChecked(i))
+                {
+                    _actionNames.RemoveAt(i);
+                }
+            }
+            UpdateActionList();
         }
     }
 }

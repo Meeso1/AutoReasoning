@@ -34,8 +34,6 @@
             fluentLabel = new Label();
             addFluentButton = new Button();
             fluentTextBox = new TextBox();
-            costActionLabel = new Label();
-            numericUpDownAction = new NumericUpDown();
             actionLabel = new Label();
             addActionButton = new Button();
             actionTextBox = new TextBox();
@@ -45,11 +43,11 @@
             fluentListLabel = new Label();
             actionListLabel = new Label();
             removeFluentsButton = new Button();
+            removeActionsButton = new Button();
             ((System.ComponentModel.ISupportInitialize)contFluentsActions).BeginInit();
             contFluentsActions.Panel1.SuspendLayout();
             contFluentsActions.Panel2.SuspendLayout();
             contFluentsActions.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)numericUpDownAction).BeginInit();
             ((System.ComponentModel.ISupportInitialize)fluentActionListContainer).BeginInit();
             fluentActionListContainer.Panel1.SuspendLayout();
             fluentActionListContainer.Panel2.SuspendLayout();
@@ -70,7 +68,7 @@
             // 
             contFluentsActions.BorderStyle = BorderStyle.FixedSingle;
             contFluentsActions.IsSplitterFixed = true;
-            contFluentsActions.Location = new Point(258, 27);
+            contFluentsActions.Location = new Point(206, 27);
             contFluentsActions.Name = "contFluentsActions";
             contFluentsActions.Orientation = Orientation.Horizontal;
             // 
@@ -83,13 +81,11 @@
             // 
             // contFluentsActions.Panel2
             // 
-            contFluentsActions.Panel2.Controls.Add(costActionLabel);
-            contFluentsActions.Panel2.Controls.Add(numericUpDownAction);
             contFluentsActions.Panel2.Controls.Add(actionLabel);
             contFluentsActions.Panel2.Controls.Add(addActionButton);
             contFluentsActions.Panel2.Controls.Add(actionTextBox);
-            contFluentsActions.Size = new Size(222, 218);
-            contFluentsActions.SplitterDistance = 104;
+            contFluentsActions.Size = new Size(222, 216);
+            contFluentsActions.SplitterDistance = 103;
             contFluentsActions.TabIndex = 1;
             contFluentsActions.SplitterMoved += contFluentsActions_SplitterMoved;
             // 
@@ -131,23 +127,6 @@
             fluentTextBox.Size = new Size(132, 23);
             fluentTextBox.TabIndex = 0;
             // 
-            // costActionLabel
-            // 
-            costActionLabel.AutoSize = true;
-            costActionLabel.Location = new Point(51, 52);
-            costActionLabel.Name = "costActionLabel";
-            costActionLabel.Size = new Size(31, 15);
-            costActionLabel.TabIndex = 6;
-            costActionLabel.Text = "Cost";
-            // 
-            // numericUpDownAction
-            // 
-            numericUpDownAction.Location = new Point(4, 70);
-            numericUpDownAction.Name = "numericUpDownAction";
-            numericUpDownAction.Size = new Size(132, 23);
-            numericUpDownAction.TabIndex = 5;
-            numericUpDownAction.ValueChanged += numericUpDownAction_ValueChanged;
-            // 
             // actionLabel
             // 
             actionLabel.AutoSize = true;
@@ -169,7 +148,7 @@
             // 
             // actionTextBox
             // 
-            actionTextBox.Location = new Point(3, 26);
+            actionTextBox.Location = new Point(3, 37);
             actionTextBox.Name = "actionTextBox";
             actionTextBox.Size = new Size(132, 23);
             actionTextBox.TabIndex = 2;
@@ -177,7 +156,7 @@
             // fluentActionListContainer
             // 
             fluentActionListContainer.IsSplitterFixed = true;
-            fluentActionListContainer.Location = new Point(486, 27);
+            fluentActionListContainer.Location = new Point(434, 27);
             fluentActionListContainer.Name = "fluentActionListContainer";
             // 
             // fluentActionListContainer.Panel1
@@ -187,8 +166,8 @@
             // fluentActionListContainer.Panel2
             // 
             fluentActionListContainer.Panel2.Controls.Add(actionCheckedListBox);
-            fluentActionListContainer.Size = new Size(293, 216);
-            fluentActionListContainer.SplitterDistance = 149;
+            fluentActionListContainer.Size = new Size(338, 216);
+            fluentActionListContainer.SplitterDistance = 171;
             fluentActionListContainer.TabIndex = 2;
             // 
             // fluentCheckedListBox
@@ -197,7 +176,7 @@
             fluentCheckedListBox.FormattingEnabled = true;
             fluentCheckedListBox.Location = new Point(0, 0);
             fluentCheckedListBox.Name = "fluentCheckedListBox";
-            fluentCheckedListBox.Size = new Size(149, 216);
+            fluentCheckedListBox.Size = new Size(171, 216);
             fluentCheckedListBox.TabIndex = 1;
             fluentCheckedListBox.SelectedIndexChanged += fluentCheckedListBox_SelectedIndexChanged;
             // 
@@ -207,13 +186,13 @@
             actionCheckedListBox.FormattingEnabled = true;
             actionCheckedListBox.Location = new Point(0, 0);
             actionCheckedListBox.Name = "actionCheckedListBox";
-            actionCheckedListBox.Size = new Size(140, 216);
+            actionCheckedListBox.Size = new Size(163, 216);
             actionCheckedListBox.TabIndex = 0;
             // 
             // fluentListLabel
             // 
             fluentListLabel.AutoSize = true;
-            fluentListLabel.Location = new Point(535, 9);
+            fluentListLabel.Location = new Point(493, 9);
             fluentListLabel.Name = "fluentListLabel";
             fluentListLabel.Size = new Size(48, 15);
             fluentListLabel.TabIndex = 0;
@@ -222,7 +201,7 @@
             // actionListLabel
             // 
             actionListLabel.AutoSize = true;
-            actionListLabel.Location = new Point(687, 9);
+            actionListLabel.Location = new Point(664, 9);
             actionListLabel.Name = "actionListLabel";
             actionListLabel.Size = new Size(50, 15);
             actionListLabel.TabIndex = 0;
@@ -230,19 +209,30 @@
             // 
             // removeFluentsButton
             // 
-            removeFluentsButton.Location = new Point(486, 249);
+            removeFluentsButton.Location = new Point(434, 249);
             removeFluentsButton.Name = "removeFluentsButton";
-            removeFluentsButton.Size = new Size(149, 23);
+            removeFluentsButton.Size = new Size(171, 23);
             removeFluentsButton.TabIndex = 2;
             removeFluentsButton.Text = "Remove Selected Fluents";
             removeFluentsButton.UseVisualStyleBackColor = true;
             removeFluentsButton.Click += removeFluentsButton_Click;
+            // 
+            // removeActionsButton
+            // 
+            removeActionsButton.Location = new Point(609, 249);
+            removeActionsButton.Name = "removeActionsButton";
+            removeActionsButton.Size = new Size(163, 23);
+            removeActionsButton.TabIndex = 3;
+            removeActionsButton.Text = "Remove Selected Actions";
+            removeActionsButton.UseVisualStyleBackColor = true;
+            removeActionsButton.Click += removeActionsButton_Click;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 461);
+            Controls.Add(removeActionsButton);
             Controls.Add(removeFluentsButton);
             Controls.Add(actionListLabel);
             Controls.Add(fluentActionListContainer);
@@ -260,7 +250,6 @@
             contFluentsActions.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)contFluentsActions).EndInit();
             contFluentsActions.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)numericUpDownAction).EndInit();
             fluentActionListContainer.Panel1.ResumeLayout(false);
             fluentActionListContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)fluentActionListContainer).EndInit();
@@ -279,8 +268,6 @@
         private Button addActionButton;
         private Label fluentLabel;
         private Label actionLabel;
-        private NumericUpDown numericUpDownAction;
-        private Label costActionLabel;
         private CheckBox isInertialCheckBox;
         private SplitContainer fluentActionListContainer;
         private Label fluentListLabel;
@@ -288,5 +275,6 @@
         private CheckedListBox fluentCheckedListBox;
         private CheckedListBox actionCheckedListBox;
         private Button removeFluentsButton;
+        private Button removeActionsButton;
     }
 }
