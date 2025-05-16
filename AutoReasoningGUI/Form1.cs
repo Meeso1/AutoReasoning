@@ -11,17 +11,16 @@ namespace AutoReasoningGUI
         public Form1()
         {
             InitializeComponent();
+            form2 = new Form2(this);
+            form2.Show();
+            form2.Visible = false;
         }
 
         private void nextPage_Click(object sender, EventArgs e)
         {
-            if (form2 == null)
-            {
-                form2 = new Form2(this);
-                form2.Show();
-            }
-            // save input from form1 first
             this.Visible = false;
+            form2.Location = this.Location;
+            form2.Size = this.Size;
             form2.Visible = true;
         }
 

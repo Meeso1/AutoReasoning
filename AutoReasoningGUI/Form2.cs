@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.DataFormats;
 
 namespace AutoReasoningGUI
 {
@@ -22,6 +23,8 @@ namespace AutoReasoningGUI
         private void prevPage_Click(object sender, EventArgs e)
         {
             this.Visible = false;
+            form1.Location = this.Location;
+            form1.Size = this.Size;
             form1.Visible = true;
         }
 
