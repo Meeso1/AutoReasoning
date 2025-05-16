@@ -38,11 +38,11 @@ namespace AutoReasoningGUI
                 //this.fluentCheckedListBox.Items.Add($"{fluentName} {isInertialString}");
                 this.fluentTextBox.Text = null;
                 this.isInertialCheckBox.Checked = true;
-                updateFluentList();
+                UpdateFluentList();
             }
         }
 
-        private void updateFluentList()
+        private void UpdateFluentList()
         {
             this.fluentCheckedListBox.Items.Clear();
             foreach (var fluent in _fluents)
@@ -87,7 +87,7 @@ namespace AutoReasoningGUI
                     _fluents.RemoveAt(i);
                 }
             }
-            updateFluentList();
+            UpdateFluentList();
         }
     }
 }
