@@ -1,7 +1,12 @@
+using Logic.States.Models;
+using System.DirectoryServices.ActiveDirectory;
+using System.Runtime.CompilerServices;
+
 namespace AutoReasoningGUI
 {
     public partial class Form1 : Form
     {
+        private List<Fluent> _fluents = new List<Fluent>();
         private Form2 form2;
         public Form1()
         {
@@ -22,7 +27,30 @@ namespace AutoReasoningGUI
 
         private void addFluentButton_Click(object sender, EventArgs e)
         {
+            var fluentName = this.fluentTextBox.Text;
+            fluentName = string.Concat(fluentName.Where(c => !char.IsWhiteSpace(c)));
+            var isInertial = this.isInertialCheckBox.Checked;
+            var newFluent = new Fluent(fluentName, isInertial);
+            //var isInertialString = isInertial ? "INERTIAL" : "NOT INERTIAL";
+            if (!_fluents.Contains(newFluent) && fluentName != "")
+            {
+                _fluents.Add(newFluent);
+                //this.fluentCheckedListBox.Items.Add($"{fluentName} {isInertialString}");
+                this.fluentTextBox.Text = null;
+                this.isInertialCheckBox.Checked = true;
+                updateFluentList();
+            }
+        }
 
+        private void updateFluentList()
+        {
+            this.fluentCheckedListBox.Items.Clear();
+            foreach (var fluent in _fluents)
+            {
+                var fluentName = fluent.Name;
+                var isInertialString = fluent.IsInertial ? "INERTIAL" : "NOT INERTIAL";
+                this.fluentCheckedListBox.Items.Add($"{fluentName} {isInertialString}");
+            }
         }
 
         private void addActionButton_Click(object sender, EventArgs e)
@@ -38,6 +66,28 @@ namespace AutoReasoningGUI
         private void numericUpDownAction_ValueChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void fluentCheckedListBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void removeFluentsButton_Click(object sender, EventArgs e)
+        {
+            for (int i = fluentCheckedListBox.Items.Count - 1; i >= 0; i--)
+            {
+                if (fluentCheckedListBox.GetItemChecked(i))
+                {
+                    _fluents.RemoveAt(i);
+                }
+            }
+            updateFluentList();
         }
     }
 }
