@@ -55,8 +55,7 @@ public sealed class FormulaReducer
 
     private StateGroup ReduceNot(Not not)
     {
-        
-        var stateGroup = Reduce(not);
+        var stateGroup = Reduce(not.Formula);
 
         // empty StateGroup represents False
         if (stateGroup.SpecifiedFluentGroups.Count == 0)
@@ -64,9 +63,38 @@ public sealed class FormulaReducer
             return Reduce(new True());
         }
 
-        // negation of a statement consisting only of expressions and ors consists of negating each expression and converting every OR to AND
+        // negation of a statement consisting only of expressions and ORs consists of negating each expression and converting every OR to AND
         // if we use CompressMergeWithStrategy with AndMergeStrategy this will deal with simplifying all the ANDs
-        throw new NotImplementedException();
+
+        // Create a list to hold all the negated fluent dictionaries
+        var negatedGroups = new List<ReadOnlyFluentDict>();
+
+        foreach (var fluentDict in stateGroup.SpecifiedFluentGroups)
+        {
+            // Create a negated version of the current fluent dictionary
+            var negatedDict = new FluentDict();
+
+            foreach (var kvp in fluentDict)
+            {
+                // Negate each value in the dictionary
+                negatedDict[kvp.Key] = !kvp.Value;
+            }
+
+            negatedGroups.Add(negatedDict);
+        }
+
+        // If there's only one negated group, return it directly
+        if (negatedGroups.Count == 1)
+        {
+            return new StateGroup(negatedGroups);
+        }
+
+        // Create two StateGroups to merge with CompressMergeWithStrategy
+        var leftGroup = new StateGroup(new List<ReadOnlyFluentDict> { negatedGroups[0] });
+        var rightGroup = new StateGroup(negatedGroups.Skip(1).ToList());
+
+        // Use CompressMergeWithStrategy with AndMergeStrategy to merge all negated dictionaries
+        return CompressMergeWithStrategy(leftGroup, rightGroup, AndMergeStrategy.Merge);
     }
 
     private StateGroup ReduceAnd(And and)
@@ -104,15 +132,84 @@ public sealed class FormulaReducer
         public static List<FluentDict> Merge(ReadOnlyFluentDict lessSpecific, ReadOnlyFluentDict moreSpecific)
         {
             // Case 1: Different number of keys - check if moreSpecific represents a state subset (has additional constraints) of lessSpecific
-            // If moreSpecific is a subset of lessSpecific, moreSpecific already covers all states that will fullfill the logic expression
-            // Case 2: Same number of keys - check if they have the same keys
-            // Different keys but same count, return both
-            // Case 3: Same keys - count differing values
-            // Case 3a: No differences, return only one copy
-            // Case 3b: Exactly one differing fluent - return empty list
-            // Case 3c: Multiple differences - return both
+            if (lessSpecific.Keys.Count() != moreSpecific.Keys.Count())
+            {
+                bool isSubset = true;
+                foreach (var kvp in lessSpecific)
+                {
+                    if (!moreSpecific.TryGetValue(kvp.Key, out bool value) || value != kvp.Value)
+                    {
+                        isSubset = false;
+                        break;
+                    }
+                }
 
-            throw new NotImplementedException();
+                if (isSubset)
+                {
+                    // If moreSpecific is a subset of lessSpecific, moreSpecific already covers all states that will fulfill the logic expression
+                    return new List<FluentDict> { new FluentDict(moreSpecific) };
+                }
+
+                // Not a subset, return both
+                return new List<FluentDict>
+            {
+                new FluentDict(lessSpecific),
+                new FluentDict(moreSpecific)
+            };
+            }
+
+            // Case 2: Same number of keys - check if they have the same keys
+            bool sameKeys = lessSpecific.Keys.All(k => moreSpecific.ContainsKey(k));
+            if (!sameKeys)
+            {
+                // Different keys but same count, return both
+                return new List<FluentDict>
+            {
+                new FluentDict(lessSpecific),
+                new FluentDict(moreSpecific)
+            };
+            }
+
+            // Case 3: Same keys - count differing values
+            int differentValues = 0;
+            Fluent? differentFluent = null;
+
+            foreach (var key in lessSpecific.Keys)
+            {
+                if (lessSpecific[key] != moreSpecific[key])
+                {
+                    differentValues++;
+                    differentFluent = key;
+
+                    // Early exit if we find more than one difference
+                    if (differentValues > 1)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            // Case 3a: No differences, return only one copy
+            if (differentValues == 0)
+            {
+                return new List<FluentDict>
+            {
+                new FluentDict(lessSpecific)
+            };
+            }
+
+            // Case 3b: Exactly one differing fluent - return empty list
+            if (differentValues == 1)
+            {
+                return new List<FluentDict>();
+            }
+
+            // Case 3c: Multiple differences - return both
+            return new List<FluentDict>
+        {
+            new FluentDict(lessSpecific),
+            new FluentDict(moreSpecific)
+        };
         }
     }
 
@@ -266,7 +363,94 @@ public sealed class FormulaReducer
     /// </returns>
     private static StateGroup CompressMergeWithStrategy(StateGroup leftGroup, StateGroup rightGroup, IFluentDictionaryMergeStrategy.MergeDelegate strategy)
     {
-        throw new NotImplementedException();
+        // Combine all fluent dictionaries from both groups into a single working set
+        var workingSet = new List<ReadOnlyFluentDict>();
+        workingSet.AddRange(leftGroup.SpecifiedFluentGroups);
+        workingSet.AddRange(rightGroup.SpecifiedFluentGroups);
+
+        // Continue merging until no new changes occur
+        bool changesMade;
+        do
+        {
+            changesMade = false;
+            var mergeResults = new List<ReadOnlyFluentDict>();
+
+            // Process each dictionary in the working set
+            for (int i = 0; i < workingSet.Count; i++)
+            {
+                bool merged = false;
+
+                // Try to merge current dictionary with each subsequent dictionary
+                for (int j = i + 1; j < workingSet.Count; j++)
+                {
+                    ReadOnlyFluentDict lessSpecificGroup;
+                    ReadOnlyFluentDict moreSpecificGroup;
+
+                    // Determine which dictionary is less specific
+                    if (workingSet[i].Keys.Count() <= workingSet[j].Keys.Count())
+                    {
+                        lessSpecificGroup = workingSet[i];
+                        moreSpecificGroup = workingSet[j];
+                    }
+                    else
+                    {
+                        lessSpecificGroup = workingSet[j];
+                        moreSpecificGroup = workingSet[i];
+                    }
+
+                    // Apply the merge strategy
+                    var resolved = strategy(lessSpecificGroup, moreSpecificGroup);
+
+                    // If the merge produced a result different from the inputs, we've made progress
+                    if (resolved.Count != 2 ||
+                        (resolved.Count == 2 &&
+                         (!DictionariesEqual(resolved[0], lessSpecificGroup) ||
+                          !DictionariesEqual(resolved[1], moreSpecificGroup))))
+                    {
+                        // Mark dictionaries as merged
+                        merged = true;
+                        changesMade = true;
+
+                        // Add merge results to our results list
+                        mergeResults.AddRange(resolved);
+
+                        // Mark the second dictionary as merged by removing it from consideration
+                        workingSet[j] = null;
+                        break;
+                    }
+                }
+
+                // If this dictionary wasn't merged with anything, keep it as is
+                if (!merged)
+                {
+                    mergeResults.Add(workingSet[i]);
+                }
+            }
+
+            // Update working set for next iteration, removing any null entries
+            workingSet = mergeResults.Where(dict => dict != null).ToList();
+
+        } while (changesMade);
+
+        return new StateGroup(workingSet);
+    }
+
+    /// <summary>
+    /// Helper method to check if two ReadOnlyFluentDict instances are equal
+    /// </summary>
+    private static bool DictionariesEqual(ReadOnlyFluentDict dict1, ReadOnlyFluentDict dict2)
+    {
+        if (dict1 == dict2) return true;
+        if (dict1 == null || dict2 == null) return false;
+        if (dict1.Keys.Count() != dict2.Keys.Count()) return false;
+
+        foreach (var key in dict1.Keys)
+        {
+            if (!dict2.ContainsKey(key) || dict1[key] != dict2[key])
+                return false;
+        }
+
+        return true;
     }
 
     private StateGroup ReduceImplies(Implies implies)
