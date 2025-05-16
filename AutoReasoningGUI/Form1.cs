@@ -11,6 +11,7 @@ namespace AutoReasoningGUI
         public Form1()
         {
             InitializeComponent();
+            this.MaximizeBox = false;
             form2 = new Form2(this);
             form2.Show();
             form2.Visible = false;

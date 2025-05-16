@@ -17,6 +17,7 @@ namespace AutoReasoningGUI
         public Form2(Form1 form1)
         {
             InitializeComponent();
+            this.MaximizeBox = false;
             this.form1 = form1;
         }
 
