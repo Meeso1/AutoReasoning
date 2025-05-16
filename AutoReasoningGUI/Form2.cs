@@ -24,5 +24,10 @@ namespace AutoReasoningGUI
             this.Visible = false;
             form1.Visible = true;
         }
+
+        private void Form2_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            form1.Close();
+        }
     }
 }

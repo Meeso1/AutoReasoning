@@ -52,6 +52,7 @@
             Name = "Form2";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Auto Reasoning";
+            FormClosing += Form2_FormClosing;
             ResumeLayout(false);
         }
 

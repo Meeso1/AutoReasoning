@@ -19,5 +19,25 @@ namespace AutoReasoningGUI
             this.Visible = false;
             form2.Visible = true;
         }
+
+        private void addFluentButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void addActionButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void contFluentsActions_SplitterMoved(object sender, SplitterEventArgs e)
+        {
+
+        }
+
+        private void numericUpDownAction_ValueChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }
