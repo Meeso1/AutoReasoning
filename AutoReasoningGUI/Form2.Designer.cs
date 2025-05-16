@@ -1,14 +1,14 @@
 ﻿namespace AutoReasoningGUI
 {
-    partial class Form1
+    partial class Form2
     {
         /// <summary>
-        ///  Required designer variable.
+        /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
         /// <summary>
-        ///  Clean up any resources being used.
+        /// Clean up any resources being used.
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
@@ -23,33 +23,33 @@
         #region Windows Form Designer generated code
 
         /// <summary>
-        ///  Required method for Designer support - do not modify
-        ///  the contents of this method with the code editor.
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent()
         {
-            nextPage = new Button();
+            prevPage = new Button();
             SuspendLayout();
             // 
-            // nextPage
+            // prevPage
             // 
-            nextPage.Location = new Point(697, 426);
-            nextPage.Name = "nextPage";
-            nextPage.Size = new Size(75, 23);
-            nextPage.TabIndex = 0;
-            nextPage.Text = "Next Page";
-            nextPage.UseVisualStyleBackColor = true;
-            nextPage.Click += nextPage_Click;
+            prevPage.Location = new Point(12, 426);
+            prevPage.Name = "prevPage";
+            prevPage.Size = new Size(110, 23);
+            prevPage.TabIndex = 0;
+            prevPage.Text = "Previous Page";
+            prevPage.UseVisualStyleBackColor = true;
+            prevPage.Click += prevPage_Click;
             // 
-            // Form1
+            // Form2
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 461);
-            Controls.Add(nextPage);
+            Controls.Add(prevPage);
             MaximumSize = new Size(800, 500);
             MinimumSize = new Size(800, 500);
-            Name = "Form1";
+            Name = "Form2";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Auto Reasoning";
             ResumeLayout(false);
@@ -57,6 +57,6 @@
 
         #endregion
 
-        private Button nextPage;
+        private Button prevPage;
     }
 }
