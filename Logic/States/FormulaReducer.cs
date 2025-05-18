@@ -61,6 +61,11 @@ public sealed class FormulaReducer
         {
             return Reduce(new True());
         }
+        // StateGroup with single empty dict represents True
+        if (stateGroup.SpecifiedFluentGroups.Count == 1 && stateGroup.SpecifiedFluentGroups[0].Count == 0)
+        {
+            return Reduce(new False());
+        }
 
         // negation of a statement consisting only of expressions and ORs consists of negating each expression and converting every OR to AND
         // if we use CompressMergeWithStrategy with AndMergeStrategy this will deal with simplifying all the ANDs
@@ -85,6 +90,17 @@ public sealed class FormulaReducer
         // If there's only one negated group, return it directly
         if (negatedGroups.Count == 1)
         {
+            ReadOnlyFluentDict negatedAnd = negatedGroups[0];
+            negatedGroups.Clear();
+
+            foreach (var kvp in negatedAnd)
+            {
+                negatedGroups.Add(new FluentDict()
+                {
+                    [kvp.Key] = kvp.Value
+                });
+            }
+
             return new StateGroup(negatedGroups);
         }
 
