@@ -22,8 +22,11 @@ public class AndMergeStrategy : IFluentDictionaryMergeStrategy
 {
     public static List<FluentDict> Merge(ReadOnlyFluentDict lessSpecific, ReadOnlyFluentDict moreSpecific)
     {
+        if (lessSpecific.Count > moreSpecific.Count)
+        {
+            throw new ArgumentException("lessSpecific has a bigger Count than moreSpecific");
+        }
         FluentDict mergedDict = new FluentDict();
-
         bool conditionsAreConsistent = true;
 
 
@@ -31,15 +34,12 @@ public class AndMergeStrategy : IFluentDictionaryMergeStrategy
         foreach (var kvp in lessSpecific)
         {
             bool keyExists = moreSpecific.TryGetValue(kvp.Key, out bool value);
-            if (keyExists)
+            if (keyExists && value != kvp.Value)
             {
-                if (value != kvp.Value)
-                {
-                    conditionsAreConsistent = false;
-                    break;
-                }
-                mergedDict[kvp.Key] = kvp.Value;
+                conditionsAreConsistent = false;
+                break;
             }
+            mergedDict[kvp.Key] = kvp.Value;
         }
 
         if (!conditionsAreConsistent) { return new List<FluentDict>(); }
@@ -59,6 +59,10 @@ public class OrMergeStrategy : IFluentDictionaryMergeStrategy
 {
     public static List<FluentDict> Merge(ReadOnlyFluentDict lessSpecific, ReadOnlyFluentDict moreSpecific)
     {
+        if (lessSpecific.Count > moreSpecific.Count)
+        {
+            throw new ArgumentException("lessSpecific has a bigger Count than moreSpecific");
+        }
         // Case 1: Different number of keys - check if moreSpecific represents a state subset (has additional constraints) of lessSpecific
         if (lessSpecific.Keys.Count() != moreSpecific.Keys.Count())
         {
