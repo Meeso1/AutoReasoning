@@ -66,12 +66,12 @@ public sealed class FormulaReducer
         // if we use CompressMergeWithStrategy with AndMergeStrategy this will deal with simplifying all the ANDs
 
         // Create a list to hold all the negated fluent dictionaries
-        var negatedGroups = new List<ReadOnlyFluentDict>();
+        List<ReadOnlyFluentDict> negatedGroups = [];
 
         foreach (var fluentDict in stateGroup.SpecifiedFluentGroups)
         {
             // Create a negated version of the current fluent dictionary
-            var negatedDict = new FluentDict();
+            FluentDict negatedDict = [];
 
             foreach (var kvp in fluentDict)
             {
@@ -89,8 +89,8 @@ public sealed class FormulaReducer
         }
 
         // Create two StateGroups to merge with CompressMergeWithStrategy
-        var leftGroup = new StateGroup(new List<ReadOnlyFluentDict> { negatedGroups[0] });
-        var rightGroup = new StateGroup(negatedGroups.Skip(1).ToList());
+        StateGroup leftGroup = new(new List<ReadOnlyFluentDict> { negatedGroups[0] });
+        StateGroup rightGroup = new(negatedGroups.Skip(1).ToList());
 
         // Use CompressMergeWithStrategy with AndMergeStrategy to merge all negated dictionaries
         return CompressMergeWithStrategy(leftGroup, rightGroup, AndMergeStrategy.Merge);
@@ -125,7 +125,7 @@ public sealed class FormulaReducer
     /// </returns>
     private static StateGroup PermutiationMergeWithStrategy(StateGroup leftGroup, StateGroup rightGroup, IFluentDictionaryMergeStrategy.MergeDelegate strategy)
     {
-        var result = new List<ReadOnlyFluentDict>();
+        List<ReadOnlyFluentDict> result = [];
 
         for (int leftIdx = 0; leftIdx < leftGroup.SpecifiedFluentGroups.Count; leftIdx++)
         {
@@ -167,7 +167,7 @@ public sealed class FormulaReducer
     private static StateGroup CompressMergeWithStrategy(StateGroup leftGroup, StateGroup rightGroup, IFluentDictionaryMergeStrategy.MergeDelegate strategy)
     {
         // Combine all fluent dictionaries from both groups into a single working set
-        var workingSet = new List<ReadOnlyFluentDict>();
+        List<ReadOnlyFluentDict> workingSet = [];
         workingSet.AddRange(leftGroup.SpecifiedFluentGroups);
         workingSet.AddRange(rightGroup.SpecifiedFluentGroups);
 
@@ -176,7 +176,7 @@ public sealed class FormulaReducer
         do
         {
             changesMade = false;
-            var mergeResults = new List<ReadOnlyFluentDict>();
+            List<ReadOnlyFluentDict> mergeResults = [];
 
             // Process each dictionary in the working set
             for (int i = 0; i < workingSet.Count; i++)
