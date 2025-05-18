@@ -117,7 +117,7 @@ public sealed class FormulaReducer
         var leftGroup = Reduce(and.First);
         var rightGroup = Reduce(and.Second);
 
-        return PermutiationMergeWithStrategy(leftGroup, rightGroup, AndMergeStrategy.Merge);
+        return PermutationMergeWithStrategy(leftGroup, rightGroup, AndMergeStrategy.Merge);
     }
 
     private StateGroup ReduceOr(Or or)
@@ -139,7 +139,7 @@ public sealed class FormulaReducer
     /// <returns>
     /// A smallest possible StateGroup representing the merge of the input StateGroups
     /// </returns>
-    private static StateGroup PermutiationMergeWithStrategy(StateGroup leftGroup, StateGroup rightGroup, IFluentDictionaryMergeStrategy.MergeDelegate strategy)
+    private static StateGroup PermutationMergeWithStrategy(StateGroup leftGroup, StateGroup rightGroup, IFluentDictionaryMergeStrategy.MergeDelegate strategy)
     {
         List<ReadOnlyFluentDict> result = [];
 
