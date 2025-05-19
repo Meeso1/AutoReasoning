@@ -1,14 +1,18 @@
 using Logic.States.Models;
+using Logic.States;
 using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.CompilerServices;
+using Logic;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AutoReasoningGUI
 {
     public partial class Form1 : Form
     {
+        public App App { get; } = new();
         private List<Fluent> _fluents = new List<Fluent>();
         private List<string> _actionNames = new List<string>();
-        private List<string> _statements = new List<string>();
+        private List<string> _statements = new List<string>(); // TODO: rozbiæ to na kilka list
         private Form2 form2;
         public Form1()
         {
@@ -46,12 +50,16 @@ namespace AutoReasoningGUI
         {
             this.fluentCheckedListBox.Items.Clear();
             this.initiallyFluentComboBox.Items.Clear();
+            this.causesFluentComboBox.Items.Clear();
+            this.releasesFluentComboBox.Items.Clear();
             foreach (var fluent in _fluents)
             {
                 var fluentName = fluent.Name;
                 var isInertialString = fluent.IsInertial ? "INERTIAL" : "NOT INERTIAL";
                 this.fluentCheckedListBox.Items.Add($"{fluentName} {isInertialString}");
                 this.initiallyFluentComboBox.Items.Add($"{fluentName}");
+                this.causesFluentComboBox.Items.Add($"{fluentName}");
+                this.releasesFluentComboBox.Items.Add($"{fluentName}");
             }
         }
 
@@ -146,13 +154,23 @@ namespace AutoReasoningGUI
 
         private void addStatementButton_Click(object sender, EventArgs e)
         {
+            this.errorProvider1.SetError(alwaysTextBox, "");
+            this.errorProvider1.SetError(impossibleTextBox, "");
+            this.errorProvider1.SetError(causesTextBox2, "");
+            this.errorProvider1.SetError(releasesTextBox2, "");
             string selectedItem = typeOfStatementComboBox.SelectedItem.ToString();
+            string fluentName = "";
+            string actionName = "";
+            string expression = "";
+            string statement = "";
+            decimal cost;
+            IReadOnlyList<string>? errors = null;
+            string combinedError = "";
             switch (selectedItem)
             {
                 case "":
                     return;
                 case "Initial Fluent Value":
-                    string fluentName = "";
                     if (initiallyFluentComboBox.SelectedItem == null)
                     {
                         return;
@@ -162,30 +180,38 @@ namespace AutoReasoningGUI
                         fluentName = initiallyFluentComboBox.SelectedItem.ToString();
                     }
                     bool startValue = InitialCheckBox.Checked;
-                    string initialStatement = $"initially {(startValue ? "" : "not ")}{fluentName}";
-                    if (!_statements.Contains(initialStatement))
+                    statement = $"initially {(startValue ? "" : "not ")}{fluentName}";
+                    if (!_statements.Contains(statement))
                     {
-                        _statements.Add(initialStatement);
+                        _statements.Add(statement);
                         UpdateStatementsList();
                     }
                     break;
                 case "Always":
-                    string expression = alwaysTextBox.Text.ToString();
+                    expression = alwaysTextBox.Text.ToString();
                     expression = expression.TrimStart();
                     if (expression == "")
                     {
                         return;
                     }
-                    // trzeba tutaj sprawdziæ czy expression jest poprawnie napisane
-                    string alwaysStatement = $"always {expression}";
-                    if (!_statements.Contains(alwaysStatement))
+                    if(!App.FormulaParser.TryParse(
+                            expression,
+                            _fluents.ToDictionary(f => f.Name),
+                            out _,
+                            out errors))
                     {
-                        _statements.Add(alwaysStatement);
+                        combinedError = string.Join(Environment.NewLine, errors);
+                        this.errorProvider1.SetError(alwaysTextBox, combinedError);
+                        return;
+                    }
+                    statement = $"always {expression}";
+                    if (!_statements.Contains(statement))
+                    {
+                        _statements.Add(statement);
                         UpdateStatementsList();
                     }
                     break;
                 case "Impossible Action":
-                    string actionName = "";
                     if (impossibleActionComboBox.SelectedItem == null)
                     {
                         return;
@@ -194,84 +220,94 @@ namespace AutoReasoningGUI
                     {
                         actionName = impossibleActionComboBox.SelectedItem.ToString();
                     }
-                    string impossibleExpression = impossibleTextBox.Text.ToString();
-                    impossibleExpression = impossibleExpression.TrimStart();
-                    if (impossibleExpression == "")
+                    expression = impossibleTextBox.Text.ToString();
+                    expression = expression.TrimStart();
+                    if (expression == "")
                     {
                         return;
                     }
-                    // trzeba tutaj sprawdziæ czy expression jest poprawnie napisane
-                    string impossibleStatement = $"impossible {actionName} if {impossibleExpression}";
-                    if (!_statements.Contains(impossibleStatement))
+                    if (!App.FormulaParser.TryParse(
+                            expression,
+                            _fluents.ToDictionary(f => f.Name),
+                            out _,
+                            out errors))
                     {
-                        _statements.Add(impossibleStatement);
+                        combinedError = string.Join(Environment.NewLine, errors);
+                        this.errorProvider1.SetError(impossibleTextBox, combinedError);
+                        return;
+                    }
+                    statement = $"impossible {actionName} if {expression}";
+                    if (!_statements.Contains(statement))
+                    {
+                        _statements.Add(statement);
                         UpdateStatementsList();
                     }
                     break;
                 case "Action Causes":
-                    string actionCausesName = "";
-                    if (causesActionComboBox.SelectedItem == null)
+                    if (causesActionComboBox.SelectedItem == null || causesFluentComboBox.SelectedItem == null)
                     {
                         return;
                     }
-                    else
+                    actionName = causesActionComboBox.SelectedItem.ToString();
+                    bool isTrue = causesCheckBox.Checked;
+                    fluentName = causesFluentComboBox.SelectedItem.ToString();
+                    expression = causesTextBox2.Text.ToString();
+                    expression = expression.TrimStart();
+                    cost = causesNumericUpDown.Value;
+                    if (expression == "")
                     {
-                        actionCausesName = causesActionComboBox.SelectedItem.ToString();
-                    }
-                    string causesExpression_1 = causesTextBox.Text.ToString();
-                    causesExpression_1 = causesExpression_1.TrimStart();
-                    string causesExpression_2 = causesTextBox2.Text.ToString();
-                    causesExpression_2 = causesExpression_2.TrimStart();
-                    if (causesExpression_1 == "")
-                    {
-                        return;
-                    }
-                    decimal costCauses = causesNumericUpDown.Value;
-                    string causesStatement = "";
-                    if (causesExpression_2 == "")
-                    {
-                        causesStatement = $"{actionCausesName} causes {causesExpression_1} costs {costCauses}";
+                        statement = $"{actionName} causes {(isTrue ? "" : "not ")}{fluentName} costs {cost}";
                     } else
                     {
-                        causesStatement = $"{actionCausesName} causes {causesExpression_1} if {causesExpression_2} costs {costCauses}";
+                        if (!App.FormulaParser.TryParse(
+                                expression,
+                                _fluents.ToDictionary(f => f.Name),
+                                out _,
+                                out errors))
+                        {
+                            combinedError = string.Join(Environment.NewLine, errors);
+                            this.errorProvider1.SetError(causesTextBox2, combinedError);
+                            return;
+                        }
+                        statement = $"{actionName} causes {(isTrue ? "" : "not ")}{fluentName} if {expression} costs {cost}";
                     }
-                    if (!_statements.Contains(causesStatement))
+                    if (!_statements.Contains(statement))
                     {
-                        _statements.Add(causesStatement);
+                        _statements.Add(statement);
                         UpdateStatementsList();
                     }
                     break;
                 case "Action Releases":
-                    string actionReleasesName = "";
-                    if (releasesActionComboBox.SelectedItem == null)
+                    if (releasesActionComboBox.SelectedItem == null || releasesFluentComboBox.SelectedItem == null)
                     {
                         return;
                     }
-                    else
+                    actionName = releasesActionComboBox.SelectedItem.ToString();
+                    fluentName = releasesFluentComboBox.SelectedItem.ToString();
+                    expression = releasesTextBox2.Text.ToString();
+                    expression = expression.TrimStart();
+                    cost = releasesNumericUpDown.Value;
+                    if (expression == "")
                     {
-                        actionReleasesName = releasesActionComboBox.SelectedItem.ToString();
-                    }
-                    string releasesExpression_1 = releasesTextBox.Text.ToString();
-                    releasesExpression_1 = releasesExpression_1.TrimStart();
-                    string releasesExpression_2 = releasesTextBox2.Text.ToString();
-                    releasesExpression_2 = releasesExpression_2.TrimStart();
-                    if (releasesExpression_1 == "")
-                    {
-                        return;
-                    }
-                    decimal costReales = releasesNumericUpDown.Value;
-                    string releasesStatement = "";
-                    if (releasesExpression_2 == "")
-                    {
-                        releasesStatement = $"{actionReleasesName} releases {releasesExpression_2} costs {costReales}";
+                        statement = $"{actionName} releases {fluentName} costs {cost}";
                     }
                     else
                     {
-                        releasesStatement = $"{actionReleasesName} releases {releasesExpression_1} if {releasesExpression_2} costs {costReales}";
+                        if (!App.FormulaParser.TryParse(
+                                expression,
+                                _fluents.ToDictionary(f => f.Name),
+                                out _,
+                                out errors))
+                        {
+                            combinedError = string.Join(Environment.NewLine, errors);
+                            this.errorProvider1.SetError(releasesTextBox2, combinedError);
+                            return;
+                        }
+                        statement = $"{actionName} releases {fluentName} if {expression} costs {cost}";
                     }
-                    if (!_statements.Contains(releasesStatement))
+                    if (!_statements.Contains(statement))
                     {
-                        _statements.Add(releasesStatement);
+                        _statements.Add(statement);
                         UpdateStatementsList();
                     }
                     break;
