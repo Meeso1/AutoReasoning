@@ -4,7 +4,7 @@ namespace Logic.Problem.Models;
 
 public record ActionElement();
 
-public sealed record ActionStatement(string name, ActionElement element);
+public sealed record ActionStatement(string ActionName, ActionElement Element);
 
 public sealed record ActionEffect(Formula Condition, Fluent Fluent, bool Value, int CostIfChanged): ActionElement;
 
