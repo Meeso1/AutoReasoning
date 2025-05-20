@@ -2,11 +2,15 @@
 
 namespace Logic.Problem.Models;
 
-public sealed record ActionEffect(Formula Condition, Fluent Fluent, bool Value, int CostIfChanged);
+public record ActionElement();
 
-public sealed record ActionRelease(Formula Condition, Fluent ReleasedFluent, int CostIfChanged);
+public sealed record ActionStatement(string name, ActionElement element);
 
-public sealed record ActionCondition(Formula Condition);
+public sealed record ActionEffect(Formula Condition, Fluent Fluent, bool Value, int CostIfChanged): ActionElement;
+
+public sealed record ActionRelease(Formula Condition, Fluent ReleasedFluent, int CostIfChanged) : ActionElement;
+
+public sealed record ActionCondition(Formula Condition) : ActionElement;
 
 /// <summary>
 /// 	Action

@@ -36,24 +36,14 @@ public sealed class ProblemDefinitionParser
     /// <returns>
     /// 	True if parsing was successful, false otherwise
     /// </returns>
-    public bool TryParse(
+    public ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
-        IReadOnlyList<string> actionStrings,
+        IReadOnlyList<ActionStatement> actionStatements,
         IReadOnlyDictionary<Fluent, bool> initials,
-        IReadOnlyList<Formula> always,
-        [NotNullWhen(true)] out ProblemDefinition? problem,
-        [NotNullWhen(false)] out IReadOnlyList<string>? errors)
+        IReadOnlyList<Formula> always)
     {
-        ActionsParser actionParser = new();
-        if (actionParser.TryParse(actionStrings, out IReadOnlyDictionary<string, Action>? actions, out IReadOnlyList<string>? actionErrors))
-        {
-            problem = CreateProblemDefinition(fluents, actions, initials, always);
-            errors = null;
-            return true;
-        }
-        problem = null;
-        errors = actionErrors;
-        return false;
+        IReadOnlyDictionary<string, Action> actions = ProcessActionStatements(actionStatements);
+        return CreateProblemDefinition(fluents, actions, initials, always);
     }
 
     private ProblemDefinition CreateProblemDefinition(
@@ -72,6 +62,52 @@ public sealed class ProblemDefinitionParser
             InitialStates = initialStates,
             ValidStates = validStates
         };
+    }
+
+    private static Dictionary<string, Action> ProcessActionStatements(IReadOnlyList<ActionStatement> actionStatements)
+    {
+        Dictionary<string, Action> actions = [];
+
+        var groupedStatements = actionStatements
+            .GroupBy(statement => statement.name)
+            .ToDictionary(group => group.Key, group => group.ToList());
+
+        foreach (var group in groupedStatements)
+        {
+            string actionName = group.Key;
+            var statements = group.Value;
+
+            // Sort elements into appropriate lists
+            List<ActionEffect> effects = [];
+            List<ActionRelease> releases = [];
+            List<ActionCondition> conditions = [];
+
+            foreach (var statement in statements)
+            {
+                switch (statement.element)
+                {
+                    case ActionEffect effect:
+                        effects.Add(effect);
+                        break;
+                    case ActionRelease release:
+                        releases.Add(release);
+                        break;
+                    case ActionCondition condition:
+                        conditions.Add(condition);
+                        break;
+                }
+            }
+
+            // Create the Action object and add it to the dictionary
+            actions[actionName] = new Action(
+                actionName,
+                effects,
+                releases,
+                conditions
+            );
+        }
+
+        return actions;
     }
 
     private static StateGroup ProcessValidStates(IReadOnlyList<Formula> always)
