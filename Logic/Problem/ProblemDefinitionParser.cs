@@ -1,8 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Logic.Problem.Models;
+using Logic.States.Models;
+using Logic.States;
+using System;
 
 namespace Logic.Problem;
 
+using Action = Models.Action;
 /// <summary>
 /// 	Class that parses and validates problem definitions
 /// </summary>
@@ -11,8 +15,17 @@ public sealed class ProblemDefinitionParser
     /// <summary>
     /// 	Parses and validates a problem definition
     /// </summary>
-    /// <param name="definition">
-    /// 	Problem definition
+    /// <param name="fluents">
+    /// 	A dict of fluents, fluent name for key and Fluent object for value
+    /// </param>
+    /// <param name="actionStrings">
+    /// 	A list of actions represented in string form.
+    /// </param>
+    /// <param name="initials">
+    /// 	A dict of fluents, specifying their intital value. If Fluent is not present in dict it means its unspecified.
+    /// </param>
+    /// <param name="always">
+    /// 	A list of formulas that must be met in every state. Will be processed into validStates
     /// </param>
     /// <param name="problem">
     /// 	Parsed problem definition if parsing was successful, null otherwise
@@ -23,11 +36,128 @@ public sealed class ProblemDefinitionParser
     /// <returns>
     /// 	True if parsing was successful, false otherwise
     /// </returns>
-    public bool TryParse(
-        string definition,
-        [NotNullWhen(true)] out ProblemDefinition? problem,
-        [NotNullWhen(false)] out IReadOnlyList<string>? errors)
+    public ProblemDefinition CreateProblemDefinition(
+        IReadOnlyDictionary<string, Fluent> fluents,
+        IReadOnlyList<ActionStatement> actionStatements,
+        IReadOnlyDictionary<Fluent, bool> initials,
+        IReadOnlyList<Formula> always)
     {
-        throw new NotImplementedException();
+        IReadOnlyDictionary<string, Action> actions = ProcessActionStatements(actionStatements);
+        return CreateProblemDefinition(fluents, actions, initials, always);
     }
+
+    private ProblemDefinition CreateProblemDefinition(
+        IReadOnlyDictionary<string, Fluent> fluents,
+        IReadOnlyDictionary<string, Action> actions,
+        IReadOnlyDictionary<Fluent, bool> initials,
+        IReadOnlyList<Formula> always)
+        
+    {
+        StateGroup validStates = ProcessValidStates(always);
+        StateGroup initialStates = ProcessInitialStates(validStates, initials);
+        return new ProblemDefinition
+        {
+            Fluents = fluents,
+            Actions = actions,
+            InitialStates = initialStates,
+            ValidStates = validStates
+        };
+    }
+
+    private static Dictionary<string, Action> ProcessActionStatements(IReadOnlyList<ActionStatement> actionStatements)
+    {
+        Dictionary<string, Action> actions = [];
+
+        var groupedStatements = actionStatements
+            .GroupBy(statement => statement.ActionName)
+            .ToDictionary(group => group.Key, group => group.ToList());
+
+        foreach (var group in groupedStatements)
+        {
+            string actionName = group.Key;
+            var statements = group.Value;
+
+            // Sort elements into appropriate lists
+            List<ActionEffect> effects = [];
+            List<ActionRelease> releases = [];
+            List<ActionCondition> conditions = [];
+
+            foreach (var statement in statements)
+            {
+                switch (statement.Element)
+                {
+                    case ActionEffect effect:
+                        effects.Add(effect);
+                        break;
+                    case ActionRelease release:
+                        releases.Add(release);
+                        break;
+                    case ActionCondition condition:
+                        conditions.Add(condition);
+                        break;
+                }
+            }
+
+            // Create the Action object and add it to the dictionary
+            actions[actionName] = new Action(
+                actionName,
+                effects,
+                releases,
+                conditions
+            );
+        }
+
+        return actions;
+    }
+
+    private static StateGroup ProcessValidStates(IReadOnlyList<Formula> always)
+    {
+        FormulaReducer formulaReducer = new();
+        Formula finalFormula = new True();
+        foreach (Formula formula in always) {
+            finalFormula = new And(finalFormula, formula);
+        }
+        return formulaReducer.Reduce(finalFormula);
+    }
+
+    private static StateGroup ProcessInitialStates(StateGroup validStates, IReadOnlyDictionary<Fluent, bool> initials)
+    {
+        List<Dictionary<Fluent, bool>> initialStates = [];
+        HashSet<string> stateSignatures = [];
+
+        foreach (IReadOnlyDictionary<Fluent, bool> state in validStates.SpecifiedFluentGroups)
+        {
+            IEnumerable<Dictionary<Fluent, bool>> mergedStates;
+            if (state.Count <= initials.Count)
+                mergedStates = AndMergeStrategy.Merge(state, initials);
+            else
+                mergedStates = AndMergeStrategy.Merge(initials, state);
+
+            foreach (var mergedState in mergedStates)
+            {
+                // Create a signature for this state to check for duplicates
+                string signature = CreateStateSignature(mergedState);
+
+                // Only add if we haven't seen this state before
+                if (!stateSignatures.Contains(signature))
+                {
+                    stateSignatures.Add(signature);
+                    initialStates.Add(mergedState);
+                }
+            }
+        }
+        return new StateGroup(initialStates);
+    }
+
+    // Helper method to create a consistent string representation of a state for duplicate checking
+    private static string CreateStateSignature(IReadOnlyDictionary<Fluent, bool> state)
+    {
+        // Sort fluents by name to ensure consistent ordering
+        var sortedEntries = state
+            .OrderBy(kv => kv.Key.Name)
+            .Select(kv => $"{kv.Key.Name}={kv.Value}");
+
+        return string.Join(",", sortedEntries);
+    }
+
 }

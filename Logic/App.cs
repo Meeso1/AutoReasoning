@@ -2,6 +2,7 @@
 using Logic.Problem.Models;
 using Logic.Queries;
 using Logic.States;
+using Logic.States.Models;
 
 namespace Logic;
 
@@ -13,12 +14,12 @@ public sealed class App
     private readonly ProblemDefinitionParser _problemParser = new();
     private ProblemSpecificStuff? _problemDependent;
 
-    public SetModelResult SetModel(string definition)
+    public SetModelResult SetModel(IReadOnlyDictionary<string, Fluent> fluents,
+        IReadOnlyList<ActionStatement> actionStatements,
+        IReadOnlyDictionary<Fluent, bool> initials,
+        IReadOnlyList<Formula> always)
     {
-        if (!_problemParser.TryParse(definition, out var problem, out var errors))
-        {
-            return new SetModelResult(false, errors);
-        }
+        ProblemDefinition problem = _problemParser.CreateProblemDefinition(fluents, actionStatements, initials, always);
 
         _problemDependent = new(
             problem,
