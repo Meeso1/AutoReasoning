@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             prevPage = new Button();
             fluentActionListContainer = new SplitContainer();
             fluentListBox = new ListBox();
@@ -47,12 +48,15 @@
             queryResultLabel = new Label();
             writeQueryResultLabel = new Label();
             createFormulaButton = new Button();
+            formulaTextBox = new TextBox();
+            formulaErrorProvider = new ErrorProvider(components);
             ((System.ComponentModel.ISupportInitialize)fluentActionListContainer).BeginInit();
             fluentActionListContainer.Panel1.SuspendLayout();
             fluentActionListContainer.Panel2.SuspendLayout();
             fluentActionListContainer.SuspendLayout();
             statementsPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)budgetNumericUpDown).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)formulaErrorProvider).BeginInit();
             SuspendLayout();
             // 
             // prevPage
@@ -192,7 +196,7 @@
             // budgetLabel
             // 
             budgetLabel.AutoSize = true;
-            budgetLabel.Location = new Point(548, 100);
+            budgetLabel.Location = new Point(545, 100);
             budgetLabel.Name = "budgetLabel";
             budgetLabel.Size = new Size(89, 15);
             budgetLabel.TabIndex = 15;
@@ -227,7 +231,7 @@
             // 
             // createFormulaButton
             // 
-            createFormulaButton.Location = new Point(552, 141);
+            createFormulaButton.Location = new Point(548, 244);
             createFormulaButton.Name = "createFormulaButton";
             createFormulaButton.Size = new Size(213, 23);
             createFormulaButton.TabIndex = 19;
@@ -235,11 +239,24 @@
             createFormulaButton.UseVisualStyleBackColor = true;
             createFormulaButton.Click += createFormulaButton_Click;
             // 
+            // formulaTextBox
+            // 
+            formulaTextBox.Location = new Point(548, 127);
+            formulaTextBox.Multiline = true;
+            formulaTextBox.Name = "formulaTextBox";
+            formulaTextBox.Size = new Size(211, 111);
+            formulaTextBox.TabIndex = 20;
+            // 
+            // formulaErrorProvider
+            // 
+            formulaErrorProvider.ContainerControl = this;
+            // 
             // Form2
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 461);
+            Controls.Add(formulaTextBox);
             Controls.Add(createFormulaButton);
             Controls.Add(writeQueryResultLabel);
             Controls.Add(queryResultLabel);
@@ -268,6 +285,7 @@
             fluentActionListContainer.ResumeLayout(false);
             statementsPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)budgetNumericUpDown).EndInit();
+            ((System.ComponentModel.ISupportInitialize)formulaErrorProvider).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -293,5 +311,7 @@
         private Label queryResultLabel;
         private Label writeQueryResultLabel;
         private Button createFormulaButton;
+        private TextBox formulaTextBox;
+        private ErrorProvider formulaErrorProvider;
     }
 }

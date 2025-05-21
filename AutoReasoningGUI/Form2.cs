@@ -1,4 +1,6 @@
-﻿using Logic.Queries.Models;
+﻿using Logic;
+using Logic.Queries.Models;
+using Logic.States.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using static System.Windows.Forms.DataFormats;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
@@ -16,6 +19,7 @@ namespace AutoReasoningGUI
     public partial class Form2 : Form
     {
         private Form1 form1;
+        private FormulaForm formulaForm;
         public Form2(Form1 form1)
         {
             InitializeComponent();
@@ -90,13 +94,31 @@ namespace AutoReasoningGUI
             budgetNumericUpDown.Enabled = isBudget;
             budgetLabel.Enabled = isBudget;
 
-            createFormulaButton.Enabled = selectedType == typeof(AccessibleQuery);
+            var isAccessible = selectedType == typeof(AccessibleQuery);
+            createFormulaButton.Enabled = isAccessible;
+            formulaTextBox.Enabled = isAccessible;
         }
 
         private void createFormulaButton_Click(object sender, EventArgs e)
         {
+            //formulaForm = new FormulaForm(this);
+            //formulaForm.Show();
+            this.formulaErrorProvider.SetError(formulaTextBox, "");
+            Formula? parsedFormula;
+            IReadOnlyList<string>? errors = null;
+            string expression = formulaTextBox.Text.Trim();
+            if (!form1.App.FormulaParser.TryParse(
+                            expression,
+                            form1.Fluents.ToDictionary(f => f.Name),
+                            out parsedFormula,
+                            out errors))
+            {
+                string combinedError = string.Join(Environment.NewLine, errors);
+                this.formulaErrorProvider.SetError(formulaTextBox, combinedError);
+                return;
+            }
 
-        }
+            }
 
         private void executeQueryButton_Click(object sender, EventArgs e)
         {
