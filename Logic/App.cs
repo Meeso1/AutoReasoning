@@ -12,6 +12,7 @@ namespace Logic;
 public sealed class App
 {
     public FormulaParser FormulaParser { get; } = new FormulaParser(new FormulaTokenizer());
+    public FormulaReducer FormulaReducer { get; } = new FormulaReducer();
     private readonly ProblemDefinitionParser _problemParser = new();
     private ProblemSpecificStuff? _problemDependent;
 
@@ -26,7 +27,7 @@ public sealed class App
             problem,
             new QueryParser(
                 problem,
-                new FormulaReducer(),
+                FormulaReducer,
                 FormulaParser),
             new QueryEvaluator(problem));
         return new SetModelResult(true, []);
