@@ -19,7 +19,8 @@ namespace AutoReasoningGUI
     public partial class Form2 : Form
     {
         private Form1 form1;
-        private FormulaForm formulaForm;
+        //private FormulaForm formulaForm;
+        private StateGroup States;
         public Form2(Form1 form1)
         {
             InitializeComponent();
@@ -127,6 +128,8 @@ namespace AutoReasoningGUI
             formulaValidationLabel.Text = "VALID";
             formulaValidationLabel.ForeColor = Color.Green;
             formulaValidationLabel.Visible = true;
+
+            States = form1.App.FormulaReducer.Reduce(parsedFormula);
         }
 
         private void executeQueryButton_Click(object sender, EventArgs e)

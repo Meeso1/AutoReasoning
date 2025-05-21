@@ -206,6 +206,7 @@
             // 
             // executeQueryButton
             // 
+            executeQueryButton.Enabled = false;
             executeQueryButton.Location = new Point(533, 397);
             executeQueryButton.Name = "executeQueryButton";
             executeQueryButton.Size = new Size(239, 23);
@@ -217,6 +218,7 @@
             // queryResultLabel
             // 
             queryResultLabel.AutoSize = true;
+            queryResultLabel.Enabled = false;
             queryResultLabel.Location = new Point(548, 430);
             queryResultLabel.Name = "queryResultLabel";
             queryResultLabel.Size = new Size(42, 15);
