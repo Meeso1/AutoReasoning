@@ -39,6 +39,10 @@ namespace AutoReasoningGUI
             queryTypeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
 
             // query class selection
+
+            // assign handler to event
+            queryClassComboBox.SelectedIndexChanged += QueryClassComboBox_SelectedIndexChanged;
+
             queryClassComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             var dict = new Dictionary<string, Type>
             {
@@ -50,6 +54,11 @@ namespace AutoReasoningGUI
             queryClassComboBox.DisplayMember = "Key";
             queryClassComboBox.ValueMember = "Value";
             queryClassComboBox.DataSource = bs;
+
+            queryClassComboBox.SelectedIndex = 0;
+
+            // invoke at start to initialize
+            QueryClassComboBox_SelectedIndexChanged(queryClassComboBox, EventArgs.Empty);
         }
 
         private void prevPage_Click(object sender, EventArgs e)
@@ -70,6 +79,15 @@ namespace AutoReasoningGUI
             fluentListBox.SelectedIndex = -1;
             actionListBox.SelectedIndex = -1;
             statementListBox.SelectedIndex = -1;
+        }
+
+        private void QueryClassComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var combo = (System.Windows.Forms.ComboBox)sender;
+            var selectedType = (Type)combo.SelectedValue;
+            var isBudget = selectedType == typeof(AffordableQuery);
+            budgetNumericUpDown.Enabled = isBudget;
+            budgetLabel.Enabled = isBudget;
         }
     }
 }

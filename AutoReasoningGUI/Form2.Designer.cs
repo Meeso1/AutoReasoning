@@ -41,11 +41,14 @@
             queryTypeLabel = new Label();
             queryClassComboBox = new ComboBox();
             queryClassLabel = new Label();
+            budgetNumericUpDown = new NumericUpDown();
+            budgetLabel = new Label();
             ((System.ComponentModel.ISupportInitialize)fluentActionListContainer).BeginInit();
             fluentActionListContainer.Panel1.SuspendLayout();
             fluentActionListContainer.Panel2.SuspendLayout();
             fluentActionListContainer.SuspendLayout();
             statementsPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)budgetNumericUpDown).BeginInit();
             SuspendLayout();
             // 
             // prevPage
@@ -174,11 +177,30 @@
             queryClassLabel.TabIndex = 13;
             queryClassLabel.Text = "Select Query:";
             // 
+            // budgetNumericUpDown
+            // 
+            budgetNumericUpDown.Location = new Point(645, 98);
+            budgetNumericUpDown.Name = "budgetNumericUpDown";
+            budgetNumericUpDown.Size = new Size(120, 23);
+            budgetNumericUpDown.TabIndex = 14;
+            budgetNumericUpDown.Value = new decimal(new int[] { 10, 0, 0, 0 });
+            // 
+            // budgetLabel
+            // 
+            budgetLabel.AutoSize = true;
+            budgetLabel.Location = new Point(548, 100);
+            budgetLabel.Name = "budgetLabel";
+            budgetLabel.Size = new Size(89, 15);
+            budgetLabel.TabIndex = 15;
+            budgetLabel.Text = "Specify Budget:";
+            // 
             // Form2
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 461);
+            Controls.Add(budgetLabel);
+            Controls.Add(budgetNumericUpDown);
             Controls.Add(queryClassLabel);
             Controls.Add(queryClassComboBox);
             Controls.Add(queryTypeLabel);
@@ -200,6 +222,7 @@
             ((System.ComponentModel.ISupportInitialize)fluentActionListContainer).EndInit();
             fluentActionListContainer.ResumeLayout(false);
             statementsPanel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)budgetNumericUpDown).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -219,5 +242,7 @@
         private Label queryTypeLabel;
         private ComboBox queryClassComboBox;
         private Label queryClassLabel;
+        private NumericUpDown budgetNumericUpDown;
+        private Label budgetLabel;
     }
 }
