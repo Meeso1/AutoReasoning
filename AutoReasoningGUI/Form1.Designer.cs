@@ -677,7 +677,7 @@
             removeStatementsButton.Name = "removeStatementsButton";
             removeStatementsButton.Size = new Size(426, 31);
             removeStatementsButton.TabIndex = 7;
-            removeStatementsButton.Text = "Remove Selected Statements";
+            removeStatementsButton.Text = "Remove All Statements";
             removeStatementsButton.UseVisualStyleBackColor = true;
             removeStatementsButton.Click += removeStatementsButton_Click;
             // 
