@@ -66,7 +66,7 @@ namespace AutoReasoningGUI
             this.Visible = false;
             form1.Location = this.Location;
             form1.Size = this.Size;
-            form1.Visible = true;     
+            form1.Visible = true;
         }
 
         private void Form2_FormClosing(object sender, FormClosingEventArgs e)
@@ -85,9 +85,22 @@ namespace AutoReasoningGUI
         {
             var combo = (System.Windows.Forms.ComboBox)sender;
             var selectedType = (Type)combo.SelectedValue;
+
             var isBudget = selectedType == typeof(AffordableQuery);
             budgetNumericUpDown.Enabled = isBudget;
             budgetLabel.Enabled = isBudget;
+
+            createFormulaButton.Enabled = selectedType == typeof(AccessibleQuery);
+        }
+
+        private void createFormulaButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void executeQueryButton_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

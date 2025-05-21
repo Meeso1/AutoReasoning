@@ -43,6 +43,10 @@
             queryClassLabel = new Label();
             budgetNumericUpDown = new NumericUpDown();
             budgetLabel = new Label();
+            executeQueryButton = new Button();
+            queryResultLabel = new Label();
+            writeQueryResultLabel = new Label();
+            createFormulaButton = new Button();
             ((System.ComponentModel.ISupportInitialize)fluentActionListContainer).BeginInit();
             fluentActionListContainer.Panel1.SuspendLayout();
             fluentActionListContainer.Panel2.SuspendLayout();
@@ -194,11 +198,52 @@
             budgetLabel.TabIndex = 15;
             budgetLabel.Text = "Specify Budget:";
             // 
+            // executeQueryButton
+            // 
+            executeQueryButton.Location = new Point(533, 397);
+            executeQueryButton.Name = "executeQueryButton";
+            executeQueryButton.Size = new Size(239, 23);
+            executeQueryButton.TabIndex = 16;
+            executeQueryButton.Text = "Execute Query";
+            executeQueryButton.UseVisualStyleBackColor = true;
+            executeQueryButton.Click += executeQueryButton_Click;
+            // 
+            // queryResultLabel
+            // 
+            queryResultLabel.AutoSize = true;
+            queryResultLabel.Location = new Point(548, 430);
+            queryResultLabel.Name = "queryResultLabel";
+            queryResultLabel.Size = new Size(42, 15);
+            queryResultLabel.TabIndex = 17;
+            queryResultLabel.Text = "Result:";
+            // 
+            // writeQueryResultLabel
+            // 
+            writeQueryResultLabel.AutoSize = true;
+            writeQueryResultLabel.Location = new Point(634, 427);
+            writeQueryResultLabel.Name = "writeQueryResultLabel";
+            writeQueryResultLabel.Size = new Size(0, 15);
+            writeQueryResultLabel.TabIndex = 18;
+            // 
+            // createFormulaButton
+            // 
+            createFormulaButton.Location = new Point(552, 141);
+            createFormulaButton.Name = "createFormulaButton";
+            createFormulaButton.Size = new Size(213, 23);
+            createFormulaButton.TabIndex = 19;
+            createFormulaButton.Text = "Create Formula";
+            createFormulaButton.UseVisualStyleBackColor = true;
+            createFormulaButton.Click += createFormulaButton_Click;
+            // 
             // Form2
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 461);
+            Controls.Add(createFormulaButton);
+            Controls.Add(writeQueryResultLabel);
+            Controls.Add(queryResultLabel);
+            Controls.Add(executeQueryButton);
             Controls.Add(budgetLabel);
             Controls.Add(budgetNumericUpDown);
             Controls.Add(queryClassLabel);
@@ -244,5 +289,9 @@
         private Label queryClassLabel;
         private NumericUpDown budgetNumericUpDown;
         private Label budgetLabel;
+        private Button executeQueryButton;
+        private Label queryResultLabel;
+        private Label writeQueryResultLabel;
+        private Button createFormulaButton;
     }
 }
