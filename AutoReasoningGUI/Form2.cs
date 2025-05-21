@@ -97,6 +97,8 @@ namespace AutoReasoningGUI
             var isAccessible = selectedType == typeof(AccessibleQuery);
             createFormulaButton.Enabled = isAccessible;
             formulaTextBox.Enabled = isAccessible;
+            formulaLabel.Enabled = isAccessible;
+            formulaValidationLabel.Visible = false;
         }
 
         private void createFormulaButton_Click(object sender, EventArgs e)
@@ -107,6 +109,7 @@ namespace AutoReasoningGUI
             Formula? parsedFormula;
             IReadOnlyList<string>? errors = null;
             string expression = formulaTextBox.Text.Trim();
+
             if (!form1.App.FormulaParser.TryParse(
                             expression,
                             form1.Fluents.ToDictionary(f => f.Name),
@@ -115,10 +118,16 @@ namespace AutoReasoningGUI
             {
                 string combinedError = string.Join(Environment.NewLine, errors);
                 this.formulaErrorProvider.SetError(formulaTextBox, combinedError);
+                formulaValidationLabel.Text = "INVALID";
+                formulaValidationLabel.ForeColor = Color.Red;
+                formulaValidationLabel.Visible = true;
                 return;
             }
 
-            }
+            formulaValidationLabel.Text = "VALID";
+            formulaValidationLabel.ForeColor = Color.Green;
+            formulaValidationLabel.Visible = true;
+        }
 
         private void executeQueryButton_Click(object sender, EventArgs e)
         {

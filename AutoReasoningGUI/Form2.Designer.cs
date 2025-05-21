@@ -50,6 +50,8 @@
             createFormulaButton = new Button();
             formulaTextBox = new TextBox();
             formulaErrorProvider = new ErrorProvider(components);
+            formulaLabel = new Label();
+            formulaValidationLabel = new Label();
             ((System.ComponentModel.ISupportInitialize)fluentActionListContainer).BeginInit();
             fluentActionListContainer.Panel1.SuspendLayout();
             fluentActionListContainer.Panel2.SuspendLayout();
@@ -231,17 +233,17 @@
             // 
             // createFormulaButton
             // 
-            createFormulaButton.Location = new Point(548, 244);
+            createFormulaButton.Location = new Point(548, 270);
             createFormulaButton.Name = "createFormulaButton";
             createFormulaButton.Size = new Size(213, 23);
             createFormulaButton.TabIndex = 19;
-            createFormulaButton.Text = "Create Formula";
+            createFormulaButton.Text = "Validate Formula";
             createFormulaButton.UseVisualStyleBackColor = true;
             createFormulaButton.Click += createFormulaButton_Click;
             // 
             // formulaTextBox
             // 
-            formulaTextBox.Location = new Point(548, 127);
+            formulaTextBox.Location = new Point(548, 156);
             formulaTextBox.Multiline = true;
             formulaTextBox.Name = "formulaTextBox";
             formulaTextBox.Size = new Size(211, 111);
@@ -251,11 +253,32 @@
             // 
             formulaErrorProvider.ContainerControl = this;
             // 
+            // formulaLabel
+            // 
+            formulaLabel.AutoSize = true;
+            formulaLabel.Location = new Point(545, 138);
+            formulaLabel.Name = "formulaLabel";
+            formulaLabel.Size = new Size(117, 15);
+            formulaLabel.TabIndex = 21;
+            formulaLabel.Text = "Type Formula below:";
+            // 
+            // formulaValidationLabel
+            // 
+            formulaValidationLabel.AutoSize = true;
+            formulaValidationLabel.Location = new Point(634, 296);
+            formulaValidationLabel.Name = "formulaValidationLabel";
+            formulaValidationLabel.Size = new Size(38, 15);
+            formulaValidationLabel.TabIndex = 22;
+            formulaValidationLabel.Text = "VALID";
+            formulaValidationLabel.Visible = false;
+            // 
             // Form2
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 461);
+            Controls.Add(formulaValidationLabel);
+            Controls.Add(formulaLabel);
             Controls.Add(formulaTextBox);
             Controls.Add(createFormulaButton);
             Controls.Add(writeQueryResultLabel);
@@ -313,5 +336,7 @@
         private Button createFormulaButton;
         private TextBox formulaTextBox;
         private ErrorProvider formulaErrorProvider;
+        private Label formulaLabel;
+        private Label formulaValidationLabel;
     }
 }
