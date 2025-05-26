@@ -1,4 +1,5 @@
 ﻿using Logic;
+using Logic.Problem.Models;
 using Logic.Queries.Models;
 using Logic.States.Models;
 using System;
@@ -20,7 +21,9 @@ namespace AutoReasoningGUI
     {
         private Form1 form1;
         //private FormulaForm formulaForm;
-        private StateGroup States;
+        private StateGroup? _states;
+        private int? _budget;
+        private Query? _query;
         public Form2(Form1 form1)
         {
             InitializeComponent();
@@ -94,6 +97,8 @@ namespace AutoReasoningGUI
             var isBudget = selectedType == typeof(AffordableQuery);
             budgetNumericUpDown.Enabled = isBudget;
             budgetLabel.Enabled = isBudget;
+            if (isBudget)
+                _budget = (int)budgetNumericUpDown.Value;
 
             var isAccessible = selectedType == typeof(AccessibleQuery);
             createFormulaButton.Enabled = isAccessible;
@@ -129,12 +134,36 @@ namespace AutoReasoningGUI
             formulaValidationLabel.ForeColor = Color.Green;
             formulaValidationLabel.Visible = true;
 
-            States = form1.App.FormulaReducer.Reduce(parsedFormula);
+            _states = form1.App.FormulaReducer.Reduce(parsedFormula);
         }
 
         private void executeQueryButton_Click(object sender, EventArgs e)
         {
+            _query = CreateQuery();
+            var result = form1.App.QueryEvaluator.Evaluate(_query);
+        }
 
+        private Query CreateQuery()
+        {
+            var selectedType = (Type)queryClassComboBox.SelectedValue;
+            var queryType = (QueryType)queryTypeComboBox.SelectedItem;
+
+            if (selectedType == typeof(ExecutableQuery))
+            {
+                return new ExecutableQuery(queryType, form1.ActionProgram);
+            }
+            else if (selectedType == typeof(AccessibleQuery))
+            {
+                return new AccessibleQuery(queryType, form1.ActionProgram, _states);
+            }
+            else if (selectedType == typeof(AffordableQuery))
+            {
+                return new AffordableQuery(queryType, form1.ActionProgram, (int)_budget);
+            }
+            else
+            {
+                throw new InvalidOperationException("Query class not implemented.");
+            }
         }
     }
 }

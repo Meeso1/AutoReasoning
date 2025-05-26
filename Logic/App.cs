@@ -13,7 +13,8 @@ public sealed class App
 {
     public FormulaParser FormulaParser { get; } = new FormulaParser(new FormulaTokenizer());
     public FormulaReducer FormulaReducer { get; } = new FormulaReducer();
-    private readonly ProblemDefinitionParser _problemParser = new();
+    public ProblemDefinitionParser ProblemParser { get; } = new();
+    public QueryEvaluator? QueryEvaluator { get; private set; }
     private ProblemSpecificStuff? _problemDependent;
 
     public SetModelResult SetModel(IReadOnlyDictionary<string, Fluent> fluents,
@@ -21,7 +22,8 @@ public sealed class App
         IReadOnlyDictionary<Fluent, bool> initials,
         IReadOnlyList<Formula> always)
     {
-        ProblemDefinition problem = _problemParser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        ProblemDefinition problem = ProblemParser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        QueryEvaluator = new QueryEvaluator(problem);
 
         _problemDependent = new(
             problem,
@@ -29,7 +31,7 @@ public sealed class App
                 problem,
                 FormulaReducer,
                 FormulaParser),
-            new QueryEvaluator(problem));
+                QueryEvaluator);
         return new SetModelResult(true, []);
     }
 

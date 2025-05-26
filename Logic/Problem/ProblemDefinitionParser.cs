@@ -64,7 +64,7 @@ public sealed class ProblemDefinitionParser
         };
     }
 
-    private static Dictionary<string, Action> ProcessActionStatements(IReadOnlyList<ActionStatement> actionStatements)
+    public Dictionary<string, Action> ProcessActionStatements(IReadOnlyList<ActionStatement> actionStatements)
     {
         Dictionary<string, Action> actions = [];
 

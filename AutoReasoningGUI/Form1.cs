@@ -19,6 +19,8 @@ namespace AutoReasoningGUI
         private Dictionary<Fluent, bool> _initialFluents = new Dictionary<Fluent, bool>();
         private List<ActionStatement> _actionStatements = new List<ActionStatement>();
         private Form2 form2;
+        public ProblemDefinition? ProblemDefinition;
+        public ActionProgram? ActionProgram;
         public Form1()
         {
             InitializeComponent();
@@ -35,6 +37,13 @@ namespace AutoReasoningGUI
             form2.Size = this.Size;
             form2.PrepareToShow();
             form2.Visible = true;
+
+            Dictionary<string, Fluent> fluentDictionary = Fluents.ToDictionary(f => f.Name);
+            ProblemDefinition = App.ProblemParser.CreateProblemDefinition(fluentDictionary, _actionStatements,
+                _initialFluents, _alwaysStatements);
+
+            var actions = App.ProblemParser.ProcessActionStatements(_actionStatements).Values.ToList();
+            ActionProgram = new ActionProgram(actions);
         }
 
         private void addFluentButton_Click(object sender, EventArgs e)
