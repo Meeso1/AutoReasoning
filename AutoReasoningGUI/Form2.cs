@@ -1,4 +1,5 @@
 ﻿using Logic;
+using Logic.Problem.Models;
 using Logic.Queries.Models;
 using Logic.States.Models;
 using System;
@@ -20,7 +21,9 @@ namespace AutoReasoningGUI
     {
         private Form1 form1;
         //private FormulaForm formulaForm;
-        private StateGroup States;
+        private StateGroup? _states;
+        private int? _budget;
+        private Query? _query;
         public Form2(Form1 form1)
         {
             InitializeComponent();
@@ -47,6 +50,7 @@ namespace AutoReasoningGUI
 
             // assign handler to event
             queryClassComboBox.SelectedIndexChanged += QueryClassComboBox_SelectedIndexChanged;
+            queryTypeComboBox.SelectedIndexChanged += QueryTypeComboBox_SelectedIndexChanged;
 
             queryClassComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             var dict = new Dictionary<string, Type>
@@ -64,10 +68,12 @@ namespace AutoReasoningGUI
 
             // invoke at start to initialize
             QueryClassComboBox_SelectedIndexChanged(queryClassComboBox, EventArgs.Empty);
+            QueryTypeComboBox_SelectedIndexChanged(queryTypeComboBox, EventArgs.Empty);
         }
 
         private void prevPage_Click(object sender, EventArgs e)
         {
+            queryResultValueLabel.Text = "";
             this.Visible = false;
             form1.Location = this.Location;
             form1.Size = this.Size;
@@ -88,12 +94,15 @@ namespace AutoReasoningGUI
 
         private void QueryClassComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
+            queryResultValueLabel.Text = "";
             var combo = (System.Windows.Forms.ComboBox)sender;
             var selectedType = (Type)combo.SelectedValue;
 
             var isBudget = selectedType == typeof(AffordableQuery);
             budgetNumericUpDown.Enabled = isBudget;
             budgetLabel.Enabled = isBudget;
+            if (isBudget)
+                _budget = (int)budgetNumericUpDown.Value;
 
             var isAccessible = selectedType == typeof(AccessibleQuery);
             createFormulaButton.Enabled = isAccessible;
@@ -102,8 +111,14 @@ namespace AutoReasoningGUI
             formulaValidationLabel.Visible = false;
         }
 
+        private void QueryTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            queryResultValueLabel.Text = "";
+        }
+
         private void createFormulaButton_Click(object sender, EventArgs e)
         {
+            queryResultValueLabel.Text = "";
             //formulaForm = new FormulaForm(this);
             //formulaForm.Show();
             this.formulaErrorProvider.SetError(formulaTextBox, "");
@@ -129,12 +144,74 @@ namespace AutoReasoningGUI
             formulaValidationLabel.ForeColor = Color.Green;
             formulaValidationLabel.Visible = true;
 
-            States = form1.App.FormulaReducer.Reduce(parsedFormula);
+            _states = form1.App.FormulaReducer.Reduce(parsedFormula);
         }
 
         private void executeQueryButton_Click(object sender, EventArgs e)
         {
+            _query = CreateQuery();
+            if (_query == null)
+            {
+                queryResultValueLabel.Text = "";
+                return;
+            }
+                
+            bool result;
 
+            // not implemented yet - try usage to avoid runtime exceptions
+            try
+            {
+                result = form1.App.QueryEvaluator.Evaluate(_query);
+            }
+            catch (NotImplementedException)
+            {
+                result = false;
+            }
+
+            queryResultValueLabel.Text = result.ToString().ToUpper();
+        }
+
+        private Query CreateQuery()
+        {
+            var selectedType = (Type)queryClassComboBox.SelectedValue;
+            var queryType = (QueryType)queryTypeComboBox.SelectedItem;
+
+            if (form1.App.ActionProgram == null)
+            {
+                MessageBox.Show($"Cannot create query. Action program is empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                queryResultValueLabel.Text = "";
+                return null;
+            }
+
+            if (selectedType == typeof(ExecutableQuery))
+            {
+                return new ExecutableQuery(queryType, form1.App.ActionProgram);
+            }
+            else if (selectedType == typeof(AccessibleQuery))
+            {
+                if (_states == null)
+                {
+                    MessageBox.Show($"Cannot create Accessible query. Formula field above has invalid input.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    queryResultValueLabel.Text = "";
+                    return null;
+                }
+                return new AccessibleQuery(queryType, form1.App.ActionProgram, _states);
+            }
+            else if (selectedType == typeof(AffordableQuery))
+            {
+                if (_budget == null)
+                {
+                    MessageBox.Show($"Cannot create Affordable query. Budget not specified.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    queryResultValueLabel.Text = "";
+                    return null;
+                }
+                return new AffordableQuery(queryType, form1.App.ActionProgram, (int)_budget);
+            }
+            else
+            {
+                queryResultValueLabel.Text = "";
+                throw new InvalidOperationException("Query type not implemented.");
+            }
         }
     }
 }

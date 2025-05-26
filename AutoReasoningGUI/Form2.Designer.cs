@@ -52,6 +52,7 @@
             formulaErrorProvider = new ErrorProvider(components);
             formulaLabel = new Label();
             formulaValidationLabel = new Label();
+            queryResultValueLabel = new Label();
             ((System.ComponentModel.ISupportInitialize)fluentActionListContainer).BeginInit();
             fluentActionListContainer.Panel1.SuspendLayout();
             fluentActionListContainer.Panel2.SuspendLayout();
@@ -206,7 +207,6 @@
             // 
             // executeQueryButton
             // 
-            executeQueryButton.Enabled = false;
             executeQueryButton.Location = new Point(533, 397);
             executeQueryButton.Name = "executeQueryButton";
             executeQueryButton.Size = new Size(239, 23);
@@ -218,8 +218,7 @@
             // queryResultLabel
             // 
             queryResultLabel.AutoSize = true;
-            queryResultLabel.Enabled = false;
-            queryResultLabel.Location = new Point(548, 430);
+            queryResultLabel.Location = new Point(561, 430);
             queryResultLabel.Name = "queryResultLabel";
             queryResultLabel.Size = new Size(42, 15);
             queryResultLabel.TabIndex = 17;
@@ -274,11 +273,21 @@
             formulaValidationLabel.Text = "VALID";
             formulaValidationLabel.Visible = false;
             // 
+            // queryResultValueLabel
+            // 
+            queryResultValueLabel.AutoSize = true;
+            queryResultValueLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 238);
+            queryResultValueLabel.Location = new Point(624, 430);
+            queryResultValueLabel.Name = "queryResultValueLabel";
+            queryResultValueLabel.Size = new Size(0, 15);
+            queryResultValueLabel.TabIndex = 23;
+            // 
             // Form2
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 461);
+            Controls.Add(queryResultValueLabel);
             Controls.Add(formulaValidationLabel);
             Controls.Add(formulaLabel);
             Controls.Add(formulaTextBox);
@@ -340,5 +349,6 @@
         private ErrorProvider formulaErrorProvider;
         private Label formulaLabel;
         private Label formulaValidationLabel;
+        private Label queryResultValueLabel;
     }
 }

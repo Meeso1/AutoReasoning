@@ -35,6 +35,8 @@ namespace AutoReasoningGUI
             form2.Size = this.Size;
             form2.PrepareToShow();
             form2.Visible = true;
+
+            App.SetModel(Fluents.ToDictionary(f => f.Name), _actionStatements, _initialFluents, _alwaysStatements);
         }
 
         private void addFluentButton_Click(object sender, EventArgs e)
