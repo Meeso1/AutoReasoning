@@ -158,19 +158,28 @@ namespace AutoReasoningGUI
                 return;
             }
 
-            bool result;
-
+            bool? result;
+            EvaluateQueryResult evalResult;
             // not implemented yet - try usage to avoid runtime exceptions
             try
             {
-                result = form1.App.ProblemDependent.Evaluator.Evaluate(_query);
+                evalResult = form1.App.EvaluateQuery(_query);
+                if (evalResult.IsValid)
+                {
+                    result = evalResult.Success;
+                }
+                else
+                {
+                    MessageBox.Show($"{evalResult.Errors}", "Error creating model",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
             catch (NotImplementedException)
             {
-                result = false;
+                evalResult = new(null, false, ["Not implemented."]);
             }
 
-            queryResultValueLabel.Text = result.ToString().ToUpper();
+            queryResultValueLabel.Text = evalResult.Success == null ? "NOT IMPLEMENTED" : evalResult.Success.ToString().ToUpper();
         }
 
         private Query CreateQuery()
