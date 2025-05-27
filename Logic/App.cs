@@ -3,6 +3,7 @@ using Logic.Problem.Models;
 using Logic.Queries;
 using Logic.States;
 using Logic.States.Models;
+using Logic.Queries.Models;
 
 namespace Logic;
 
@@ -25,27 +26,16 @@ public sealed class App
         ProblemDefinition problem = ProblemParser.CreateProblemDefinition(fluents, actionStatements, initials, always);
         QueryEvaluator = new QueryEvaluator(problem);
 
-        ProblemDependent = new(
-            problem,
-            new QueryParser(
-                problem,
-                FormulaReducer,
-                FormulaParser),
-                QueryEvaluator);
+        ProblemDependent = new(problem, QueryEvaluator);
         return new SetModelResult(true, []);
     }
 
-    public EvaluateQueryResult EvaluateQuery(string queryString)
+    public EvaluateQueryResult EvaluateQuery(Query query)
     {
         if (ProblemDependent is null)
         {
             return new(null, false,
                 ["Model needs to be set before queries can be evaluated"]);
-        }
-
-        if (!ProblemDependent.QueryParser.TryParse(queryString, out var query, out var errors))
-        {
-            return new(null, false, errors);
         }
 
         var result = ProblemDependent.Evaluator.Evaluate(query);
@@ -54,7 +44,6 @@ public sealed class App
 
     public sealed record ProblemSpecificStuff(
         ProblemDefinition Problem,
-        QueryParser QueryParser,
         QueryEvaluator Evaluator);
 }
 
