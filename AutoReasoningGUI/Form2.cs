@@ -24,6 +24,7 @@ namespace AutoReasoningGUI
         private StateGroup? _states;
         private int? _budget;
         private Query? _query;
+        private ActionProgram? _actionProgram;
         public Form2(Form1 form1)
         {
             InitializeComponent();
@@ -35,8 +36,8 @@ namespace AutoReasoningGUI
             fluentListBox.SelectedIndex = -1;
 
             // show actions list
-            actionListBox.DataSource = form1.ActionNames;
-            actionListBox.SelectedIndex = -1;
+            actionCheckedListBox.DataSource = form1.ActionNames;
+            actionCheckedListBox.SelectedIndex = -1;
 
             // show statements list
             statementListBox.DataSource = form1.Statements;
@@ -88,7 +89,7 @@ namespace AutoReasoningGUI
         public void PrepareToShow()
         {
             fluentListBox.SelectedIndex = -1;
-            actionListBox.SelectedIndex = -1;
+            actionCheckedListBox.SelectedIndex = -1;
             statementListBox.SelectedIndex = -1;
         }
 
@@ -149,26 +150,36 @@ namespace AutoReasoningGUI
 
         private void executeQueryButton_Click(object sender, EventArgs e)
         {
+            _actionProgram = CreateActionProgram();
             _query = CreateQuery();
             if (_query == null)
             {
                 queryResultValueLabel.Text = "";
                 return;
             }
-                
-            bool result;
 
+            bool? result;
+            EvaluateQueryResult evalResult;
             // not implemented yet - try usage to avoid runtime exceptions
             try
             {
-                result = form1.App.QueryEvaluator.Evaluate(_query);
+                evalResult = form1.App.EvaluateQuery(_query);
+                if (evalResult.IsValid)
+                {
+                    result = evalResult.Success;
+                }
+                else
+                {
+                    MessageBox.Show($"{evalResult.Errors}", "Error creating model",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
             catch (NotImplementedException)
             {
-                result = false;
+                evalResult = new(null, false, ["Not implemented."]);
             }
 
-            queryResultValueLabel.Text = result.ToString().ToUpper();
+            queryResultValueLabel.Text = evalResult.Success == null ? "NOT IMPLEMENTED" : evalResult.Success.ToString().ToUpper();
         }
 
         private Query CreateQuery()
@@ -176,42 +187,94 @@ namespace AutoReasoningGUI
             var selectedType = (Type)queryClassComboBox.SelectedValue;
             var queryType = (QueryType)queryTypeComboBox.SelectedItem;
 
-            if (form1.App.ActionProgram == null)
+            if (_actionProgram == null)
             {
-                MessageBox.Show($"Cannot create query. Action program is empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Cannot create action program. Some actions do not have at least 1 statement specified.",
+                    "Error creating action program", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 queryResultValueLabel.Text = "";
                 return null;
             }
 
             if (selectedType == typeof(ExecutableQuery))
             {
-                return new ExecutableQuery(queryType, form1.App.ActionProgram);
+                return new ExecutableQuery(queryType, _actionProgram);
             }
             else if (selectedType == typeof(AccessibleQuery))
             {
                 if (_states == null)
                 {
-                    MessageBox.Show($"Cannot create Accessible query. Formula field above has invalid input.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Cannot create Accessible query. Formula field above has invalid input.",
+                        "Error creating query", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     queryResultValueLabel.Text = "";
                     return null;
                 }
-                return new AccessibleQuery(queryType, form1.App.ActionProgram, _states);
+                return new AccessibleQuery(queryType, _actionProgram, _states);
             }
             else if (selectedType == typeof(AffordableQuery))
             {
                 if (_budget == null)
                 {
-                    MessageBox.Show($"Cannot create Affordable query. Budget not specified.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Cannot create Affordable query. Budget not specified.",
+                        "Error creating query", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     queryResultValueLabel.Text = "";
                     return null;
                 }
-                return new AffordableQuery(queryType, form1.App.ActionProgram, (int)_budget);
+                return new AffordableQuery(queryType, _actionProgram, (int)_budget);
             }
             else
             {
                 queryResultValueLabel.Text = "";
                 throw new InvalidOperationException("Query type not implemented.");
             }
+        }
+
+        private void addActionToProgramButton_Click(object sender, EventArgs e)
+        {
+            foreach (var item in actionCheckedListBox.CheckedItems)
+            {
+                actionProgramCheckedListBox.Items.Add(item);
+            }
+
+            queryResultValueLabel.Text = "";
+        }
+
+        private void removeActionFromProgramButton_Click(object sender, EventArgs e)
+        {
+            List<int> checkedIndices = new();
+
+            foreach (int index in actionProgramCheckedListBox.CheckedIndices)
+            {
+                checkedIndices.Add(index);
+            }
+
+            checkedIndices.Reverse();
+            foreach (int index in checkedIndices)
+            {
+                actionProgramCheckedListBox.Items.RemoveAt(index);
+            }
+
+            queryResultValueLabel.Text = "";
+        }
+
+        private ActionProgram CreateActionProgram()
+        {
+            var actionsDict = form1.App.ProblemDependent.Problem.Actions;
+
+            var orderedActions = new List<Logic.Problem.Models.Action>();
+
+            foreach (string name in actionProgramCheckedListBox.Items)
+            {
+                if (actionsDict.TryGetValue(name, out var action))
+                {
+                    orderedActions.Add(action);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            return new ActionProgram(orderedActions);
         }
     }
 }

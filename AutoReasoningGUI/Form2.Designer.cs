@@ -30,9 +30,6 @@
         {
             components = new System.ComponentModel.Container();
             prevPage = new Button();
-            fluentActionListContainer = new SplitContainer();
-            fluentListBox = new ListBox();
-            actionListBox = new ListBox();
             fluentListLabel = new Label();
             actionListLabel = new Label();
             statementsPanel = new Panel();
@@ -53,13 +50,21 @@
             formulaLabel = new Label();
             formulaValidationLabel = new Label();
             queryResultValueLabel = new Label();
-            ((System.ComponentModel.ISupportInitialize)fluentActionListContainer).BeginInit();
-            fluentActionListContainer.Panel1.SuspendLayout();
-            fluentActionListContainer.Panel2.SuspendLayout();
-            fluentActionListContainer.SuspendLayout();
+            fluentsPanel = new Panel();
+            fluentListBox = new ListBox();
+            actionsPanel = new Panel();
+            actionCheckedListBox = new CheckedListBox();
+            actionProgramPanel = new Panel();
+            actionProgramCheckedListBox = new CheckedListBox();
+            actionProgramLabel = new Label();
+            addActionToProgramButton = new Button();
+            removeActionFromProgramButton = new Button();
             statementsPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)budgetNumericUpDown).BeginInit();
             ((System.ComponentModel.ISupportInitialize)formulaErrorProvider).BeginInit();
+            fluentsPanel.SuspendLayout();
+            actionsPanel.SuspendLayout();
+            actionProgramPanel.SuspendLayout();
             SuspendLayout();
             // 
             // prevPage
@@ -72,46 +77,11 @@
             prevPage.UseVisualStyleBackColor = true;
             prevPage.Click += prevPage_Click;
             // 
-            // fluentActionListContainer
-            // 
-            fluentActionListContainer.IsSplitterFixed = true;
-            fluentActionListContainer.Location = new Point(12, 30);
-            fluentActionListContainer.Name = "fluentActionListContainer";
-            // 
-            // fluentActionListContainer.Panel1
-            // 
-            fluentActionListContainer.Panel1.Controls.Add(fluentListBox);
-            // 
-            // fluentActionListContainer.Panel2
-            // 
-            fluentActionListContainer.Panel2.Controls.Add(actionListBox);
-            fluentActionListContainer.Size = new Size(346, 218);
-            fluentActionListContainer.SplitterDistance = 170;
-            fluentActionListContainer.TabIndex = 1;
-            // 
-            // fluentListBox
-            // 
-            fluentListBox.Dock = DockStyle.Fill;
-            fluentListBox.FormattingEnabled = true;
-            fluentListBox.Location = new Point(0, 0);
-            fluentListBox.Name = "fluentListBox";
-            fluentListBox.Size = new Size(170, 218);
-            fluentListBox.TabIndex = 0;
-            // 
-            // actionListBox
-            // 
-            actionListBox.Dock = DockStyle.Fill;
-            actionListBox.FormattingEnabled = true;
-            actionListBox.Location = new Point(0, 0);
-            actionListBox.Name = "actionListBox";
-            actionListBox.Size = new Size(172, 218);
-            actionListBox.TabIndex = 0;
-            // 
             // fluentListLabel
             // 
             fluentListLabel.AutoSize = true;
             fluentListLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            fluentListLabel.Location = new Point(72, 9);
+            fluentListLabel.Location = new Point(62, 9);
             fluentListLabel.Name = "fluentListLabel";
             fluentListLabel.Size = new Size(50, 15);
             fluentListLabel.TabIndex = 1;
@@ -121,7 +91,7 @@
             // 
             actionListLabel.AutoSize = true;
             actionListLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            actionListLabel.Location = new Point(243, 9);
+            actionListLabel.Location = new Point(215, 9);
             actionListLabel.Name = "actionListLabel";
             actionListLabel.Size = new Size(51, 15);
             actionListLabel.TabIndex = 2;
@@ -130,9 +100,9 @@
             // statementsPanel
             // 
             statementsPanel.Controls.Add(statementListBox);
-            statementsPanel.Location = new Point(15, 270);
+            statementsPanel.Location = new Point(15, 283);
             statementsPanel.Name = "statementsPanel";
-            statementsPanel.Size = new Size(342, 150);
+            statementsPanel.Size = new Size(342, 137);
             statementsPanel.TabIndex = 3;
             // 
             // statementListBox
@@ -141,14 +111,14 @@
             statementListBox.FormattingEnabled = true;
             statementListBox.Location = new Point(0, 0);
             statementListBox.Name = "statementListBox";
-            statementListBox.Size = new Size(342, 150);
+            statementListBox.Size = new Size(342, 137);
             statementListBox.TabIndex = 0;
             // 
             // statementsLabel
             // 
             statementsLabel.AutoSize = true;
             statementsLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            statementsLabel.Location = new Point(146, 252);
+            statementsLabel.Location = new Point(141, 265);
             statementsLabel.Name = "statementsLabel";
             statementsLabel.Size = new Size(75, 15);
             statementsLabel.TabIndex = 9;
@@ -282,11 +252,98 @@
             queryResultValueLabel.Size = new Size(0, 15);
             queryResultValueLabel.TabIndex = 23;
             // 
+            // fluentsPanel
+            // 
+            fluentsPanel.Controls.Add(fluentListBox);
+            fluentsPanel.Location = new Point(19, 27);
+            fluentsPanel.Name = "fluentsPanel";
+            fluentsPanel.Size = new Size(138, 222);
+            fluentsPanel.TabIndex = 24;
+            // 
+            // fluentListBox
+            // 
+            fluentListBox.Dock = DockStyle.Fill;
+            fluentListBox.FormattingEnabled = true;
+            fluentListBox.Location = new Point(0, 0);
+            fluentListBox.Name = "fluentListBox";
+            fluentListBox.Size = new Size(138, 222);
+            fluentListBox.TabIndex = 0;
+            // 
+            // actionsPanel
+            // 
+            actionsPanel.Controls.Add(actionCheckedListBox);
+            actionsPanel.Location = new Point(174, 27);
+            actionsPanel.Name = "actionsPanel";
+            actionsPanel.Size = new Size(138, 209);
+            actionsPanel.TabIndex = 25;
+            // 
+            // actionCheckedListBox
+            // 
+            actionCheckedListBox.Dock = DockStyle.Fill;
+            actionCheckedListBox.FormattingEnabled = true;
+            actionCheckedListBox.Location = new Point(0, 0);
+            actionCheckedListBox.Name = "actionCheckedListBox";
+            actionCheckedListBox.Size = new Size(138, 209);
+            actionCheckedListBox.TabIndex = 0;
+            // 
+            // actionProgramPanel
+            // 
+            actionProgramPanel.Controls.Add(actionProgramCheckedListBox);
+            actionProgramPanel.Location = new Point(329, 27);
+            actionProgramPanel.Name = "actionProgramPanel";
+            actionProgramPanel.Size = new Size(157, 209);
+            actionProgramPanel.TabIndex = 25;
+            // 
+            // actionProgramCheckedListBox
+            // 
+            actionProgramCheckedListBox.Dock = DockStyle.Fill;
+            actionProgramCheckedListBox.FormattingEnabled = true;
+            actionProgramCheckedListBox.Location = new Point(0, 0);
+            actionProgramCheckedListBox.Name = "actionProgramCheckedListBox";
+            actionProgramCheckedListBox.Size = new Size(157, 209);
+            actionProgramCheckedListBox.TabIndex = 0;
+            // 
+            // actionProgramLabel
+            // 
+            actionProgramLabel.AutoSize = true;
+            actionProgramLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            actionProgramLabel.Location = new Point(361, 9);
+            actionProgramLabel.Name = "actionProgramLabel";
+            actionProgramLabel.Size = new Size(97, 15);
+            actionProgramLabel.TabIndex = 26;
+            actionProgramLabel.Text = "Action Program:";
+            // 
+            // addActionToProgramButton
+            // 
+            addActionToProgramButton.Location = new Point(174, 239);
+            addActionToProgramButton.Name = "addActionToProgramButton";
+            addActionToProgramButton.Size = new Size(138, 23);
+            addActionToProgramButton.TabIndex = 27;
+            addActionToProgramButton.Text = "Add selected action(s)";
+            addActionToProgramButton.UseVisualStyleBackColor = true;
+            addActionToProgramButton.Click += addActionToProgramButton_Click;
+            // 
+            // removeActionFromProgramButton
+            // 
+            removeActionFromProgramButton.Location = new Point(329, 239);
+            removeActionFromProgramButton.Name = "removeActionFromProgramButton";
+            removeActionFromProgramButton.Size = new Size(157, 23);
+            removeActionFromProgramButton.TabIndex = 28;
+            removeActionFromProgramButton.Text = "Remove selected action(s)";
+            removeActionFromProgramButton.UseVisualStyleBackColor = true;
+            removeActionFromProgramButton.Click += removeActionFromProgramButton_Click;
+            // 
             // Form2
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 461);
+            Controls.Add(removeActionFromProgramButton);
+            Controls.Add(addActionToProgramButton);
+            Controls.Add(actionProgramLabel);
+            Controls.Add(actionProgramPanel);
+            Controls.Add(actionsPanel);
+            Controls.Add(fluentsPanel);
             Controls.Add(queryResultValueLabel);
             Controls.Add(formulaValidationLabel);
             Controls.Add(formulaLabel);
@@ -305,7 +362,6 @@
             Controls.Add(statementsPanel);
             Controls.Add(actionListLabel);
             Controls.Add(fluentListLabel);
-            Controls.Add(fluentActionListContainer);
             Controls.Add(prevPage);
             MaximumSize = new Size(800, 500);
             MinimumSize = new Size(800, 500);
@@ -313,13 +369,12 @@
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Auto Reasoning";
             FormClosing += Form2_FormClosing;
-            fluentActionListContainer.Panel1.ResumeLayout(false);
-            fluentActionListContainer.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)fluentActionListContainer).EndInit();
-            fluentActionListContainer.ResumeLayout(false);
             statementsPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)budgetNumericUpDown).EndInit();
             ((System.ComponentModel.ISupportInitialize)formulaErrorProvider).EndInit();
+            fluentsPanel.ResumeLayout(false);
+            actionsPanel.ResumeLayout(false);
+            actionProgramPanel.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -327,11 +382,8 @@
         #endregion
 
         private Button prevPage;
-        private SplitContainer fluentActionListContainer;
         private Label fluentListLabel;
         private Label actionListLabel;
-        private ListBox fluentListBox;
-        private ListBox actionListBox;
         private Panel statementsPanel;
         private ListBox statementListBox;
         private Label statementsLabel;
@@ -350,5 +402,14 @@
         private Label formulaLabel;
         private Label formulaValidationLabel;
         private Label queryResultValueLabel;
+        private Panel fluentsPanel;
+        private Label actionProgramLabel;
+        private Panel actionProgramPanel;
+        private Panel actionsPanel;
+        private ListBox fluentListBox;
+        private CheckedListBox actionCheckedListBox;
+        private CheckedListBox actionProgramCheckedListBox;
+        private Button removeActionFromProgramButton;
+        private Button addActionToProgramButton;
     }
 }
