@@ -36,8 +36,8 @@ namespace AutoReasoningGUI
             fluentListBox.SelectedIndex = -1;
 
             // show actions list
-            actionCheckedListBox.DataSource = form1.ActionNames;
-            actionCheckedListBox.SelectedIndex = -1;
+            actionListBox.DataSource = form1.ActionNames;
+            actionListBox.SelectedIndex = -1;
 
             // show statements list
             statementListBox.DataSource = form1.Statements;
@@ -70,6 +70,7 @@ namespace AutoReasoningGUI
             // invoke at start to initialize
             QueryClassComboBox_SelectedIndexChanged(queryClassComboBox, EventArgs.Empty);
             QueryTypeComboBox_SelectedIndexChanged(queryTypeComboBox, EventArgs.Empty);
+
         }
 
         private void prevPage_Click(object sender, EventArgs e)
@@ -89,7 +90,7 @@ namespace AutoReasoningGUI
         public void PrepareToShow()
         {
             fluentListBox.SelectedIndex = -1;
-            actionCheckedListBox.SelectedIndex = -1;
+            actionListBox.SelectedIndex = -1;
             statementListBox.SelectedIndex = -1;
         }
 
@@ -230,8 +231,10 @@ namespace AutoReasoningGUI
 
         private void addActionToProgramButton_Click(object sender, EventArgs e)
         {
-            foreach (var item in actionCheckedListBox.CheckedItems)
+            int index = actionListBox.SelectedIndex;
+            if (index != ListBox.NoMatches)
             {
+                var item = actionListBox.Items[index];
                 actionProgramCheckedListBox.Items.Add(item);
             }
 
@@ -252,6 +255,9 @@ namespace AutoReasoningGUI
             {
                 actionProgramCheckedListBox.Items.RemoveAt(index);
             }
+
+            if (actionProgramCheckedListBox.Items.Count == 0)
+                selectAllActionsFromProgramButton.Text = "Select all actions";
 
             queryResultValueLabel.Text = "";
         }
@@ -276,5 +282,80 @@ namespace AutoReasoningGUI
 
             return new ActionProgram(orderedActions);
         }
+
+        private void actionListBox_MouseDown(object sender, MouseEventArgs e)
+        {
+            int index = actionListBox.IndexFromPoint(e.Location);
+            if (index != ListBox.NoMatches)
+            {
+                var item = actionListBox.Items[index];
+                DoDragDrop(item, DragDropEffects.Copy);
+            }
+        }
+
+        private void actionProgramCheckedListBox_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(typeof(string)))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
+
+        private void actionProgramCheckedListBox_DragDrop(object sender, DragEventArgs e)
+        {
+            var data = e.Data.GetData(typeof(string)) as string;
+            if (!string.IsNullOrEmpty(data))
+            {
+                actionProgramCheckedListBox.Items.Add(data);
+            }
+        }
+
+        private void selectAllActionsFromProgramButton_Click(object sender, EventArgs e)
+        {
+            if (actionProgramCheckedListBox.Items.Count == 0) return;
+
+            bool allChecked = true;
+
+            for (int i = 0; i < actionProgramCheckedListBox.Items.Count; i++)
+            {
+                if (!actionProgramCheckedListBox.GetItemChecked(i))
+                {
+                    allChecked = false;
+                    break;
+                }
+            }
+
+            for (int i = 0; i < actionProgramCheckedListBox.Items.Count; i++)
+            {
+                actionProgramCheckedListBox.SetItemChecked(i, !allChecked);
+            }
+
+            selectAllActionsFromProgramButton.Text = allChecked ? "Select all actions" : "Deselect all actions";
+        }
+
+        private void actionListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                addActionToProgramButton_Click(sender, EventArgs.Empty);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void actionProgramCheckedListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                removeActionFromProgramButton_Click(sender, EventArgs.Empty);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
     }
 }

@@ -45,7 +45,7 @@ namespace AutoReasoningGUI
             fluentName = string.Concat(fluentName.Where(c => !char.IsWhiteSpace(c)));
             var isInertial = this.isInertialCheckBox.Checked;
             var newFluent = new Fluent(fluentName, isInertial);
-            if (!Fluents.Contains(newFluent) && fluentName != "")
+            if (!Fluents.Contains(newFluent) && fluentName != "" && !Fluents.Any(f => f.Name == newFluent.Name))
             {
                 Fluents.Add(newFluent);
                 this.fluentTextBox.Text = null;
@@ -201,7 +201,8 @@ namespace AutoReasoningGUI
                         {
                             Statements.Add(statement);
                             _initialFluents.Add(fluent, startValue);
-                        } else
+                        }
+                        else
                         {
                             Statements.Remove(oppositeStatement);
                             _initialFluents.Remove(fluent);
@@ -218,7 +219,7 @@ namespace AutoReasoningGUI
                     {
                         return;
                     }
-                    if(!App.FormulaParser.TryParse(
+                    if (!App.FormulaParser.TryParse(
                             expression,
                             Fluents.ToDictionary(f => f.Name),
                             out parsedFormula,
@@ -288,7 +289,8 @@ namespace AutoReasoningGUI
                     {
                         statement = $"{actionName} causes {(isTrue ? "" : "not ")}{fluentName} costs {cost}";
                         formula = new True();
-                    } else
+                    }
+                    else
                     {
                         if (!App.FormulaParser.TryParse(
                                 expression,
@@ -363,6 +365,26 @@ namespace AutoReasoningGUI
             _initialFluents.Clear();
             _alwaysStatements.Clear();
             UpdateStatementsList();
+        }
+
+        private void fluentCheckedListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                removeFluentsButton_Click(sender, EventArgs.Empty);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void actionCheckedListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                removeActionsButton_Click(sender, EventArgs.Empty);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
         }
     }
 }
