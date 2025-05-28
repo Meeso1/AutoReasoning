@@ -53,12 +53,13 @@
             fluentsPanel = new Panel();
             fluentListBox = new ListBox();
             actionsPanel = new Panel();
-            actionCheckedListBox = new CheckedListBox();
+            actionListBox = new ListBox();
             actionProgramPanel = new Panel();
             actionProgramCheckedListBox = new CheckedListBox();
             actionProgramLabel = new Label();
-            addActionToProgramButton = new Button();
             removeActionFromProgramButton = new Button();
+            addActionToProgramButton = new Button();
+            selectAllActionsFromProgramButton = new Button();
             statementsPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)budgetNumericUpDown).BeginInit();
             ((System.ComponentModel.ISupportInitialize)formulaErrorProvider).BeginInit();
@@ -100,9 +101,9 @@
             // statementsPanel
             // 
             statementsPanel.Controls.Add(statementListBox);
-            statementsPanel.Location = new Point(15, 283);
+            statementsPanel.Location = new Point(15, 294);
             statementsPanel.Name = "statementsPanel";
-            statementsPanel.Size = new Size(342, 137);
+            statementsPanel.Size = new Size(342, 126);
             statementsPanel.TabIndex = 3;
             // 
             // statementListBox
@@ -111,14 +112,14 @@
             statementListBox.FormattingEnabled = true;
             statementListBox.Location = new Point(0, 0);
             statementListBox.Name = "statementListBox";
-            statementListBox.Size = new Size(342, 137);
+            statementListBox.Size = new Size(342, 126);
             statementListBox.TabIndex = 0;
             // 
             // statementsLabel
             // 
             statementsLabel.AutoSize = true;
             statementsLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            statementsLabel.Location = new Point(141, 265);
+            statementsLabel.Location = new Point(19, 265);
             statementsLabel.Name = "statementsLabel";
             statementsLabel.Size = new Size(75, 15);
             statementsLabel.TabIndex = 9;
@@ -271,20 +272,22 @@
             // 
             // actionsPanel
             // 
-            actionsPanel.Controls.Add(actionCheckedListBox);
+            actionsPanel.Controls.Add(actionListBox);
             actionsPanel.Location = new Point(174, 27);
             actionsPanel.Name = "actionsPanel";
             actionsPanel.Size = new Size(138, 209);
             actionsPanel.TabIndex = 25;
             // 
-            // actionCheckedListBox
+            // actionListBox
             // 
-            actionCheckedListBox.Dock = DockStyle.Fill;
-            actionCheckedListBox.FormattingEnabled = true;
-            actionCheckedListBox.Location = new Point(0, 0);
-            actionCheckedListBox.Name = "actionCheckedListBox";
-            actionCheckedListBox.Size = new Size(138, 209);
-            actionCheckedListBox.TabIndex = 0;
+            actionListBox.Dock = DockStyle.Fill;
+            actionListBox.FormattingEnabled = true;
+            actionListBox.Location = new Point(0, 0);
+            actionListBox.Name = "actionListBox";
+            actionListBox.Size = new Size(138, 209);
+            actionListBox.TabIndex = 0;
+            actionListBox.KeyDown += actionListBox_KeyDown;
+            actionListBox.MouseDown += actionListBox_MouseDown;
             // 
             // actionProgramPanel
             // 
@@ -296,12 +299,16 @@
             // 
             // actionProgramCheckedListBox
             // 
+            actionProgramCheckedListBox.AllowDrop = true;
             actionProgramCheckedListBox.Dock = DockStyle.Fill;
             actionProgramCheckedListBox.FormattingEnabled = true;
             actionProgramCheckedListBox.Location = new Point(0, 0);
             actionProgramCheckedListBox.Name = "actionProgramCheckedListBox";
             actionProgramCheckedListBox.Size = new Size(157, 209);
             actionProgramCheckedListBox.TabIndex = 0;
+            actionProgramCheckedListBox.DragDrop += actionProgramCheckedListBox_DragDrop;
+            actionProgramCheckedListBox.DragEnter += actionProgramCheckedListBox_DragEnter;
+            actionProgramCheckedListBox.KeyDown += actionProgramCheckedListBox_KeyDown;
             // 
             // actionProgramLabel
             // 
@@ -313,19 +320,9 @@
             actionProgramLabel.TabIndex = 26;
             actionProgramLabel.Text = "Action Program:";
             // 
-            // addActionToProgramButton
-            // 
-            addActionToProgramButton.Location = new Point(174, 239);
-            addActionToProgramButton.Name = "addActionToProgramButton";
-            addActionToProgramButton.Size = new Size(138, 23);
-            addActionToProgramButton.TabIndex = 27;
-            addActionToProgramButton.Text = "Add selected action(s)";
-            addActionToProgramButton.UseVisualStyleBackColor = true;
-            addActionToProgramButton.Click += addActionToProgramButton_Click;
-            // 
             // removeActionFromProgramButton
             // 
-            removeActionFromProgramButton.Location = new Point(329, 239);
+            removeActionFromProgramButton.Location = new Point(329, 265);
             removeActionFromProgramButton.Name = "removeActionFromProgramButton";
             removeActionFromProgramButton.Size = new Size(157, 23);
             removeActionFromProgramButton.TabIndex = 28;
@@ -333,13 +330,34 @@
             removeActionFromProgramButton.UseVisualStyleBackColor = true;
             removeActionFromProgramButton.Click += removeActionFromProgramButton_Click;
             // 
+            // addActionToProgramButton
+            // 
+            addActionToProgramButton.Location = new Point(174, 239);
+            addActionToProgramButton.Name = "addActionToProgramButton";
+            addActionToProgramButton.Size = new Size(138, 23);
+            addActionToProgramButton.TabIndex = 29;
+            addActionToProgramButton.Text = "Add selected action";
+            addActionToProgramButton.UseVisualStyleBackColor = true;
+            addActionToProgramButton.Click += addActionToProgramButton_Click;
+            // 
+            // selectAllActionsFromProgramButton
+            // 
+            selectAllActionsFromProgramButton.Location = new Point(329, 239);
+            selectAllActionsFromProgramButton.Name = "selectAllActionsFromProgramButton";
+            selectAllActionsFromProgramButton.Size = new Size(157, 23);
+            selectAllActionsFromProgramButton.TabIndex = 30;
+            selectAllActionsFromProgramButton.Text = "Select all actions";
+            selectAllActionsFromProgramButton.UseVisualStyleBackColor = true;
+            selectAllActionsFromProgramButton.Click += selectAllActionsFromProgramButton_Click;
+            // 
             // Form2
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 461);
-            Controls.Add(removeActionFromProgramButton);
+            Controls.Add(selectAllActionsFromProgramButton);
             Controls.Add(addActionToProgramButton);
+            Controls.Add(removeActionFromProgramButton);
             Controls.Add(actionProgramLabel);
             Controls.Add(actionProgramPanel);
             Controls.Add(actionsPanel);
@@ -407,9 +425,10 @@
         private Panel actionProgramPanel;
         private Panel actionsPanel;
         private ListBox fluentListBox;
-        private CheckedListBox actionCheckedListBox;
         private CheckedListBox actionProgramCheckedListBox;
         private Button removeActionFromProgramButton;
+        private ListBox actionListBox;
         private Button addActionToProgramButton;
+        private Button selectAllActionsFromProgramButton;
     }
 }
