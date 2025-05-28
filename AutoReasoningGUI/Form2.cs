@@ -313,6 +313,8 @@ namespace AutoReasoningGUI
 
         private void selectAllActionsFromProgramButton_Click(object sender, EventArgs e)
         {
+            actionProgramCheckedListBox.Focus();
+
             if (actionProgramCheckedListBox.Items.Count == 0) return;
 
             bool allChecked = true;
