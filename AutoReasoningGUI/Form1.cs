@@ -4,15 +4,20 @@ using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.CompilerServices;
 using Logic;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Logic.Problem.Models;
+using System.ComponentModel;
 
 namespace AutoReasoningGUI
 {
-    public partial class Form1 : Form
+    public partial class Form1 : Form // TODO: Zrobiæ usuwanie wybranych statement
     {
         public App App { get; } = new();
-        private List<Fluent> _fluents = new List<Fluent>();
-        private List<string> _actionNames = new List<string>();
-        private List<string> _statements = new List<string>(); // TODO: rozbiæ to na kilka list
+        public BindingList<Fluent> Fluents = new();
+        public BindingList<string> ActionNames = new();
+        public BindingList<string> Statements = new();
+        private List<Formula> _alwaysStatements = new List<Formula>();
+        private Dictionary<Fluent, bool> _initialFluents = new Dictionary<Fluent, bool>();
+        private List<ActionStatement> _actionStatements = new List<ActionStatement>();
         private Form2 form2;
         public Form1()
         {
@@ -28,7 +33,10 @@ namespace AutoReasoningGUI
             this.Visible = false;
             form2.Location = this.Location;
             form2.Size = this.Size;
+            form2.PrepareToShow();
             form2.Visible = true;
+
+            App.SetModel(Fluents.ToDictionary(f => f.Name), _actionStatements, _initialFluents, _alwaysStatements);
         }
 
         private void addFluentButton_Click(object sender, EventArgs e)
@@ -37,9 +45,9 @@ namespace AutoReasoningGUI
             fluentName = string.Concat(fluentName.Where(c => !char.IsWhiteSpace(c)));
             var isInertial = this.isInertialCheckBox.Checked;
             var newFluent = new Fluent(fluentName, isInertial);
-            if (!_fluents.Contains(newFluent) && fluentName != "")
+            if (!Fluents.Contains(newFluent) && fluentName != "" && !Fluents.Any(f => f.Name == newFluent.Name))
             {
-                _fluents.Add(newFluent);
+                Fluents.Add(newFluent);
                 this.fluentTextBox.Text = null;
                 this.isInertialCheckBox.Checked = true;
                 UpdateFluentList();
@@ -52,7 +60,7 @@ namespace AutoReasoningGUI
             this.initiallyFluentComboBox.Items.Clear();
             this.causesFluentComboBox.Items.Clear();
             this.releasesFluentComboBox.Items.Clear();
-            foreach (var fluent in _fluents)
+            foreach (var fluent in Fluents)
             {
                 var fluentName = fluent.Name;
                 var isInertialString = fluent.IsInertial ? "INERTIAL" : "NOT INERTIAL";
@@ -67,9 +75,9 @@ namespace AutoReasoningGUI
         {
             var actionName = this.actionTextBox.Text;
             actionName = string.Concat(actionName.Where(c => !char.IsWhiteSpace(c)));
-            if (!_actionNames.Contains(actionName) && actionName != "")
+            if (!ActionNames.Contains(actionName) && actionName != "")
             {
-                _actionNames.Add(actionName);
+                ActionNames.Add(actionName);
                 this.actionTextBox.Text = null;
                 UpdateActionList();
             }
@@ -81,7 +89,7 @@ namespace AutoReasoningGUI
             this.impossibleActionComboBox.Items.Clear();
             this.causesActionComboBox.Items.Clear();
             this.releasesActionComboBox.Items.Clear();
-            foreach (string action in _actionNames)
+            foreach (string action in ActionNames)
             {
                 this.actionCheckedListBox.Items.Add(action);
                 this.impossibleActionComboBox.Items.Add(action);
@@ -93,7 +101,7 @@ namespace AutoReasoningGUI
         private void UpdateStatementsList()
         {
             this.statementsCheckedListBox.Items.Clear();
-            foreach (string statement in _statements)
+            foreach (string statement in Statements)
             {
                 this.statementsCheckedListBox.Items.Add(statement);
             }
@@ -104,7 +112,7 @@ namespace AutoReasoningGUI
             {
                 if (fluentCheckedListBox.GetItemChecked(i))
                 {
-                    _fluents.RemoveAt(i);
+                    Fluents.RemoveAt(i);
                 }
             }
             UpdateFluentList();
@@ -116,7 +124,7 @@ namespace AutoReasoningGUI
             {
                 if (actionCheckedListBox.GetItemChecked(i))
                 {
-                    _actionNames.RemoveAt(i);
+                    ActionNames.RemoveAt(i);
                 }
             }
             UpdateActionList();
@@ -164,6 +172,10 @@ namespace AutoReasoningGUI
             string expression = "";
             string statement = "";
             decimal cost;
+            Formula? parsedFormula;
+            Formula formula;
+            Fluent fluent;
+            ActionStatement actionStatement;
             IReadOnlyList<string>? errors = null;
             string combinedError = "";
             switch (selectedItem)
@@ -181,9 +193,22 @@ namespace AutoReasoningGUI
                     }
                     bool startValue = InitialCheckBox.Checked;
                     statement = $"initially {(startValue ? "" : "not ")}{fluentName}";
-                    if (!_statements.Contains(statement))
+                    string oppositeStatement = $"initially {(startValue ? "not " : "")}{fluentName}";
+                    if (!Statements.Contains(statement))
                     {
-                        _statements.Add(statement);
+                        fluent = Fluents.FirstOrDefault(f => f.Name == fluentName);
+                        if (!Statements.Contains(oppositeStatement))
+                        {
+                            Statements.Add(statement);
+                            _initialFluents.Add(fluent, startValue);
+                        }
+                        else
+                        {
+                            Statements.Remove(oppositeStatement);
+                            _initialFluents.Remove(fluent);
+                            Statements.Add(statement);
+                            _initialFluents.Add(fluent, startValue);
+                        }
                         UpdateStatementsList();
                     }
                     break;
@@ -194,20 +219,22 @@ namespace AutoReasoningGUI
                     {
                         return;
                     }
-                    if(!App.FormulaParser.TryParse(
+                    if (!App.FormulaParser.TryParse(
                             expression,
-                            _fluents.ToDictionary(f => f.Name),
-                            out _,
+                            Fluents.ToDictionary(f => f.Name),
+                            out parsedFormula,
                             out errors))
                     {
                         combinedError = string.Join(Environment.NewLine, errors);
                         this.errorProvider1.SetError(alwaysTextBox, combinedError);
                         return;
                     }
+                    formula = parsedFormula;
                     statement = $"always {expression}";
-                    if (!_statements.Contains(statement))
+                    if (!Statements.Contains(statement))
                     {
-                        _statements.Add(statement);
+                        Statements.Add(statement);
+                        _alwaysStatements.Add(formula);
                         UpdateStatementsList();
                     }
                     break;
@@ -228,18 +255,22 @@ namespace AutoReasoningGUI
                     }
                     if (!App.FormulaParser.TryParse(
                             expression,
-                            _fluents.ToDictionary(f => f.Name),
-                            out _,
+                            Fluents.ToDictionary(f => f.Name),
+                            out parsedFormula,
                             out errors))
                     {
                         combinedError = string.Join(Environment.NewLine, errors);
                         this.errorProvider1.SetError(impossibleTextBox, combinedError);
                         return;
                     }
+                    formula = parsedFormula;
                     statement = $"impossible {actionName} if {expression}";
-                    if (!_statements.Contains(statement))
+                    if (!Statements.Contains(statement))
                     {
-                        _statements.Add(statement);
+                        Statements.Add(statement);
+                        ActionCondition actionImpossible = new ActionCondition(formula);
+                        actionStatement = new ActionStatement(actionName, actionImpossible);
+                        _actionStatements.Add(actionStatement);
                         UpdateStatementsList();
                     }
                     break;
@@ -257,23 +288,30 @@ namespace AutoReasoningGUI
                     if (expression == "")
                     {
                         statement = $"{actionName} causes {(isTrue ? "" : "not ")}{fluentName} costs {cost}";
-                    } else
+                        formula = new True();
+                    }
+                    else
                     {
                         if (!App.FormulaParser.TryParse(
                                 expression,
-                                _fluents.ToDictionary(f => f.Name),
-                                out _,
+                                Fluents.ToDictionary(f => f.Name),
+                                out parsedFormula,
                                 out errors))
                         {
                             combinedError = string.Join(Environment.NewLine, errors);
                             this.errorProvider1.SetError(causesTextBox2, combinedError);
                             return;
                         }
+                        formula = parsedFormula;
                         statement = $"{actionName} causes {(isTrue ? "" : "not ")}{fluentName} if {expression} costs {cost}";
                     }
-                    if (!_statements.Contains(statement))
+                    if (!Statements.Contains(statement))
                     {
-                        _statements.Add(statement);
+                        Statements.Add(statement);
+                        fluent = Fluents.FirstOrDefault(f => f.Name == fluentName);
+                        ActionEffect actionCauses = new ActionEffect(formula, fluent, isTrue, (int)cost);
+                        actionStatement = new ActionStatement(actionName, actionCauses);
+                        _actionStatements.Add(actionStatement);
                         UpdateStatementsList();
                     }
                     break;
@@ -290,24 +328,30 @@ namespace AutoReasoningGUI
                     if (expression == "")
                     {
                         statement = $"{actionName} releases {fluentName} costs {cost}";
+                        formula = new True();
                     }
                     else
                     {
                         if (!App.FormulaParser.TryParse(
                                 expression,
-                                _fluents.ToDictionary(f => f.Name),
-                                out _,
+                                Fluents.ToDictionary(f => f.Name),
+                                out parsedFormula,
                                 out errors))
                         {
                             combinedError = string.Join(Environment.NewLine, errors);
                             this.errorProvider1.SetError(releasesTextBox2, combinedError);
                             return;
                         }
+                        formula = parsedFormula;
                         statement = $"{actionName} releases {fluentName} if {expression} costs {cost}";
                     }
-                    if (!_statements.Contains(statement))
+                    if (!Statements.Contains(statement))
                     {
-                        _statements.Add(statement);
+                        Statements.Add(statement);
+                        fluent = Fluents.FirstOrDefault(f => f.Name == fluentName);
+                        ActionRelease actionRelease = new ActionRelease(formula, fluent, (int)cost);
+                        actionStatement = new ActionStatement(actionName, actionRelease);
+                        _actionStatements.Add(actionStatement);
                         UpdateStatementsList();
                     }
                     break;
@@ -316,14 +360,31 @@ namespace AutoReasoningGUI
 
         private void removeStatementsButton_Click(object sender, EventArgs e)
         {
-            for (int i = statementsCheckedListBox.Items.Count - 1; i >= 0; i--)
-            {
-                if (statementsCheckedListBox.GetItemChecked(i))
-                {
-                    _statements.RemoveAt(i);
-                }
-            }
+            Statements.Clear();
+            _actionStatements.Clear();
+            _initialFluents.Clear();
+            _alwaysStatements.Clear();
             UpdateStatementsList();
+        }
+
+        private void fluentCheckedListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                removeFluentsButton_Click(sender, EventArgs.Empty);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void actionCheckedListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                removeActionsButton_Click(sender, EventArgs.Empty);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
         }
     }
 }

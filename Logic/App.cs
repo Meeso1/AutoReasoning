@@ -3,6 +3,7 @@ using Logic.Problem.Models;
 using Logic.Queries;
 using Logic.States;
 using Logic.States.Models;
+using Logic.Queries.Models;
 
 namespace Logic;
 
@@ -12,46 +13,37 @@ namespace Logic;
 public sealed class App
 {
     public FormulaParser FormulaParser { get; } = new FormulaParser(new FormulaTokenizer());
-    private readonly ProblemDefinitionParser _problemParser = new();
-    private ProblemSpecificStuff? _problemDependent;
+    public FormulaReducer FormulaReducer { get; } = new FormulaReducer();
+    public ProblemDefinitionParser ProblemParser { get; } = new();
+    public QueryEvaluator? QueryEvaluator { get; private set; }
+    public ProblemSpecificStuff? ProblemDependent { get; private set; }
 
     public SetModelResult SetModel(IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyList<ActionStatement> actionStatements,
         IReadOnlyDictionary<Fluent, bool> initials,
         IReadOnlyList<Formula> always)
     {
-        ProblemDefinition problem = _problemParser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        ProblemDefinition problem = ProblemParser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        QueryEvaluator = new QueryEvaluator(problem);
 
-        _problemDependent = new(
-            problem,
-            new QueryParser(
-                problem,
-                new FormulaReducer(),
-                FormulaParser),
-            new QueryEvaluator(problem));
+        ProblemDependent = new(problem, QueryEvaluator);
         return new SetModelResult(true, []);
     }
 
-    public EvaluateQueryResult EvaluateQuery(string queryString)
+    public EvaluateQueryResult EvaluateQuery(Query query)
     {
-        if (_problemDependent is null)
+        if (ProblemDependent is null)
         {
             return new(null, false,
                 ["Model needs to be set before queries can be evaluated"]);
         }
 
-        if (!_problemDependent.QueryParser.TryParse(queryString, out var query, out var errors))
-        {
-            return new(null, false, errors);
-        }
-
-        var result = _problemDependent.Evaluator.Evaluate(query);
+        var result = ProblemDependent.Evaluator.Evaluate(query);
         return new(result, true, []);
     }
 
-    private sealed record ProblemSpecificStuff(
+    public sealed record ProblemSpecificStuff(
         ProblemDefinition Problem,
-        QueryParser QueryParser,
         QueryEvaluator Evaluator);
 }
 
