@@ -256,9 +256,6 @@ namespace AutoReasoningGUI
                 actionProgramCheckedListBox.Items.RemoveAt(index);
             }
 
-            if (actionProgramCheckedListBox.Items.Count == 0)
-                selectAllActionsFromProgramButton.Text = "Select all actions";
-
             queryResultValueLabel.Text = "";
         }
 
@@ -333,8 +330,6 @@ namespace AutoReasoningGUI
             {
                 actionProgramCheckedListBox.SetItemChecked(i, !allChecked);
             }
-
-            selectAllActionsFromProgramButton.Text = allChecked ? "Select all actions" : "Deselect all actions";
         }
 
         private void actionListBox_KeyDown(object sender, KeyEventArgs e)
