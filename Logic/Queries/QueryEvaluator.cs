@@ -90,25 +90,8 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
 
         var possibleEndStates = ResZero(state, action);
         var notCountedFluents = GetNotCountedForMinimalization(state, action);
-
-        var lowestCost = int.MaxValue;
-        var minCostStates = new List<State>();
-        foreach (var endState in possibleEndStates.EnumerateStates(problem.FluentUniverse))
-        {
-            var cost = Changed(state, endState, notCountedFluents);
-            if (cost < lowestCost)
-            {
-                lowestCost = cost;
-                minCostStates.Clear();
-                minCostStates.Add(endState);
-            }
-            else if (cost == lowestCost)
-            {
-                minCostStates.Add(endState);
-            }
-        }
-
-        return formulaReducer.CompressStateGroup(new StateGroup(minCostStates.Select(s => s.FluentValues).ToList()));
+        var minChangeStates = GetMinimalChangeStates(state, possibleEndStates, notCountedFluents);
+        return formulaReducer.CompressStateGroup(minChangeStates);
     }
 
     private StateGroup ResZero(State state, Action action)
@@ -130,7 +113,7 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
         return result;
     }
 
-    private IReadOnlyList<Fluent> GetNotCountedForMinimalization(State state, Action action)
+    private HashSet<Fluent> GetNotCountedForMinimalization(State state, Action action)
     {
         var result = new HashSet<Fluent>();
         result.UnionWith(problem.FluentUniverse.Where(f => !f.IsInertial));
@@ -138,17 +121,22 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
         var relevantReleaseStatements = action.Releases.Where(e => e.Condition.IsSatisfiedBy(state));
         result.UnionWith(relevantReleaseStatements.Select(e => e.ReleasedFluent));
 
-        return result.ToList();
+        return result;
     }
 
-    private static int Changed(State start, State end, IReadOnlyList<Fluent> notCountedFluents)
+    private static int Changed(State start, State end, HashSet<Fluent> notCountedFluents)
     {
         var result = 0;
         foreach (var fluent in start.FluentValues)
         {
-            if (notCountedFluents.Contains(fluent.Key))
+            if (!end.FluentValues.ContainsKey(fluent.Key))
             {
                 throw new UnreachableException($"End state does not specify all fluents: {fluent.Key} is present in start state, but not in end state");
+            }
+
+            if (notCountedFluents.Contains(fluent.Key))
+            {
+                continue;
             }
 
             if (start.FluentValues[fluent.Key] != end.FluentValues[fluent.Key])
@@ -158,5 +146,27 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
         }
 
         return result;
+    }
+
+    private StateGroup GetMinimalChangeStates(State start, StateGroup possibleEnds, HashSet<Fluent> notCountedFluents)
+    {
+        var smallestChange = int.MaxValue;
+        var minChangeStates = new List<State>();
+        foreach (var endState in possibleEnds.EnumerateStates(problem.FluentUniverse))
+        {
+            var change = Changed(start, endState, notCountedFluents);
+            if (change < smallestChange)
+            {
+                smallestChange = change;
+                minChangeStates.Clear();
+                minChangeStates.Add(endState);
+            }
+            else if (change == smallestChange)
+            {
+                minChangeStates.Add(endState);
+            }
+        }
+
+        return new StateGroup(minChangeStates.Select(s => s.FluentValues).ToList());
     }
 }

@@ -61,7 +61,6 @@ public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluen
 
         if (allUnknownFluents.Count != 0)
         {
-
             throw new ArgumentException($"Constraints contain fluents not in universe: {allUnknownFluents.Select(f => f.Name)}");
         }
 
@@ -86,7 +85,7 @@ public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluen
                 }
 
                 var newState = new State(fluentValues);
-                if (!alreadyReturned.Add(newState))
+                if (alreadyReturned.Add(newState))
                 {
                     yield return newState;
                 }

@@ -18,7 +18,7 @@ public class StateGroupTests
         var stateGroup = new StateGroup(new List<IReadOnlyDictionary<Fluent, bool>>());
 
         // Act
-        var result = stateGroup.GenerateAllStatesInGroup(fluentUniverse);
+        var result = stateGroup.EnumerateStates(fluentUniverse);
 
         // Assert
         Assert.Empty(result);
@@ -36,10 +36,10 @@ public class StateGroupTests
         var stateGroup = new StateGroup(constraints);
 
         // Act
-        var result = stateGroup.GenerateAllStatesInGroup(fluentUniverse);
+        var result = stateGroup.EnumerateStates(fluentUniverse);
 
         // Assert
-        Assert.Equal(4, result.Count); // 2^2 = 4 possible states
+        Assert.Equal(4, result.Count()); // 2^2 = 4 possible states
 
         // Check that we have all 4 possible combinations
         Assert.Contains(result, state => state.FluentValues[FluentA] == false && state.FluentValues[FluentB] == false);
@@ -60,10 +60,10 @@ public class StateGroupTests
         var stateGroup = new StateGroup(constraints);
 
         // Act
-        var result = stateGroup.GenerateAllStatesInGroup(fluentUniverse);
+        var result = stateGroup.EnumerateStates(fluentUniverse);
 
         // Assert
-        Assert.Equal(2, result.Count); // 2^1 = 2 states (B can be true/false)
+        Assert.Equal(2, result.Count()); // 2^1 = 2 states (B can be true/false)
 
         // All states should have A = true
         Assert.All(result, state => Assert.True(state.FluentValues[FluentA]));
@@ -85,7 +85,7 @@ public class StateGroupTests
         var stateGroup = new StateGroup(constraints);
 
         // Act
-        var result = stateGroup.GenerateAllStatesInGroup(fluentUniverse);
+        var result = stateGroup.EnumerateStates(fluentUniverse).ToList();
 
         // Assert
         Assert.Single(result);
@@ -106,7 +106,7 @@ public class StateGroupTests
         var stateGroup = new StateGroup(constraints);
 
         // Act
-        var result = stateGroup.GenerateAllStatesInGroup(fluentUniverse);
+        var result = stateGroup.EnumerateStates(fluentUniverse).ToList();
 
         // Assert
         Assert.Equal(3, result.Count); // Should get: (T,T), (T,F), (F,T)
@@ -133,7 +133,7 @@ public class StateGroupTests
         var stateGroup = new StateGroup(constraints);
 
         // Act
-        var result = stateGroup.GenerateAllStatesInGroup(fluentUniverse);
+        var result = stateGroup.EnumerateStates(fluentUniverse).ToList();
 
         // Assert
         Assert.Single(result); // Should only have one unique state
@@ -153,7 +153,7 @@ public class StateGroupTests
         var stateGroup = new StateGroup(constraints);
 
         // Act
-        var result = stateGroup.GenerateAllStatesInGroup(fluentUniverse);
+        var result = stateGroup.EnumerateStates(fluentUniverse).ToList();
 
         // Assert
         Assert.Equal(4, result.Count); // 2^2 = 4 (B and C can each be true/false)
@@ -181,7 +181,7 @@ public class StateGroupTests
         var stateGroup = new StateGroup(constraints);
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => stateGroup.GenerateAllStatesInGroup(fluentUniverse));
+        Assert.Throws<ArgumentException>(() => stateGroup.EnumerateStates(fluentUniverse).ToList());
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class StateGroupTests
         var stateGroup = new StateGroup(constraints);
 
         // Act
-        var result = stateGroup.GenerateAllStatesInGroup(fluentUniverse);
+        var result = stateGroup.EnumerateStates(fluentUniverse).ToList();
 
         // Assert
         Assert.Single(result); // One state with no fluents
