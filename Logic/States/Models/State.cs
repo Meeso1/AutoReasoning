@@ -22,6 +22,10 @@ public sealed record State(ReadOnlyFluentDict FluentValues);
 /// </remarks>
 public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluentGroups)
 {
+    public static StateGroup Empty => new([]);
+
+    public static StateGroup All => new([new Dictionary<Fluent, bool>()]);
+
     public bool Contains(State state)
     {
         return SpecifiedFluentGroups.Any(group => IsSubsetOf(group, state.FluentValues));

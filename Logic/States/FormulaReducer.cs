@@ -239,7 +239,8 @@ public sealed class FormulaReducer
                         mergeResults.AddRange(resolved);
 
                         // Mark the second dictionary as merged by removing it from consideration
-                        workingSet[j] = null;
+                        workingSet.RemoveAt(j);
+                        j--;
                         break;
                     }
                 }

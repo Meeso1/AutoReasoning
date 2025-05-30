@@ -15,10 +15,20 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
         if (actions.Count == 0)
         {
             yield return [initialState];
+            yield break;
         }
         
         var firstAction = actions[0];
-        foreach (var endState in ExecuteAction(initialState, firstAction).EnumerateStates(problem.FluentUniverse))
+        var endStates = ExecuteAction(initialState, firstAction).EnumerateStates(problem.FluentUniverse);
+
+        // Action is impossible - truncate trajectory
+        if (!endStates.Any())
+        {
+            yield return [initialState];
+            yield break;
+        }
+
+        foreach (var endState in endStates)
         {
             foreach (var history in ComputeHistories(endState, actions[1..]))
             {
@@ -29,10 +39,10 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
 
     private StateGroup ExecuteAction(State state, Action action)
     {
-        if (!action.Conditions.All(c => c.Condition.IsSatisfiedBy(state)))
+        if (action.Conditions.Any(c => !c.Condition.IsSatisfiedBy(state)))
         {
             // Action cannot be executed in this state
-            return new StateGroup([]);
+            return StateGroup.Empty;
         }
 
         var possibleEndStates = ResZero(state, action);
