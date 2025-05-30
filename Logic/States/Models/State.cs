@@ -46,4 +46,62 @@ public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluen
 
         return true;
     }
+
+    public static StateGroup And(StateGroup group1, StateGroup group2)
+    {
+        return FormulaReducer.PermutationMergeWithStrategy(group1, group2, AndMergeStrategy.Merge);
+    }
+
+    public IReadOnlyList<State> GenerateAllStatesInGroup(IEnumerable<Fluent> fluentUniverse)
+    {
+        var allFluents = fluentUniverse.ToList();
+        var stateSet = new HashSet<State>(new StateEqualityComparer());
+        int maxPossibleStates = 1 << allFluents.Count; // 2^n
+
+        var allUnknownFluents = SpecifiedFluentGroups
+        .SelectMany(constraintDict => constraintDict.Keys.Except(allFluents))
+        .Distinct()
+        .ToList();
+
+        if (allUnknownFluents.Count != 0)
+        {
+
+            throw new ArgumentException($"Constraints contain fluents not in universe: {allUnknownFluents.Select(f => f.Name)}");
+        }
+
+        foreach (var constraintDict in SpecifiedFluentGroups)
+        {
+            // Get unspecified fluents for this constraint
+            var unspecifiedFluents = allFluents
+                .Except(constraintDict.Keys)
+                .ToList();
+
+            // Generate all combinations for unspecified fluents
+            int totalPermutations = 1 << unspecifiedFluents.Count;
+
+            for (int i = 0; i < totalPermutations; i++)
+            {
+                // Start with a copy of the constraint dictionary
+                var fluentValues = new Dictionary<Fluent, bool>(constraintDict);
+
+                // Add permutations of unconstrained values
+                for (int j = 0; j < unspecifiedFluents.Count; j++)
+                {
+                    bool value = (i & (1 << j)) != 0;
+                    fluentValues[unspecifiedFluents[j]] = value;
+                }
+
+                stateSet.Add(new State(fluentValues));
+            }
+
+            // Early termination if we've generated all possible states
+            if (stateSet.Count == maxPossibleStates)
+            {
+                break;
+            }
+        }
+
+        return stateSet.ToList().AsReadOnly();
+    }
+
 }

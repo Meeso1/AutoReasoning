@@ -139,7 +139,7 @@ public sealed class FormulaReducer
     /// <returns>
     /// A smallest possible StateGroup representing the merge of the input StateGroups
     /// </returns>
-    private static StateGroup PermutationMergeWithStrategy(StateGroup leftGroup, StateGroup rightGroup, IFluentDictionaryMergeStrategy.MergeDelegate strategy)
+    public static StateGroup PermutationMergeWithStrategy(StateGroup leftGroup, StateGroup rightGroup, IFluentDictionaryMergeStrategy.MergeDelegate strategy)
     {
         List<ReadOnlyFluentDict> result = [];
 
@@ -180,7 +180,7 @@ public sealed class FormulaReducer
     /// <returns>
     /// A smallest possible StateGroup representing the merge of the input StateGroups
     /// </returns>
-    private static StateGroup CompressMergeWithStrategy(StateGroup leftGroup, StateGroup rightGroup, IFluentDictionaryMergeStrategy.MergeDelegate strategy)
+    public static StateGroup CompressMergeWithStrategy(StateGroup leftGroup, StateGroup rightGroup, IFluentDictionaryMergeStrategy.MergeDelegate strategy)
     {
         // Combine all fluent dictionaries from both groups into a single working set
         List<ReadOnlyFluentDict> workingSet = [];
