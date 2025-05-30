@@ -41,7 +41,7 @@ namespace AutoReasoningGUI
 
         private void addFluentButton_Click(object sender, EventArgs e)
         {
-            var fluentName = this.fluentTextBox.Text;
+            var fluentName = this.fluentTextBox.Text.ToLower();
             fluentName = string.Concat(fluentName.Where(c => !char.IsWhiteSpace(c)));
             var isInertial = this.isInertialCheckBox.Checked;
             var newFluent = new Fluent(fluentName, isInertial);
@@ -73,7 +73,7 @@ namespace AutoReasoningGUI
 
         private void addActionButton_Click(object sender, EventArgs e)
         {
-            var actionName = this.actionTextBox.Text;
+            var actionName = this.actionTextBox.Text.ToUpper();
             actionName = string.Concat(actionName.Where(c => !char.IsWhiteSpace(c)));
             if (!ActionNames.Contains(actionName) && actionName != "")
             {
@@ -214,7 +214,7 @@ namespace AutoReasoningGUI
                     break;
                 case "Always":
                     expression = alwaysTextBox.Text.ToString();
-                    expression = expression.TrimStart();
+                    expression = expression.Trim().ToLower();
                     if (expression == "")
                     {
                         return;
@@ -248,7 +248,7 @@ namespace AutoReasoningGUI
                         actionName = impossibleActionComboBox.SelectedItem.ToString();
                     }
                     expression = impossibleTextBox.Text.ToString();
-                    expression = expression.TrimStart();
+                    expression = expression.Trim().ToLower();
                     if (expression == "")
                     {
                         return;
@@ -283,7 +283,7 @@ namespace AutoReasoningGUI
                     bool isTrue = causesCheckBox.Checked;
                     fluentName = causesFluentComboBox.SelectedItem.ToString();
                     expression = causesTextBox2.Text.ToString();
-                    expression = expression.TrimStart();
+                    expression = expression.Trim().ToLower();
                     cost = causesNumericUpDown.Value;
                     if (expression == "")
                     {
@@ -323,7 +323,7 @@ namespace AutoReasoningGUI
                     actionName = releasesActionComboBox.SelectedItem.ToString();
                     fluentName = releasesFluentComboBox.SelectedItem.ToString();
                     expression = releasesTextBox2.Text.ToString();
-                    expression = expression.TrimStart();
+                    expression = expression.Trim().ToLower();
                     cost = releasesNumericUpDown.Value;
                     if (expression == "")
                     {
