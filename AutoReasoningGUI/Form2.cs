@@ -126,7 +126,7 @@ namespace AutoReasoningGUI
             this.formulaErrorProvider.SetError(formulaTextBox, "");
             Formula? parsedFormula;
             IReadOnlyList<string>? errors = null;
-            string expression = formulaTextBox.Text.Trim();
+            string expression = formulaTextBox.Text.Trim().ToLower();
 
             if (!form1.App.FormulaParser.TryParse(
                             expression,
