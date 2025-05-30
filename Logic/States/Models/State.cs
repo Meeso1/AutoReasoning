@@ -65,7 +65,8 @@ public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluen
 
         if (allUnknownFluents.Count != 0)
         {
-            throw new ArgumentException($"Constraints contain fluents not in universe: {string.Join(", ", allUnknownFluents)}");
+
+            throw new ArgumentException($"Constraints contain fluents not in universe: {allUnknownFluents.Select(f => f.Name)}");
         }
 
         foreach (var constraintDict in SpecifiedFluentGroups)
