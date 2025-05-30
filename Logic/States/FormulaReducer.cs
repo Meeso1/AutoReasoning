@@ -129,6 +129,11 @@ public sealed class FormulaReducer
         
     }
 
+    public StateGroup CompressStateGroup(StateGroup stateGroup)
+    {
+        return CompressMergeWithStrategy(stateGroup, stateGroup, OrMergeStrategy.Merge);
+    }
+
     /// <summary>
     /// Merges two <see cref="StateGroup"/> by merging each FluentDict on the left with each FluentDict on the right. 
     /// Important for when we have (... OR ... ) AND ( ... OR ... )

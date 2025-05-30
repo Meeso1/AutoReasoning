@@ -24,7 +24,7 @@ public sealed class App
         IReadOnlyList<Formula> always)
     {
         ProblemDefinition problem = ProblemParser.CreateProblemDefinition(fluents, actionStatements, initials, always);
-        QueryEvaluator = new QueryEvaluator(problem);
+        QueryEvaluator = new QueryEvaluator(problem, FormulaReducer);
 
         ProblemDependent = new(problem, QueryEvaluator);
         return new SetModelResult(true, []);

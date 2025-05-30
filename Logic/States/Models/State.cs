@@ -52,16 +52,12 @@ public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluen
         return FormulaReducer.PermutationMergeWithStrategy(group1, group2, AndMergeStrategy.Merge);
     }
 
-    public IReadOnlyList<State> GenerateAllStatesInGroup(IEnumerable<Fluent> fluentUniverse)
+    public IEnumerable<State> EnumerateStates(IReadOnlyList<Fluent> fluentUniverse)
     {
-        var allFluents = fluentUniverse.ToList();
-        var stateSet = new HashSet<State>(new StateEqualityComparer());
-        int maxPossibleStates = 1 << allFluents.Count; // 2^n
-
-        var allUnknownFluents = SpecifiedFluentGroups
-        .SelectMany(constraintDict => constraintDict.Keys.Except(allFluents))
-        .Distinct()
-        .ToList();
+        var alreadyReturned = new HashSet<State>(new StateEqualityComparer());
+        var allUnknownFluents = SpecifiedFluentGroups.SelectMany(constraintDict => constraintDict.Keys.Except(fluentUniverse))
+                                                     .Distinct()
+                                                     .ToList();
 
         if (allUnknownFluents.Count != 0)
         {
@@ -72,9 +68,7 @@ public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluen
         foreach (var constraintDict in SpecifiedFluentGroups)
         {
             // Get unspecified fluents for this constraint
-            var unspecifiedFluents = allFluents
-                .Except(constraintDict.Keys)
-                .ToList();
+            var unspecifiedFluents = fluentUniverse.Except(constraintDict.Keys).ToList();
 
             // Generate all combinations for unspecified fluents
             int totalPermutations = 1 << unspecifiedFluents.Count;
@@ -91,17 +85,18 @@ public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluen
                     fluentValues[unspecifiedFluents[j]] = value;
                 }
 
-                stateSet.Add(new State(fluentValues));
+                var newState = new State(fluentValues);
+                if (!alreadyReturned.Add(newState))
+                {
+                    yield return newState;
+                }
             }
 
             // Early termination if we've generated all possible states
-            if (stateSet.Count == maxPossibleStates)
+            if (alreadyReturned.Count == 1 << fluentUniverse.Count)
             {
-                break;
+                yield break;
             }
         }
-
-        return stateSet.ToList().AsReadOnly();
     }
-
 }
