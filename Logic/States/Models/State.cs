@@ -8,7 +8,7 @@ using ReadOnlyFluentDict = IReadOnlyDictionary<Fluent, bool>;
 /// 	Single state specifying all fluent values
 /// </summary>
 /// <param name="FluentValues">Dictionary containing all fluent values</param>
-public sealed record State(ReadOnlyFluentDict FluentValues)
+public sealed record State(ReadOnlyFluentDict FluentValues) : IEquatable<State>
 {
     public bool Equals(State? other)
     {
