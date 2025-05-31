@@ -151,6 +151,12 @@ namespace AutoReasoningGUI
 
         private void executeQueryButton_Click(object sender, EventArgs e)
         {
+            // validate formula expression input in accessible query case
+            var queryClass = (Type)queryClassComboBox.SelectedValue;
+
+            if (queryClass == typeof(AccessibleQuery))
+                createFormulaButton_Click(sender, e);
+
             _actionProgram = CreateActionProgram();
             _query = CreateQuery();
             if (_query == null)
@@ -181,6 +187,8 @@ namespace AutoReasoningGUI
             }
 
             queryResultValueLabel.Text = evalResult.Success == null ? "NOT IMPLEMENTED" : evalResult.Success.ToString().ToUpper();
+
+            _states = null;
         }
 
         private Query CreateQuery()
