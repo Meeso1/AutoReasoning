@@ -48,13 +48,13 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
 
     private bool EvaluateExecutable(ExecutableQuery query)
     {
-        return CheckTrajectories(query, trajectory => trajectory.Count == query.Program.Actions.Count+1);
+        return CheckTrajectories(query, trajectory => trajectory.Count == query.Program.Actions.Count + 1);
     }
 
     private bool EvaluateAccessible(AccessibleQuery query)
     {
-        return CheckTrajectories(query, trajectory => 
-            trajectory.Count == query.Program.Actions.Count+1 
+        return CheckTrajectories(query, trajectory =>
+            trajectory.Count == query.Program.Actions.Count + 1
             && query.States.Contains(trajectory[^1]));
     }
 

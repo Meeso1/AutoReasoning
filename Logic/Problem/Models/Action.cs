@@ -6,7 +6,7 @@ public record ActionElement();
 
 public sealed record ActionStatement(string ActionName, ActionElement Element);
 
-public sealed record ActionEffect(Formula Condition, Formula Effect, int CostIfChanged): ActionElement;
+public sealed record ActionEffect(Formula Condition, Formula Effect, int CostIfChanged) : ActionElement;
 
 public sealed record ActionRelease(Formula Condition, Fluent ReleasedFluent, int CostIfChanged) : ActionElement;
 

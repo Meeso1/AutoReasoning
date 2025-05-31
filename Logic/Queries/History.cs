@@ -17,7 +17,7 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
             yield return [initialState];
             yield break;
         }
-        
+
         var firstAction = actions[0];
         var endStates = ExecuteAction(initialState, firstAction).EnumerateStates(problem.FluentUniverse);
 

@@ -11,18 +11,18 @@ public sealed class HistoryTests(ITestOutputHelper output)
 {
     private static ProblemDefinition CreateYaleShootingProblem()
     {
-        var fluents = new[] {"alive", "loaded", "walking"}.Select(name => new Fluent(name, true)).ToList();
+        var fluents = new[] { "alive", "loaded", "walking" }.Select(name => new Fluent(name, true)).ToList();
         var actions = new List<Action>
         {
-            new Action("load", 
+            new Action("load",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[1]), 1)], // load causes loaded
-                [], 
+                [],
                 [new ActionCondition(new Not(new FluentIsSet(fluents[1])))]), // impossible load if loaded
-            new Action("shoot", 
+            new Action("shoot",
                 [new ActionEffect(new FluentIsSet(fluents[1]), new Not(new FluentIsSet(fluents[0])), 1), // shoot causes not alive if loaded
                  new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1)], // shoot causes not loaded
                 [], []),
-            new Action("walk", 
+            new Action("walk",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[2]), 1)], // walk causes walking
                 [], []),
         };
@@ -30,9 +30,9 @@ public sealed class HistoryTests(ITestOutputHelper output)
         return new ProblemDefinition
         {
             Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            InitialStates = new StateGroup([new Dictionary<Fluent, bool>(){ [fluents[0]] = true }]), // initially alive
+            InitialStates = new StateGroup([new Dictionary<Fluent, bool>() { [fluents[0]] = true }]), // initially alive
             ValidStates = new StateGroup([
-                new Dictionary<Fluent, bool>(){ [fluents[2]] = false }, 
+                new Dictionary<Fluent, bool>(){ [fluents[2]] = false },
                 new Dictionary<Fluent, bool>(){ [fluents[0]] = true }
             ]), // always (walking => alive)
             Actions = actions.ToDictionary(a => a.Name, a => a)
@@ -41,27 +41,27 @@ public sealed class HistoryTests(ITestOutputHelper output)
 
     private static ProblemDefinition CreateYaleShootingProblemWithReleases()
     {
-        var fluents = new[] {"alive", "loaded", "walking"}.Select(name => new Fluent(name, true)).ToList();
+        var fluents = new[] { "alive", "loaded", "walking" }.Select(name => new Fluent(name, true)).ToList();
         var actions = new List<Action>
         {
-            new Action("load", 
+            new Action("load",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[1]), 1)], // load causes loaded
-                [], 
+                [],
                 [new ActionCondition(new Not(new FluentIsSet(fluents[1])))]), // impossible load if loaded
-            new Action("shoot", 
+            new Action("shoot",
                 [new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1)], // shoot causes not loaded
                 [new ActionRelease(new And(new FluentIsSet(fluents[1]), new FluentIsSet(fluents[0])), fluents[0], 1)], // shoot releases alive if loaded and alive
                 []),
-            new Action("walk", 
+            new Action("walk",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[2]), 1)], // walk causes walking
-                [], 
+                [],
                 [new ActionCondition(new FluentIsSet(fluents[0]))]), // impossible walk if not alive
         };
 
         return new ProblemDefinition
         {
             Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            InitialStates = new StateGroup([new Dictionary<Fluent, bool>(){ [fluents[0]] = true }]), // initially alive
+            InitialStates = new StateGroup([new Dictionary<Fluent, bool>() { [fluents[0]] = true }]), // initially alive
             ValidStates = StateGroup.All,
             Actions = actions.ToDictionary(a => a.Name, a => a)
         };
@@ -69,18 +69,18 @@ public sealed class HistoryTests(ITestOutputHelper output)
 
     private static ProblemDefinition CreateYaleShootingProblemWithNoninertialFluents()
     {
-        var fluents = new[] {new Fluent("alive", true), new Fluent("loaded", true), new Fluent("walking", false)};
+        var fluents = new[] { new Fluent("alive", true), new Fluent("loaded", true), new Fluent("walking", false) };
         var actions = new List<Action>
         {
-            new Action("load", 
+            new Action("load",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[1]), 1)], // load causes loaded
-                [], 
+                [],
                 [new ActionCondition(new Not(new FluentIsSet(fluents[1])))]), // impossible load if loaded
-            new Action("shoot", 
+            new Action("shoot",
                 [new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1)], // shoot causes not loaded
                 [new ActionRelease(new And(new FluentIsSet(fluents[1]), new FluentIsSet(fluents[0])), fluents[0], 1)], // shoot releases alive if loaded and alive
                 []),
-            new Action("walk", 
+            new Action("walk",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[2]), 1)], // walk causes walking
                 [], []), // impossible walk if not alive
         };
@@ -88,9 +88,9 @@ public sealed class HistoryTests(ITestOutputHelper output)
         return new ProblemDefinition
         {
             Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            InitialStates = new StateGroup([new Dictionary<Fluent, bool>(){ [fluents[0]] = true }]), // initially alive
+            InitialStates = new StateGroup([new Dictionary<Fluent, bool>() { [fluents[0]] = true }]), // initially alive
             ValidStates = new StateGroup([
-                new Dictionary<Fluent, bool>(){ [fluents[2]] = false }, 
+                new Dictionary<Fluent, bool>(){ [fluents[2]] = false },
                 new Dictionary<Fluent, bool>(){ [fluents[0]] = true }
             ]), // always (walking => alive)
             Actions = actions.ToDictionary(a => a.Name, a => a)
@@ -108,10 +108,10 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var problem = CreateYaleShootingProblem();
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
-            new State(CreateState(problem.FluentUniverse, 
-                ("alive", true), 
-                ("loaded", false), 
-                ("walking", false))), 
+            new State(CreateState(problem.FluentUniverse,
+                ("alive", true),
+                ("loaded", false),
+                ("walking", false))),
             []);
 
         var singleTrajectory = Assert.Single(histories);
@@ -125,14 +125,14 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var problem = CreateYaleShootingProblem();
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
-            new State(CreateState(problem.FluentUniverse, 
-                ("alive", true), 
-                ("loaded", false), 
-                ("walking", false))), 
+            new State(CreateState(problem.FluentUniverse,
+                ("alive", true),
+                ("loaded", false),
+                ("walking", false))),
             [problem.Actions["load"]]).ToList();
 
         var singleTrajectory = Assert.Single(histories);
-        
+
         Assert.Equal(2, singleTrajectory.Count);
         Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), singleTrajectory[0]);
         Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), singleTrajectory[1]);
@@ -144,7 +144,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var problem = CreateYaleShootingProblem();
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
-            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), 
+            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))),
             [problem.Actions["walk"], problem.Actions["load"], problem.Actions["shoot"]]).ToList();
 
         var singleTrajectory = Assert.Single(histories);
@@ -161,7 +161,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var problem = CreateYaleShootingProblem();
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
-            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), 
+            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))),
             [problem.Actions["walk"], problem.Actions["load"], problem.Actions["load"]]).ToList();
 
         var singleTrajectory = Assert.Single(histories);
@@ -177,7 +177,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var problem = CreateYaleShootingProblemWithReleases();
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
-            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), 
+            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))),
             [problem.Actions["shoot"]]).ToList();
 
         Assert.Equal(2, histories.Count);
@@ -200,7 +200,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var problem = CreateYaleShootingProblemWithReleases();
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
-            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), 
+            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))),
             [problem.Actions["shoot"], problem.Actions["load"], problem.Actions["shoot"]]).ToList();
 
         Assert.Equal(3, histories.Count);
@@ -234,7 +234,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var problem = CreateYaleShootingProblemWithReleases();
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
-            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), 
+            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))),
             [problem.Actions["shoot"], problem.Actions["load"], problem.Actions["shoot"], problem.Actions["walk"]]).ToList();
 
         Assert.Equal(3, histories.Count);
@@ -270,7 +270,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var problem = CreateYaleShootingProblemWithNoninertialFluents();
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
-            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))), 
+            new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))),
             [problem.Actions["shoot"]]).ToList();
 
         Assert.Equal(3, histories.Count);

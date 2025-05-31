@@ -126,7 +126,6 @@ public sealed class FormulaReducer
         var rightGroup = Reduce(or.Second);
 
         return CompressMergeWithStrategy(leftGroup, rightGroup, OrMergeStrategy.Merge);
-        
     }
 
     public StateGroup CompressStateGroup(StateGroup stateGroup)
@@ -281,7 +280,7 @@ public sealed class FormulaReducer
     private StateGroup ReduceImplies(Implies implies)
     {
         return Reduce(new Or(
-            new Not(implies.Prior), 
+            new Not(implies.Prior),
             implies.Posterior
             ));
     }
