@@ -233,6 +233,8 @@ namespace AutoReasoningGUI
 
         private void addStatementButton_Click(object sender, EventArgs e)
         {
+            if (typeOfStatementComboBox.SelectedItem == null) return;
+
             this.errorProvider1.SetError(alwaysTextBox, "");
             this.errorProvider1.SetError(impossibleTextBox, "");
             this.errorProvider1.SetError(causesTextBox1, "");
@@ -296,6 +298,7 @@ namespace AutoReasoningGUI
                     {
                         Statements.Add(displayItem);
                         UpdateStatementsList();
+                        alwaysTextBox.Clear();
                     }
                     break;
                 case "Impossible Action":
@@ -329,6 +332,7 @@ namespace AutoReasoningGUI
                     {
                         Statements.Add(displayItem);
                         UpdateStatementsList();
+                        impossibleTextBox.Clear();
                     }
                     break;
                 case "Action Causes":
@@ -384,6 +388,8 @@ namespace AutoReasoningGUI
                     {
                         Statements.Add(displayItem);
                         UpdateStatementsList();
+                        causesTextBox1.Clear();
+                        causesTextBox2.Clear();
                     }
                     break;
                 case "Action Releases":
@@ -424,6 +430,7 @@ namespace AutoReasoningGUI
                     {
                         Statements.Add(displayItem);
                         UpdateStatementsList();
+                        releasesTextBox2.Clear();
                     }
                     break;
             }
