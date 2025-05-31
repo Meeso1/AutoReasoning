@@ -31,7 +31,7 @@ public sealed class ProblemDefinitionParserTests
 
         var actionStatements = new List<ActionStatement>
         {
-            new ActionStatement("move", new ActionEffect(new True(), FluentA, true, 1)),
+            new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1)),
             new ActionStatement("move", new ActionCondition(new FluentIsSet(FluentB)))
         };
 
@@ -74,9 +74,9 @@ public sealed class ProblemDefinitionParserTests
 
         var actionStatements = new List<ActionStatement>
         {
-            new ActionStatement("move", new ActionEffect(new True(), FluentA, true, 1)),
+            new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1)),
             new ActionStatement("move", new ActionCondition(new FluentIsSet(FluentB))),
-            new ActionStatement("jump", new ActionEffect(new True(), FluentC, true, 2)),
+            new ActionStatement("jump", new ActionEffect(new True(), new FluentIsSet(FluentC), 2)),
             new ActionStatement("jump", new ActionRelease(new FluentIsSet(FluentA), FluentB, 1))
         };
 
@@ -123,7 +123,7 @@ public sealed class ProblemDefinitionParserTests
 
         var actionStatements = new List<ActionStatement>
         {
-            new ActionStatement("move", new ActionEffect(new True(), FluentA, true, 1))
+            new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1))
         };
 
         var initials = new Dictionary<Fluent, bool>();
@@ -165,7 +165,7 @@ public sealed class ProblemDefinitionParserTests
 
         var actionStatements = new List<ActionStatement>
         {
-            new ActionStatement("move", new ActionEffect(new True(), FluentA, true, 1))
+            new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1))
         };
 
         // Initial: A is false
@@ -207,7 +207,7 @@ public sealed class ProblemDefinitionParserTests
 
         var actionStatements = new List<ActionStatement>
     {
-        new ActionStatement("move", new ActionEffect(new True(), FluentA, true, 1))
+        new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1))
     };
 
         var initials = new Dictionary<Fluent, bool>
@@ -270,7 +270,7 @@ public sealed class ProblemDefinitionParserTests
 
         var actionStatements = new List<ActionStatement>
         {
-            new ActionStatement("move", new ActionEffect(new True(), FluentA, true, 1))
+            new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1))
         };
 
         var initials = new Dictionary<Fluent, bool>();
@@ -306,7 +306,7 @@ public sealed class ProblemDefinitionParserTests
 
         var actionStatements = new List<ActionStatement>
     {
-        new ActionStatement("move", new ActionEffect(new True(), FluentA, true, 1))
+        new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1))
     };
 
         // Initial state: A is false
@@ -349,7 +349,7 @@ public sealed class ProblemDefinitionParserTests
 
         var actionStatements = new List<ActionStatement>
     {
-        new ActionStatement("move", new ActionEffect(new True(), FluentA, true, 1))
+        new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1))
     };
 
         // Initial state only specifies A=true
@@ -394,13 +394,13 @@ public sealed class ProblemDefinitionParserTests
         var actionStatements = new List<ActionStatement>
         {
             // "move" has effect: if B is true, set A to true with cost 1
-            new ActionStatement("move", new ActionEffect(new FluentIsSet(FluentB), FluentA, true, 1)),
+            new ActionStatement("move", new ActionEffect(new FluentIsSet(FluentB), new FluentIsSet(FluentA), 1)),
             
             // "move" has condition: C must be true
             new ActionStatement("move", new ActionCondition(new FluentIsSet(FluentC))),
             
             // "move" has another effect: if A is false, set B to false with cost 2
-            new ActionStatement("move", new ActionEffect(new Not(new FluentIsSet(FluentA)), FluentB, false, 2)),
+            new ActionStatement("move", new ActionEffect(new Not(new FluentIsSet(FluentA)), new Not(new FluentIsSet(FluentB)), 2)),
             
             // "move" releases C if A and B are true with cost 3
             new ActionStatement("move", new ActionRelease(
@@ -433,9 +433,9 @@ public sealed class ProblemDefinitionParserTests
 
         // Check specific action elements
         Assert.Contains(moveAction.Effects, e =>
-            e.Fluent == FluentA && e.Value == true && e.CostIfChanged == 1);
+            e.Effect == new FluentIsSet(FluentA) && e.CostIfChanged == 1);
         Assert.Contains(moveAction.Effects, e =>
-            e.Fluent == FluentB && e.Value == false && e.CostIfChanged == 2);
+            e.Effect == new Not(new FluentIsSet(FluentB)) && e.CostIfChanged == 2);
         Assert.Contains(moveAction.Releases, r =>
             r.ReleasedFluent == FluentC && r.CostIfChanged == 3);
     }

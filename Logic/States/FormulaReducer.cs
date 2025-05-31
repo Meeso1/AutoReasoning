@@ -126,7 +126,11 @@ public sealed class FormulaReducer
         var rightGroup = Reduce(or.Second);
 
         return CompressMergeWithStrategy(leftGroup, rightGroup, OrMergeStrategy.Merge);
-        
+    }
+
+    public StateGroup CompressStateGroup(StateGroup stateGroup)
+    {
+        return CompressMergeWithStrategy(stateGroup, stateGroup, OrMergeStrategy.Merge);
     }
 
     /// <summary>
@@ -234,7 +238,8 @@ public sealed class FormulaReducer
                         mergeResults.AddRange(resolved);
 
                         // Mark the second dictionary as merged by removing it from consideration
-                        workingSet[j] = null;
+                        workingSet.RemoveAt(j);
+                        j--;
                         break;
                     }
                 }
@@ -275,7 +280,7 @@ public sealed class FormulaReducer
     private StateGroup ReduceImplies(Implies implies)
     {
         return Reduce(new Or(
-            new Not(implies.Prior), 
+            new Not(implies.Prior),
             implies.Posterior
             ));
     }

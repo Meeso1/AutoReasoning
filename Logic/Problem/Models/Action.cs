@@ -6,7 +6,7 @@ public record ActionElement();
 
 public sealed record ActionStatement(string ActionName, ActionElement Element);
 
-public sealed record ActionEffect(Formula Condition, Fluent Fluent, bool Value, int CostIfChanged): ActionElement;
+public sealed record ActionEffect(Formula Condition, Formula Effect, int CostIfChanged) : ActionElement;
 
 public sealed record ActionRelease(Formula Condition, Fluent ReleasedFluent, int CostIfChanged) : ActionElement;
 
@@ -17,8 +17,8 @@ public sealed record ActionCondition(Formula Condition) : ActionElement;
 /// </summary>
 /// <param name="Name">Name of the action</param>
 /// <param name="Effects">
-/// 	Fluent change caused by the action, and cost if the fluent value changes 
-/// 	(from `[action] causes [fluent value] if [condition] costs [cost]`)
+/// 	Formula that will be satisfied after the action is executed, and cost if the formula was not satisfied before
+/// 	(from `[action] causes [formula] if [condition] costs [cost]`)
 /// </param>
 /// <param name="Releases">
 /// 	Nondeterministic fluent change statement, and cost if the fluent value changes

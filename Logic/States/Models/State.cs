@@ -8,7 +8,31 @@ using ReadOnlyFluentDict = IReadOnlyDictionary<Fluent, bool>;
 /// 	Single state specifying all fluent values
 /// </summary>
 /// <param name="FluentValues">Dictionary containing all fluent values</param>
-public sealed record State(ReadOnlyFluentDict FluentValues);
+public sealed record State(ReadOnlyFluentDict FluentValues) : IEquatable<State>
+{
+    public bool Equals(State? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        if (FluentValues.Count != other.FluentValues.Count) return false;
+
+        return FluentValues.All(kvp =>
+            other.FluentValues.TryGetValue(kvp.Key, out var value) &&
+            kvp.Value == value);
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        foreach (var kvp in FluentValues.OrderBy(x => x.Key.Name))
+        {
+            hash.Add(kvp.Key);
+            hash.Add(kvp.Value);
+        }
+        return hash.ToHashCode();
+    }
+}
 
 /// <summary>
 /// 	Group of states, specified by a list of possible parial fluent value specifications
@@ -22,6 +46,10 @@ public sealed record State(ReadOnlyFluentDict FluentValues);
 /// </remarks>
 public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluentGroups)
 {
+    public static StateGroup Empty => new([]);
+
+    public static StateGroup All => new([new Dictionary<Fluent, bool>()]);
+
     public bool Contains(State state)
     {
         return SpecifiedFluentGroups.Any(group => IsSubsetOf(group, state.FluentValues));
@@ -52,29 +80,22 @@ public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluen
         return FormulaReducer.PermutationMergeWithStrategy(group1, group2, AndMergeStrategy.Merge);
     }
 
-    public IReadOnlyList<State> GenerateAllStatesInGroup(IEnumerable<Fluent> fluentUniverse)
+    public IEnumerable<State> EnumerateStates(IReadOnlyList<Fluent> fluentUniverse)
     {
-        var allFluents = fluentUniverse.ToList();
-        var stateSet = new HashSet<State>(new StateEqualityComparer());
-        int maxPossibleStates = 1 << allFluents.Count; // 2^n
-
-        var allUnknownFluents = SpecifiedFluentGroups
-        .SelectMany(constraintDict => constraintDict.Keys.Except(allFluents))
-        .Distinct()
-        .ToList();
+        var alreadyReturned = new HashSet<State>();
+        var allUnknownFluents = SpecifiedFluentGroups.SelectMany(constraintDict => constraintDict.Keys.Except(fluentUniverse))
+                                                     .Distinct()
+                                                     .ToList();
 
         if (allUnknownFluents.Count != 0)
         {
-
             throw new ArgumentException($"Constraints contain fluents not in universe: {allUnknownFluents.Select(f => f.Name)}");
         }
 
         foreach (var constraintDict in SpecifiedFluentGroups)
         {
             // Get unspecified fluents for this constraint
-            var unspecifiedFluents = allFluents
-                .Except(constraintDict.Keys)
-                .ToList();
+            var unspecifiedFluents = fluentUniverse.Except(constraintDict.Keys).ToList();
 
             // Generate all combinations for unspecified fluents
             int totalPermutations = 1 << unspecifiedFluents.Count;
@@ -91,17 +112,18 @@ public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluen
                     fluentValues[unspecifiedFluents[j]] = value;
                 }
 
-                stateSet.Add(new State(fluentValues));
+                var newState = new State(fluentValues);
+                if (alreadyReturned.Add(newState))
+                {
+                    yield return newState;
+                }
             }
 
             // Early termination if we've generated all possible states
-            if (stateSet.Count == maxPossibleStates)
+            if (alreadyReturned.Count == 1 << fluentUniverse.Count)
             {
-                break;
+                yield break;
             }
         }
-
-        return stateSet.ToList().AsReadOnly();
     }
-
 }

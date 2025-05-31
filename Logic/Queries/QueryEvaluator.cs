@@ -1,6 +1,10 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using Logic.Problem.Models;
 using Logic.Queries.Models;
+using Logic.States;
+using Logic.States.Models;
+using Action = Logic.Problem.Models.Action;
 
 namespace Logic.Queries;
 
@@ -13,8 +17,11 @@ namespace Logic.Queries;
 /// <param name="problem">
 /// 	Problem definition
 /// </param>
-public sealed class QueryEvaluator(ProblemDefinition problem)
+public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer formulaReducer)
 {
+    private readonly History _history = new(problem, formulaReducer);
+    private readonly StateGroup _validInitialStates = StateGroup.And(problem.InitialStates, problem.ValidStates);
+
     public bool Evaluate(Query query)
     {
         return query switch
@@ -26,14 +33,29 @@ public sealed class QueryEvaluator(ProblemDefinition problem)
         };
     }
 
+    private bool CheckTrajectories(Query query, Func<IReadOnlyList<State>, bool> predicate)
+    {
+        var histories = _validInitialStates.EnumerateStates(problem.FluentUniverse)
+                                           .Select(start => _history.ComputeHistories(start, query.Program.Actions.ToList()));
+
+        return histories.All(history => query.Type switch
+        {
+            QueryType.Possibly => history.Any(predicate),
+            QueryType.Necessarily => history.All(predicate),
+            _ => throw new UnreachableException($"Query type not implemented: {query.Type}")
+        });
+    }
+
     private bool EvaluateExecutable(ExecutableQuery query)
     {
-        throw new NotImplementedException();
+        return CheckTrajectories(query, trajectory => trajectory.Count == query.Program.Actions.Count + 1);
     }
 
     private bool EvaluateAccessible(AccessibleQuery query)
     {
-        throw new NotImplementedException();
+        return CheckTrajectories(query, trajectory =>
+            trajectory.Count == query.Program.Actions.Count + 1
+            && query.States.Contains(trajectory[^1]));
     }
 
     private bool EvaluateAffordable(AffordableQuery query)
