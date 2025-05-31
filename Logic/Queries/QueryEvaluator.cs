@@ -20,6 +20,7 @@ namespace Logic.Queries;
 public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer formulaReducer)
 {
     private readonly History _history = new(problem, formulaReducer);
+    private readonly StateGroup _validInitialStates = StateGroup.And(problem.InitialStates, problem.ValidStates);
 
     public bool Evaluate(Query query)
     {
@@ -34,14 +35,13 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
 
     private bool CheckTrajectories(Query query, Func<IReadOnlyList<State>, bool> predicate)
     {
-        var histories = problem.InitialStates
-                               .EnumerateStates(problem.FluentUniverse)
-                               .Select(start => _history.ComputeHistories(start, query.Program.Actions.ToList()));
+        var histories = _validInitialStates.EnumerateStates(problem.FluentUniverse)
+                                           .Select(start => _history.ComputeHistories(start, query.Program.Actions.ToList()));
 
         return histories.All(history => query.Type switch
         {
-            QueryType.Possibly => history.All(predicate),
-            QueryType.Necessarily => history.Any(predicate),
+            QueryType.Possibly => history.Any(predicate),
+            QueryType.Necessarily => history.All(predicate),
             _ => throw new UnreachableException($"Query type not implemented: {query.Type}")
         });
     }

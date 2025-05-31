@@ -3,11 +3,12 @@ using Logic.Queries;
 using Logic.Queries.Models;
 using Logic.States;
 using Logic.States.Models;
+using Xunit.Abstractions;
 using Action = Logic.Problem.Models.Action;
 
 namespace Tests;
 
-public sealed class QueryEvaluatorTests
+public sealed class QueryEvaluatorTests(ITestOutputHelper output)
 {
     private static ProblemDefinition CreateYaleShootingProblem(params (string Fluent, bool Value)[][] initialStates)
     {
@@ -41,7 +42,7 @@ public sealed class QueryEvaluatorTests
         };
     }
 
-    private static ProblemDefinition CreateYaleShootingProblemWithReleases()
+    private static ProblemDefinition CreateYaleShootingProblemWithReleases(params (string Fluent, bool Value)[][] initialStates)
     {
         var fluents = new[] { "alive", "loaded", "walking" }.Select(name => new Fluent(name, true)).ToList();
         var actions = new List<Action>
@@ -63,13 +64,15 @@ public sealed class QueryEvaluatorTests
         return new ProblemDefinition
         {
             Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            InitialStates = new StateGroup([new Dictionary<Fluent, bool>() { [fluents[0]] = true }]), // initially alive
+            InitialStates = new StateGroup(
+                initialStates.Select(states =>
+                    states.ToDictionary(s => fluents.First(f => f.Name == s.Fluent), s => s.Value)).ToList()),
             ValidStates = StateGroup.All,
             Actions = actions.ToDictionary(a => a.Name, a => a)
         };
     }
 
-    private static ProblemDefinition CreateYaleShootingProblemWithNoninertialFluents()
+    private static ProblemDefinition CreateYaleShootingProblemWithNoninertialFluents(params (string Fluent, bool Value)[][] initialStates)
     {
         var fluents = new[] { new Fluent("alive", true), new Fluent("loaded", true), new Fluent("walking", false) };
         var actions = new List<Action>
@@ -84,13 +87,16 @@ public sealed class QueryEvaluatorTests
                 []),
             new Action("walk",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[2]), 1)], // walk causes walking
-                [], []), // impossible walk if not alive
+                [],
+                [new ActionCondition(new Not(new FluentIsSet(fluents[2])))]), // impossible walk if walking
         };
 
         return new ProblemDefinition
         {
             Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            InitialStates = new StateGroup([new Dictionary<Fluent, bool>() { [fluents[0]] = true }]), // initially alive
+            InitialStates = new StateGroup(
+                initialStates.Select(states =>
+                    states.ToDictionary(s => fluents.First(f => f.Name == s.Fluent), s => s.Value)).ToList()),
             ValidStates = new StateGroup([
                 new Dictionary<Fluent, bool>(){ [fluents[2]] = false },
                 new Dictionary<Fluent, bool>(){ [fluents[0]] = true }
@@ -161,7 +167,110 @@ public sealed class QueryEvaluatorTests
         Assert.False(evaluator.Evaluate(possibleQuery));
     }
 
-    // TODO: Check executable with releases and non-inertial fluents
+    [Fact]
+    public void EvaluateExecutable_SometimesExecutableNonDeterministicProgram_ReturnsTrueForPossiblyAndFalseForNecessarily()
+    {
+        var problem = CreateYaleShootingProblemWithReleases([("alive", true), ("loaded", false)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([
+            problem.Actions["load"],
+            problem.Actions["shoot"],
+            problem.Actions["walk"]
+        ]);
+
+        var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
+        Assert.False(evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
+        Assert.True(evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateExecutable_AlwaysExecutableNonDeterministicProgram_ReturnsTrueForNecessarilyAndPossibly()
+    {
+        var problem = CreateYaleShootingProblemWithReleases([("alive", true), ("loaded", false)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([
+            problem.Actions["load"],
+            problem.Actions["shoot"]
+        ]);
+
+        var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
+        Assert.True(evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
+        Assert.True(evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateExecutable_ProblemWithNoninertialFluents_ReturnsFalseForNecessarilyAndTrueForPossibly()
+    {
+        var problem = CreateYaleShootingProblemWithNoninertialFluents([("alive", true), ("loaded", false), ("walking", true)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([
+            problem.Actions["load"], // For walk to be executable, walking must become false after load
+			problem.Actions["walk"]
+        ]);
+
+        // TODO: Remove
+        var history = new History(problem, new FormulaReducer());
+        var trajectories = history.ComputeHistories(
+            new State(CreateState(problem.FluentUniverse,
+                ("alive", true),
+                ("loaded", false),
+                ("walking", true)
+            )),
+            program.Actions.ToList());
+        PrintTrajectories(trajectories);
+
+        var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
+        Assert.False(evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
+        Assert.True(evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateExecutable_ProblemWithNoInitialStates_ReturnsTrueForAnyProgram()
+    {
+        var problem = CreateYaleShootingProblem([("alive", false), ("walking", true)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([
+            problem.Actions["load"],
+            problem.Actions["load"]
+        ]);
+
+        var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
+        Assert.True(evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
+        Assert.True(evaluator.Evaluate(possibleQuery));
+    }
 
     // TODO: Check accessible
+
+    private static Dictionary<Fluent, bool> CreateState(IReadOnlyList<Fluent> fluents, params (string name, bool value)[] setValues)
+    {
+        return setValues.ToDictionary(f => fluents.First(fluent => fluent.Name == f.name), f => f.value);
+    }
+
+    private void PrintTrajectories(IEnumerable<IReadOnlyList<State>> trajectories)
+    {
+        foreach (var trajectory in trajectories)
+        {
+            output.WriteLine("Trajectory:");
+            foreach (var state in trajectory)
+            {
+                output.WriteLine($"  ---");
+                foreach (var (fluent, value) in state.FluentValues.OrderBy(f => f.Key.Name))
+                {
+                    output.WriteLine($"  {fluent.Name}: {value}");
+                }
+            }
+        }
+    }
 }
