@@ -56,8 +56,7 @@
             releasesActionComboBox = new ComboBox();
             releasesLabel = new Label();
             causesPanel = new Panel();
-            causesCheckBox = new CheckBox();
-            causesFluentComboBox = new ComboBox();
+            causesTextBox1 = new TextBox();
             causesNumericUpDown = new NumericUpDown();
             casuesCostLabel = new Label();
             causesTextBox2 = new TextBox();
@@ -384,8 +383,7 @@
             // 
             // causesPanel
             // 
-            causesPanel.Controls.Add(causesCheckBox);
-            causesPanel.Controls.Add(causesFluentComboBox);
+            causesPanel.Controls.Add(causesTextBox1);
             causesPanel.Controls.Add(causesNumericUpDown);
             causesPanel.Controls.Add(casuesCostLabel);
             causesPanel.Controls.Add(causesTextBox2);
@@ -399,26 +397,14 @@
             causesPanel.TabIndex = 8;
             causesPanel.Visible = false;
             // 
-            // causesCheckBox
+            // causesTextBox1
             // 
-            causesCheckBox.AutoSize = true;
-            causesCheckBox.Checked = true;
-            causesCheckBox.CheckState = CheckState.Checked;
-            causesCheckBox.Location = new Point(11, 49);
-            causesCheckBox.Name = "causesCheckBox";
-            causesCheckBox.Size = new Size(49, 19);
-            causesCheckBox.TabIndex = 8;
-            causesCheckBox.Text = "True";
-            causesCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // causesFluentComboBox
-            // 
-            causesFluentComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            causesFluentComboBox.FormattingEnabled = true;
-            causesFluentComboBox.Location = new Point(64, 49);
-            causesFluentComboBox.Name = "causesFluentComboBox";
-            causesFluentComboBox.Size = new Size(128, 23);
-            causesFluentComboBox.TabIndex = 7;
+            causesTextBox1.Location = new Point(26, 45);
+            causesTextBox1.Multiline = true;
+            causesTextBox1.Name = "causesTextBox1";
+            causesTextBox1.PlaceholderText = "Expression";
+            causesTextBox1.Size = new Size(167, 35);
+            causesTextBox1.TabIndex = 7;
             // 
             // causesNumericUpDown
             // 
@@ -440,7 +426,7 @@
             // 
             // causesTextBox2
             // 
-            causesTextBox2.Location = new Point(26, 98);
+            causesTextBox2.Location = new Point(26, 101);
             causesTextBox2.Multiline = true;
             causesTextBox2.Name = "causesTextBox2";
             causesTextBox2.PlaceholderText = "Expression";
@@ -450,7 +436,7 @@
             // causesIfLabel
             // 
             causesIfLabel.AutoSize = true;
-            causesIfLabel.Location = new Point(100, 82);
+            causesIfLabel.Location = new Point(97, 83);
             causesIfLabel.Name = "causesIfLabel";
             causesIfLabel.Size = new Size(14, 15);
             causesIfLabel.TabIndex = 3;
@@ -468,7 +454,7 @@
             // causesLabel
             // 
             causesLabel.AutoSize = true;
-            causesLabel.Location = new Point(85, 31);
+            causesLabel.Location = new Point(82, 27);
             causesLabel.Name = "causesLabel";
             causesLabel.Size = new Size(42, 15);
             causesLabel.TabIndex = 0;
@@ -580,7 +566,7 @@
             InitialCheckBox.CheckState = CheckState.Checked;
             InitialCheckBox.Location = new Point(79, 100);
             InitialCheckBox.Name = "InitialCheckBox";
-            InitialCheckBox.Size = new Size(49, 19);
+            InitialCheckBox.Size = new Size(48, 19);
             InitialCheckBox.TabIndex = 9;
             InitialCheckBox.Text = "True";
             InitialCheckBox.UseVisualStyleBackColor = true;
@@ -610,7 +596,7 @@
             statementsCheckedListBox.FormattingEnabled = true;
             statementsCheckedListBox.Location = new Point(3, 17);
             statementsCheckedListBox.Name = "statementsCheckedListBox";
-            statementsCheckedListBox.Size = new Size(367, 148);
+            statementsCheckedListBox.Size = new Size(367, 166);
             statementsCheckedListBox.TabIndex = 6;
             // 
             // panel2
@@ -640,7 +626,7 @@
             removeStatementsButton.Name = "removeStatementsButton";
             removeStatementsButton.Size = new Size(373, 23);
             removeStatementsButton.TabIndex = 7;
-            removeStatementsButton.Text = "Remove All Statements";
+            removeStatementsButton.Text = "Remove Selected Statements";
             removeStatementsButton.UseVisualStyleBackColor = true;
             removeStatementsButton.Click += removeStatementsButton_Click;
             // 
@@ -749,8 +735,7 @@
         private TextBox releasesTextBox2;
         private Label releasesIfLabel;
         private ComboBox releasesFluentComboBox;
-        private CheckBox causesCheckBox;
-        private ComboBox causesFluentComboBox;
         private ErrorProvider errorProvider1;
+        private TextBox causesTextBox1;
     }
 }
