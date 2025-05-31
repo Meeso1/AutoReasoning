@@ -263,7 +263,6 @@ public sealed class HistoryTests(ITestOutputHelper output)
         Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), deadAfterFirstShot[3]);
     }
 
-    // TODO: Should this work like that?
     [Fact]
     public void ComputeHistories_NoninertialFluents_ShouldNotMinimizeNoninertialFluents()
     {

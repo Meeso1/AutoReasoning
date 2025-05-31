@@ -3,12 +3,11 @@ using Logic.Queries;
 using Logic.Queries.Models;
 using Logic.States;
 using Logic.States.Models;
-using Xunit.Abstractions;
 using Action = Logic.Problem.Models.Action;
 
 namespace Tests;
 
-public sealed class QueryEvaluatorTests(ITestOutputHelper output)
+public sealed class QueryEvaluatorTests
 {
     private static ProblemDefinition CreateYaleShootingProblem(params (string Fluent, bool Value)[][] initialStates)
     {
@@ -53,7 +52,8 @@ public sealed class QueryEvaluatorTests(ITestOutputHelper output)
                 [new ActionCondition(new Not(new FluentIsSet(fluents[1])))]), // impossible load if loaded
             new Action("shoot",
                 [new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1)], // shoot causes not loaded
-                [new ActionRelease(new And(new FluentIsSet(fluents[1]), new FluentIsSet(fluents[0])), fluents[0], 1)], // shoot releases alive if loaded and alive
+                [new ActionRelease(new And(new FluentIsSet(fluents[1]), new FluentIsSet(fluents[0])), fluents[0], 1),  // shoot releases alive if loaded and alive
+                 new ActionRelease(new And(new FluentIsSet(fluents[1]), new FluentIsSet(fluents[0])), fluents[2], 1)], // shoot releases walking if loaded and alive
                 []),
             new Action("walk",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[2]), 1)], // walk causes walking
@@ -67,7 +67,10 @@ public sealed class QueryEvaluatorTests(ITestOutputHelper output)
             InitialStates = new StateGroup(
                 initialStates.Select(states =>
                     states.ToDictionary(s => fluents.First(f => f.Name == s.Fluent), s => s.Value)).ToList()),
-            ValidStates = StateGroup.All,
+            ValidStates = new StateGroup([
+                new Dictionary<Fluent, bool>(){ [fluents[2]] = false },
+                new Dictionary<Fluent, bool>(){ [fluents[0]] = true }
+            ]), // always (walking => alive)
             Actions = actions.ToDictionary(a => a.Name, a => a)
         };
     }
@@ -215,17 +218,6 @@ public sealed class QueryEvaluatorTests(ITestOutputHelper output)
 			problem.Actions["walk"]
         ]);
 
-        // TODO: Remove
-        var history = new History(problem, new FormulaReducer());
-        var trajectories = history.ComputeHistories(
-            new State(CreateState(problem.FluentUniverse,
-                ("alive", true),
-                ("loaded", false),
-                ("walking", true)
-            )),
-            program.Actions.ToList());
-        PrintTrajectories(trajectories);
-
         var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
         Assert.False(evaluator.Evaluate(necessaryQuery));
 
@@ -251,26 +243,122 @@ public sealed class QueryEvaluatorTests(ITestOutputHelper output)
         Assert.True(evaluator.Evaluate(possibleQuery));
     }
 
-    // TODO: Check accessible
-
-    private static Dictionary<Fluent, bool> CreateState(IReadOnlyList<Fluent> fluents, params (string name, bool value)[] setValues)
+    [Fact]
+    public void EvaluateAccessible_EmptyProgram_ReturnsTrueForConditionsSatisfiedInAllInitialStates()
     {
-        return setValues.ToDictionary(f => fluents.First(fluent => fluent.Name == f.name), f => f.value);
+        var problem = CreateYaleShootingProblem([("alive", true)]);
+        var formulaReducer = new FormulaReducer();
+        var evaluator = new QueryEvaluator(problem, formulaReducer);
+
+        var satisfiedCondition = formulaReducer.Reduce(new FluentIsSet(problem.Fluents["alive"]));
+        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, new ActionProgram([]), satisfiedCondition)));
+        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, new ActionProgram([]), satisfiedCondition)));
+
+        var unsatisfiedCondition = formulaReducer.Reduce(new FluentIsSet(problem.Fluents["loaded"]));
+        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, new ActionProgram([]), unsatisfiedCondition)));
+        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, new ActionProgram([]), unsatisfiedCondition)));
     }
 
-    private void PrintTrajectories(IEnumerable<IReadOnlyList<State>> trajectories)
+    [Fact]
+    public void EvaluateAccessible_ImpossibleProgram_ReturnsFalse()
     {
-        foreach (var trajectory in trajectories)
-        {
-            output.WriteLine("Trajectory:");
-            foreach (var state in trajectory)
-            {
-                output.WriteLine($"  ---");
-                foreach (var (fluent, value) in state.FluentValues.OrderBy(f => f.Key.Name))
-                {
-                    output.WriteLine($"  {fluent.Name}: {value}");
-                }
-            }
-        }
+        var problem = CreateYaleShootingProblem([("alive", true)]);
+        var formulaReducer = new FormulaReducer();
+        var evaluator = new QueryEvaluator(problem, formulaReducer);
+
+        var program = new ActionProgram([
+            problem.Actions["load"],
+            problem.Actions["load"]
+        ]);
+
+        var condition = formulaReducer.Reduce(new FluentIsSet(problem.Fluents["loaded"]));
+        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
+        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
+    }
+
+    [Fact]
+    public void EvaluateAccessible_ConditionallyImpossibleProgram_ReturnsFalseForNecessarilyAndTrueForPossibly()
+    {
+        var problem = CreateYaleShootingProblemWithReleases([("alive", true), ("loaded", false)]);
+        var formulaReducer = new FormulaReducer();
+        var evaluator = new QueryEvaluator(problem, formulaReducer);
+
+        var program = new ActionProgram([
+            problem.Actions["load"],
+            problem.Actions["shoot"],
+            problem.Actions["walk"]
+        ]);
+
+        var condition = formulaReducer.Reduce(new Not(new FluentIsSet(problem.Fluents["loaded"])));
+        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
+        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
+    }
+
+    [Fact]
+    public void EvaluateAccessible_ConditionSatisfiedFromSomeInitialStates_ReturnsFalse()
+    {
+        var problem = CreateYaleShootingProblem([("alive", true), ("loaded", false)]);
+        var formulaReducer = new FormulaReducer();
+        var evaluator = new QueryEvaluator(problem, formulaReducer);
+
+        var program = new ActionProgram([
+            problem.Actions["load"]
+        ]);
+
+        var condition = formulaReducer.Reduce(new FluentIsSet(problem.Fluents["walking"]));
+        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
+        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
+    }
+
+    [Fact]
+    public void EvaluateAccessible_ConditionSatisfiedFromAllInitialStates_ReturnsTrue()
+    {
+        var problem = CreateYaleShootingProblemWithReleases([("loaded", false)]);
+        var formulaReducer = new FormulaReducer();
+        var evaluator = new QueryEvaluator(problem, formulaReducer);
+
+        var program = new ActionProgram([
+            problem.Actions["load"]
+        ]);
+
+        var condition = formulaReducer.Reduce(new FluentIsSet(problem.Fluents["loaded"]));
+        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
+        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
+    }
+
+    [Fact]
+    public void EvaluateAccessible_ConditionSometimesSatisfiedFromAllInitialStates_ReturnsTrueForPossiblyAndFalseForNecessarily()
+    {
+        var problem = CreateYaleShootingProblemWithReleases([("alive", true), ("loaded", false)]);
+        var formulaReducer = new FormulaReducer();
+        var evaluator = new QueryEvaluator(problem, formulaReducer);
+
+        var program = new ActionProgram([
+            problem.Actions["load"],
+            problem.Actions["shoot"]
+        ]);
+
+        var condition = formulaReducer.Reduce(new Not(new FluentIsSet(problem.Fluents["walking"])));
+        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
+        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
+    }
+
+    [Fact]
+    public void EvaluateAccessible_ProblemWithNoInitialStates_ReturnsTrueForAnyProgramAndCondition()
+    {
+        var problem = CreateYaleShootingProblem([("alive", false), ("walking", true)]);
+        var formulaReducer = new FormulaReducer();
+        var evaluator = new QueryEvaluator(problem, formulaReducer);
+
+        var program = new ActionProgram([
+            problem.Actions["load"],
+            problem.Actions["load"]
+        ]);
+
+        var necessaryQuery = new AccessibleQuery(QueryType.Necessarily, program, formulaReducer.Reduce(new False()));
+        Assert.True(evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new AccessibleQuery(QueryType.Possibly, program, formulaReducer.Reduce(new False()));
+        Assert.True(evaluator.Evaluate(possibleQuery));
     }
 }
