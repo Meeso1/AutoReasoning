@@ -116,7 +116,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
 
         var singleTrajectory = Assert.Single(histories);
         var singleState = Assert.Single(singleTrajectory);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), singleState, new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), singleState);
     }
 
     [Fact]
@@ -134,8 +134,8 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var singleTrajectory = Assert.Single(histories);
         
         Assert.Equal(2, singleTrajectory.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), singleTrajectory[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), singleTrajectory[1], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), singleTrajectory[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), singleTrajectory[1]);
     }
 
     [Fact]
@@ -149,10 +149,10 @@ public sealed class HistoryTests(ITestOutputHelper output)
 
         var singleTrajectory = Assert.Single(histories);
         Assert.Equal(4, singleTrajectory.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), singleTrajectory[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", true))), singleTrajectory[1], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))), singleTrajectory[2], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), singleTrajectory[3], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), singleTrajectory[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", true))), singleTrajectory[1]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))), singleTrajectory[2]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), singleTrajectory[3]);
     }
 
     [Fact]
@@ -166,9 +166,9 @@ public sealed class HistoryTests(ITestOutputHelper output)
 
         var singleTrajectory = Assert.Single(histories);
         Assert.Equal(3, singleTrajectory.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), singleTrajectory[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", true))), singleTrajectory[1], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))), singleTrajectory[2], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), singleTrajectory[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", true))), singleTrajectory[1]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))), singleTrajectory[2]);
     }
 
     [Fact]
@@ -185,13 +185,13 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var firstIndex = histories[0][^1].FluentValues.Values.Any(v => v) ? 0 : 1; // first index: end state with alive
         var firstTrajectory = histories[firstIndex];
         Assert.Equal(2, firstTrajectory.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), firstTrajectory[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), firstTrajectory[1], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), firstTrajectory[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), firstTrajectory[1]);
 
         var secondTrajectory = histories[1 - firstIndex];
         Assert.Equal(2, secondTrajectory.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), secondTrajectory[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), secondTrajectory[1], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), secondTrajectory[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), secondTrajectory[1]);
     }
 
     [Fact]
@@ -210,22 +210,22 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var deadAfterFirstShot = histories.First(h => !h[^3].FluentValues.Values.Any(v => v) && !h[^1].FluentValues.Values.Any(v => v));
 
         Assert.Equal(4, aliveAtEnd.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveAtEnd[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveAtEnd[1], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveAtEnd[2], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveAtEnd[3], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveAtEnd[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveAtEnd[1]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveAtEnd[2]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveAtEnd[3]);
 
         Assert.Equal(4, aliveBeforeSecondShot.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveBeforeSecondShot[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveBeforeSecondShot[1], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveBeforeSecondShot[2], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), aliveBeforeSecondShot[3], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveBeforeSecondShot[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveBeforeSecondShot[1]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveBeforeSecondShot[2]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), aliveBeforeSecondShot[3]);
 
         Assert.Equal(4, deadAfterFirstShot.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), deadAfterFirstShot[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), deadAfterFirstShot[1], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", true), ("walking", false))), deadAfterFirstShot[2], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), deadAfterFirstShot[3], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), deadAfterFirstShot[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), deadAfterFirstShot[1]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", true), ("walking", false))), deadAfterFirstShot[2]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), deadAfterFirstShot[3]);
     }
 
     [Fact]
@@ -244,23 +244,23 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var deadAfterFirstShot = histories.First(h => !h[1].FluentValues.Values.Any(v => v) && !h[3].FluentValues.Values.Any(v => v));
 
         Assert.Equal(5, aliveAtEnd.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveAtEnd[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveAtEnd[1], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveAtEnd[2], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveAtEnd[3], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", true))), aliveAtEnd[4], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveAtEnd[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveAtEnd[1]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveAtEnd[2]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveAtEnd[3]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", true))), aliveAtEnd[4]);
 
         Assert.Equal(4, aliveBeforeSecondShot.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveBeforeSecondShot[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveBeforeSecondShot[1], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveBeforeSecondShot[2], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), aliveBeforeSecondShot[3], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveBeforeSecondShot[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveBeforeSecondShot[1]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), aliveBeforeSecondShot[2]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), aliveBeforeSecondShot[3]);
 
         Assert.Equal(4, deadAfterFirstShot.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), deadAfterFirstShot[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), deadAfterFirstShot[1], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", true), ("walking", false))), deadAfterFirstShot[2], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), deadAfterFirstShot[3], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))), deadAfterFirstShot[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), deadAfterFirstShot[1]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", true), ("walking", false))), deadAfterFirstShot[2]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), deadAfterFirstShot[3]);
     }
 
     // TODO: Should this work like that?
@@ -280,16 +280,16 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var deadAndNotWalking = histories.First(h => h[1].FluentValues.Values.Count(v => v) == 0);
 
         Assert.Equal(2, aliveAndWalking.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))), aliveAndWalking[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", true))), aliveAndWalking[1], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))), aliveAndWalking[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", true))), aliveAndWalking[1]);
 
         Assert.Equal(2, aliveAndNotWalking.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))), aliveAndNotWalking[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveAndNotWalking[1], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))), aliveAndNotWalking[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))), aliveAndNotWalking[1]);
 
         Assert.Equal(2, deadAndNotWalking.Count);
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))), deadAndNotWalking[0], new StateEqualityComparer());
-        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), deadAndNotWalking[1], new StateEqualityComparer());
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))), deadAndNotWalking[0]);
+        Assert.Equal(new State(CreateState(problem.FluentUniverse, ("alive", false), ("loaded", false), ("walking", false))), deadAndNotWalking[1]);
     }
 
     // Helper to see what's going on when stuff inevitably breaks

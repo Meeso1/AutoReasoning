@@ -8,7 +8,31 @@ using ReadOnlyFluentDict = IReadOnlyDictionary<Fluent, bool>;
 /// 	Single state specifying all fluent values
 /// </summary>
 /// <param name="FluentValues">Dictionary containing all fluent values</param>
-public sealed record State(ReadOnlyFluentDict FluentValues);
+public sealed record State(ReadOnlyFluentDict FluentValues)
+{
+    public bool Equals(State? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        if (FluentValues.Count != other.FluentValues.Count) return false;
+
+        return FluentValues.All(kvp =>
+            other.FluentValues.TryGetValue(kvp.Key, out var value) &&
+            kvp.Value == value);
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        foreach (var kvp in FluentValues.OrderBy(x => x.Key.Name))
+        {
+            hash.Add(kvp.Key);
+            hash.Add(kvp.Value);
+        }
+        return hash.ToHashCode();
+    }
+}
 
 /// <summary>
 /// 	Group of states, specified by a list of possible parial fluent value specifications
@@ -58,7 +82,7 @@ public sealed record StateGroup(IReadOnlyList<ReadOnlyFluentDict> SpecifiedFluen
 
     public IEnumerable<State> EnumerateStates(IReadOnlyList<Fluent> fluentUniverse)
     {
-        var alreadyReturned = new HashSet<State>(new StateEqualityComparer());
+        var alreadyReturned = new HashSet<State>();
         var allUnknownFluents = SpecifiedFluentGroups.SelectMany(constraintDict => constraintDict.Keys.Except(fluentUniverse))
                                                      .Distinct()
                                                      .ToList();

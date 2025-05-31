@@ -3,9 +3,8 @@ using Logic.States.Models;
 
 namespace Tests;
 
-public class StateEqualityComparerTests
+public sealed class StateEqualityTests
 {
-    private readonly StateEqualityComparer _comparer = new();
     private readonly Fluent FluentA = new("A", false);
     private readonly Fluent FluentB = new("B", false);
     private readonly Fluent FluentC = new("C", false);
@@ -13,7 +12,10 @@ public class StateEqualityComparerTests
     [Fact]
     public void Equals_BothNull_ReturnsTrue()
     {
-        Assert.True(_comparer.Equals(null, null));
+        State? state1 = null;
+        State? state2 = null;
+
+        Assert.True(state1 == state2);
     }
 
     [Fact]
@@ -21,8 +23,8 @@ public class StateEqualityComparerTests
     {
         var state = new State(new Dictionary<Fluent, bool> { { FluentA, true } });
 
-        Assert.False(_comparer.Equals(state, null));
-        Assert.False(_comparer.Equals(null, state));
+        Assert.False(state.Equals(null));
+        Assert.False(state == null);
     }
 
     [Fact]
@@ -30,7 +32,7 @@ public class StateEqualityComparerTests
     {
         var state = new State(new Dictionary<Fluent, bool> { { FluentA, true } });
 
-        Assert.True(_comparer.Equals(state, state));
+        Assert.True(state.Equals(state));
     }
 
     [Fact]
@@ -39,7 +41,7 @@ public class StateEqualityComparerTests
         var state1 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
         var state2 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
 
-        Assert.True(_comparer.Equals(state1, state2));
+        Assert.True(state1.Equals(state2));
     }
 
     [Fact]
@@ -48,7 +50,7 @@ public class StateEqualityComparerTests
         var state1 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
         var state2 = new State(new Dictionary<Fluent, bool> { { FluentB, false }, { FluentA, true } });
 
-        Assert.True(_comparer.Equals(state1, state2));
+        Assert.True(state1.Equals(state2));
     }
 
     [Fact]
@@ -57,7 +59,7 @@ public class StateEqualityComparerTests
         var state1 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
         var state2 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, true } });
 
-        Assert.False(_comparer.Equals(state1, state2));
+        Assert.False(state1.Equals(state2));
     }
 
     [Fact]
@@ -66,7 +68,7 @@ public class StateEqualityComparerTests
         var state1 = new State(new Dictionary<Fluent, bool> { { FluentA, true } });
         var state2 = new State(new Dictionary<Fluent, bool> { { FluentB, true } });
 
-        Assert.False(_comparer.Equals(state1, state2));
+        Assert.False(state1.Equals(state2));
     }
 
     [Fact]
@@ -75,7 +77,7 @@ public class StateEqualityComparerTests
         var state1 = new State(new Dictionary<Fluent, bool> { { FluentA, true } });
         var state2 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
 
-        Assert.False(_comparer.Equals(state1, state2));
+        Assert.False(state1.Equals(state2));
     }
 
     [Fact]
@@ -84,7 +86,7 @@ public class StateEqualityComparerTests
         var state1 = new State(new Dictionary<Fluent, bool>());
         var state2 = new State(new Dictionary<Fluent, bool>());
 
-        Assert.True(_comparer.Equals(state1, state2));
+        Assert.True(state1.Equals(state2));
     }
 
     [Fact]
@@ -93,8 +95,8 @@ public class StateEqualityComparerTests
         var state1 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
         var state2 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
 
-        var hash1 = _comparer.GetHashCode(state1);
-        var hash2 = _comparer.GetHashCode(state2);
+        var hash1 = state1.GetHashCode();
+        var hash2 = state2.GetHashCode();
 
         Assert.Equal(hash1, hash2);
     }
@@ -105,8 +107,8 @@ public class StateEqualityComparerTests
         var state1 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
         var state2 = new State(new Dictionary<Fluent, bool> { { FluentB, false }, { FluentA, true } });
 
-        var hash1 = _comparer.GetHashCode(state1);
-        var hash2 = _comparer.GetHashCode(state2);
+        var hash1 = state1.GetHashCode();
+        var hash2 = state2.GetHashCode();
 
         Assert.Equal(hash1, hash2);
     }
@@ -117,8 +119,8 @@ public class StateEqualityComparerTests
         var state1 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
         var state2 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, true } });
 
-        var hash1 = _comparer.GetHashCode(state1);
-        var hash2 = _comparer.GetHashCode(state2);
+        var hash1 = state1.GetHashCode();
+        var hash2 = state2.GetHashCode();
 
         Assert.NotEqual(hash1, hash2);
     }
@@ -129,16 +131,16 @@ public class StateEqualityComparerTests
         var state1 = new State(new Dictionary<Fluent, bool>());
         var state2 = new State(new Dictionary<Fluent, bool>());
 
-        var hash1 = _comparer.GetHashCode(state1);
-        var hash2 = _comparer.GetHashCode(state2);
+        var hash1 = state1.GetHashCode();
+        var hash2 = state2.GetHashCode();
 
         Assert.Equal(hash1, hash2);
     }
 
     [Fact]
-    public void HashSet_WithComparer_CorrectlyDeduplicatesStates()
+    public void HashSet_CorrectlyDeduplicatesStates()
     {
-        var hashSet = new HashSet<State>(_comparer);
+        var hashSet = new HashSet<State>();
         var state1 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
         var state2 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
         var state3 = new State(new Dictionary<Fluent, bool> { { FluentB, false }, { FluentA, true } }); // Same content, different order
@@ -151,9 +153,9 @@ public class StateEqualityComparerTests
     }
 
     [Fact]
-    public void HashSet_WithComparer_KeepsDifferentStates()
+    public void HashSet_KeepsDifferentStates()
     {
-        var hashSet = new HashSet<State>(_comparer);
+        var hashSet = new HashSet<State>();
         var state1 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, false } });
         var state2 = new State(new Dictionary<Fluent, bool> { { FluentA, false }, { FluentB, true } });
         var state3 = new State(new Dictionary<Fluent, bool> { { FluentA, true }, { FluentB, true } });
