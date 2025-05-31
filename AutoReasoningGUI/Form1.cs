@@ -9,7 +9,7 @@ using System.ComponentModel;
 
 namespace AutoReasoningGUI
 {
-    public partial class Form1 : Form // TODO: Zrobiæ usuwanie wybranych statement
+    public partial class Form1 : Form // TODO: Zrobiï¿½ usuwanie wybranych statement
     {
         public App App { get; } = new();
         public BindingList<Fluent> Fluents = new();
@@ -309,7 +309,8 @@ namespace AutoReasoningGUI
                     {
                         Statements.Add(statement);
                         fluent = Fluents.FirstOrDefault(f => f.Name == fluentName);
-                        ActionEffect actionCauses = new ActionEffect(formula, fluent, isTrue, (int)cost);
+                        Formula fluentChangeFormula = isTrue ? new FluentIsSet(fluent) : new Not(new FluentIsSet(fluent));
+                        ActionEffect actionCauses = new ActionEffect(formula, fluentChangeFormula, (int)cost);
                         actionStatement = new ActionStatement(actionName, actionCauses);
                         _actionStatements.Add(actionStatement);
                         UpdateStatementsList();
