@@ -100,7 +100,7 @@ namespace AutoReasoningGUI
                 if (fluent.IsInertial == true)
                 {
                     this.releasesFluentComboBox.Items.Add($"{fluentName}");
-                }                
+                }
             }
         }
 
@@ -463,6 +463,16 @@ namespace AutoReasoningGUI
             if (e.KeyCode == Keys.Delete)
             {
                 removeActionsButton_Click(sender, EventArgs.Empty);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void statementsCheckedListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                removeStatementsButton_Click(sender, EventArgs.Empty);
                 e.Handled = true;
                 e.SuppressKeyPress = true;
             }

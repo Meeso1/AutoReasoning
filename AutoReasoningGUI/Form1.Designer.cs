@@ -566,7 +566,7 @@
             InitialCheckBox.CheckState = CheckState.Checked;
             InitialCheckBox.Location = new Point(79, 100);
             InitialCheckBox.Name = "InitialCheckBox";
-            InitialCheckBox.Size = new Size(48, 19);
+            InitialCheckBox.Size = new Size(49, 19);
             InitialCheckBox.TabIndex = 9;
             InitialCheckBox.Text = "True";
             InitialCheckBox.UseVisualStyleBackColor = true;
@@ -598,6 +598,7 @@
             statementsCheckedListBox.Name = "statementsCheckedListBox";
             statementsCheckedListBox.Size = new Size(367, 166);
             statementsCheckedListBox.TabIndex = 6;
+            statementsCheckedListBox.KeyDown += statementsCheckedListBox_KeyDown;
             // 
             // panel2
             // 
