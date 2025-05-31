@@ -128,15 +128,15 @@
             // queryTypeComboBox
             // 
             queryTypeComboBox.FormattingEnabled = true;
-            queryTypeComboBox.Location = new Point(643, 17);
+            queryTypeComboBox.Location = new Point(645, 17);
             queryTypeComboBox.Name = "queryTypeComboBox";
-            queryTypeComboBox.Size = new Size(121, 23);
+            queryTypeComboBox.Size = new Size(119, 23);
             queryTypeComboBox.TabIndex = 10;
             // 
             // queryTypeLabel
             // 
             queryTypeLabel.AutoSize = true;
-            queryTypeLabel.Location = new Point(533, 20);
+            queryTypeLabel.Location = new Point(534, 62);
             queryTypeLabel.Name = "queryTypeLabel";
             queryTypeLabel.Size = new Size(104, 15);
             queryTypeLabel.TabIndex = 11;
@@ -153,7 +153,7 @@
             // queryClassLabel
             // 
             queryClassLabel.AutoSize = true;
-            queryClassLabel.Location = new Point(561, 62);
+            queryClassLabel.Location = new Point(562, 20);
             queryClassLabel.Name = "queryClassLabel";
             queryClassLabel.Size = new Size(76, 15);
             queryClassLabel.TabIndex = 13;
@@ -170,7 +170,7 @@
             // budgetLabel
             // 
             budgetLabel.AutoSize = true;
-            budgetLabel.Location = new Point(545, 100);
+            budgetLabel.Location = new Point(550, 100);
             budgetLabel.Name = "budgetLabel";
             budgetLabel.Size = new Size(89, 15);
             budgetLabel.TabIndex = 15;
