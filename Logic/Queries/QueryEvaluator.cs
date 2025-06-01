@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using Logic.Problem.Models;
 using Logic.Queries.Models;
@@ -58,8 +59,43 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
             && query.States.Contains(trajectory[^1]));
     }
 
+
+
+    private bool AffordablePredicate(int costLimit, ActionProgram actions, IReadOnlyList<State> trajectory)
+    {
+        int cost = 0;
+        for(int i=0; i<actions.Actions.Count; i++)
+        {
+            var action = actions.Actions[i];
+
+            foreach (var cause in action.Effects)
+            {
+                if (!cause.Condition.IsSatisfiedBy(trajectory[i])) { continue; }
+
+                if (!cause.Effect.IsSatisfiedBy(trajectory[i]) && cause.Effect.IsSatisfiedBy(trajectory[i+1])) {
+                    cost += cause.CostIfChanged;
+                }
+            }
+
+            foreach (var release in action.Releases)
+            {
+                if (!release.Condition.IsSatisfiedBy(trajectory[i])) { continue; }
+
+                Formula fluentState = new FluentIsSet(release.ReleasedFluent);
+
+                if (fluentState.IsSatisfiedBy(trajectory[i]) != fluentState.IsSatisfiedBy(trajectory[i + 1]))
+                {
+                    cost += release.CostIfChanged;
+                }
+            }
+        }
+        return cost <= costLimit;
+    }
+
     private bool EvaluateAffordable(AffordableQuery query)
     {
-        throw new NotImplementedException();
+        return CheckTrajectories(query, trajectory =>
+            trajectory.Count == query.Program.Actions.Count + 1
+            && AffordablePredicate(query.CostLimit, query.Program, trajectory));
     }
 }
