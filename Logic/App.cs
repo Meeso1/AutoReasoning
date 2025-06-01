@@ -20,7 +20,7 @@ public sealed class App
 
     public SetModelResult SetModel(IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyList<ActionStatement> actionStatements,
-        IReadOnlyDictionary<Fluent, bool> initials,
+        IReadOnlyList<Formula> initials,
         IReadOnlyList<Formula> always)
     {
         ProblemDefinition problem = ProblemParser.CreateProblemDefinition(fluents, actionStatements, initials, always);

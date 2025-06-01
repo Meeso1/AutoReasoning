@@ -35,11 +35,7 @@ public sealed class ProblemDefinitionParserTests
             new ActionStatement("move", new ActionCondition(new FluentIsSet(FluentB)))
         };
 
-        var initials = new Dictionary<Fluent, bool>
-        {
-            { FluentA, false },
-            { FluentB, true }
-        };
+        var initials = new And(new Not(new FluentIsSet(FluentA)), new FluentIsSet(FluentB));
 
         var always = new List<Formula>
         {
@@ -47,7 +43,7 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -80,11 +76,7 @@ public sealed class ProblemDefinitionParserTests
             new ActionStatement("jump", new ActionRelease(new FluentIsSet(FluentA), FluentB, 1))
         };
 
-        var initials = new Dictionary<Fluent, bool>
-        {
-            { FluentA, false },
-            { FluentB, true }
-        };
+        var initials = new And(new Not(new FluentIsSet(FluentA)), new FluentIsSet(FluentB));
 
         var always = new List<Formula>
         {
@@ -92,7 +84,7 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -126,7 +118,7 @@ public sealed class ProblemDefinitionParserTests
             new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1))
         };
 
-        var initials = new Dictionary<Fluent, bool>();
+        var initials = new True();
 
         // Constraint: A implies B (if A is true, B must also be true)
         var always = new List<Formula>
@@ -135,7 +127,7 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -168,11 +160,8 @@ public sealed class ProblemDefinitionParserTests
             new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1))
         };
 
-        // Initial: A is false
-        var initials = new Dictionary<Fluent, bool>
-        {
-            { FluentA, true }
-        };
+        // Initial: A is true
+        var initials = new FluentIsSet(FluentA);
 
         // Constraint: A implies B (if A is true, B must also be true)
         var always = new List<Formula>
@@ -181,16 +170,16 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
 
-        // Initial states should only include the state where A=false
+        // Initial states should only include the state where A=true and B=true
         var initialStates = result.InitialStates.SpecifiedFluentGroups;
         Assert.Single(initialStates);
         Assert.Contains(initialStates, dict =>
-            dict.ContainsKey(FluentA) && dict[FluentA] == true && 
+            dict.ContainsKey(FluentA) && dict[FluentA] == true &&
             dict.ContainsKey(FluentB) && dict[FluentB] == true && dict.Count == 2);
     }
 
@@ -210,11 +199,7 @@ public sealed class ProblemDefinitionParserTests
         new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1))
     };
 
-        var initials = new Dictionary<Fluent, bool>
-    {
-        { FluentA, false },
-        { FluentB, true }
-    };
+        var initials = new And(new Not(new FluentIsSet(FluentA)), new FluentIsSet(FluentB));
 
         // Constraints: A implies B, and B implies C
         var always = new List<Formula>
@@ -224,7 +209,7 @@ public sealed class ProblemDefinitionParserTests
     };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -273,7 +258,7 @@ public sealed class ProblemDefinitionParserTests
             new ActionStatement("move", new ActionEffect(new True(), new FluentIsSet(FluentA), 1))
         };
 
-        var initials = new Dictionary<Fluent, bool>();
+        var initials = new True();
 
         // Contradictory constraints: A and not A
         var always = new List<Formula>
@@ -283,7 +268,7 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -310,10 +295,7 @@ public sealed class ProblemDefinitionParserTests
     };
 
         // Initial state: A is false
-        var initials = new Dictionary<Fluent, bool>
-    {
-        { FluentA, false }
-    };
+        var initials = new Not(new FluentIsSet(FluentA));
 
         // Constraint: A must always be true
         var always = new List<Formula>
@@ -322,7 +304,7 @@ public sealed class ProblemDefinitionParserTests
     };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -353,10 +335,7 @@ public sealed class ProblemDefinitionParserTests
     };
 
         // Initial state only specifies A=true
-        var initials = new Dictionary<Fluent, bool>
-    {
-        { FluentA, true }
-    };
+        var initials = new FluentIsSet(FluentA);
 
         // Constraint: A implies B, and B implies C (if A is true, both B and C must be true)
         var always = new List<Formula>
@@ -366,7 +345,7 @@ public sealed class ProblemDefinitionParserTests
     };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -409,10 +388,7 @@ public sealed class ProblemDefinitionParserTests
                 3))
         };
 
-        var initials = new Dictionary<Fluent, bool>
-        {
-            { FluentC, true }
-        };
+        var initials = new FluentIsSet(FluentC);
 
         var always = new List<Formula>
         {
@@ -420,7 +396,7 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -446,11 +422,11 @@ public sealed class ProblemDefinitionParserTests
         // Arrange
         var fluents = new Dictionary<string, Fluent>();
         var actionStatements = new List<ActionStatement>();
-        var initials = new Dictionary<Fluent, bool>();
+        var initials = new True();
         var always = new List<Formula> { new True() };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
