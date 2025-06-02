@@ -1,4 +1,5 @@
-﻿using Logic.States.Models;
+﻿using System.Collections.Generic;
+using Logic.States.Models;
 
 namespace Logic.States;
 
@@ -133,6 +134,37 @@ public sealed class FormulaReducer
         return CompressMergeWithStrategy(stateGroup, stateGroup, OrMergeStrategy.Merge);
     }
 
+
+
+    public class FluentDictComparer : IEqualityComparer<ReadOnlyFluentDict>
+    {
+        public bool Equals(ReadOnlyFluentDict? x, ReadOnlyFluentDict? y)
+        {
+            if (x == null || y == null) return false;
+            if (x == y) return true;
+            if (x.Count != y.Count) return false;
+
+            foreach (var kvp in x)
+            {
+                if (!y.TryGetValue(kvp.Key, out var value) || value != kvp.Value)
+                    return false;
+            }
+            return true;
+        }
+
+        public int GetHashCode(ReadOnlyFluentDict obj)
+        {
+            if (obj == null) return 0;
+
+            int hash = 0;
+            foreach (var kvp in obj.OrderBy(x => x.Key.Name))
+            {
+                hash ^= kvp.Key.GetHashCode() ^ kvp.Value.GetHashCode();
+            }
+            return hash;
+        }
+    }
+
     /// <summary>
     /// Merges two <see cref="StateGroup"/> by merging each FluentDict on the left with each FluentDict on the right. 
     /// Important for when we have (... OR ... ) AND ( ... OR ... )
@@ -145,7 +177,7 @@ public sealed class FormulaReducer
     /// </returns>
     public static StateGroup PermutationMergeWithStrategy(StateGroup leftGroup, StateGroup rightGroup, IFluentDictionaryMergeStrategy.MergeDelegate strategy)
     {
-        List<ReadOnlyFluentDict> result = [];
+        HashSet<ReadOnlyFluentDict> result = new(new FluentDictComparer());
 
         for (int leftIdx = 0; leftIdx < leftGroup.SpecifiedFluentGroups.Count; leftIdx++)
         {
@@ -169,10 +201,10 @@ public sealed class FormulaReducer
 
                 var resolved = strategy(lessSpecificGroup, moreSpecificGroup);
 
-                result.AddRange(resolved);
+                result.UnionWith(resolved);
             }
         }
-        return new StateGroup(result);
+        return new StateGroup(result.ToList());
     }
 
     /// <summary>
@@ -187,9 +219,17 @@ public sealed class FormulaReducer
     public static StateGroup CompressMergeWithStrategy(StateGroup leftGroup, StateGroup rightGroup, IFluentDictionaryMergeStrategy.MergeDelegate strategy)
     {
         // Combine all fluent dictionaries from both groups into a single working set
+        var comparer = new FluentDictComparer();
         List<ReadOnlyFluentDict> workingSet = [];
-        workingSet.AddRange(leftGroup.SpecifiedFluentGroups);
-        workingSet.AddRange(rightGroup.SpecifiedFluentGroups);
+
+        // Add items while avoiding duplicates
+        foreach (var dict in leftGroup.SpecifiedFluentGroups.Concat(rightGroup.SpecifiedFluentGroups))
+        {
+            if (!workingSet.Any(existing => comparer.Equals(existing, dict)))
+            {
+                workingSet.Add(dict);
+            }
+        }
 
         // Continue merging until no new changes occur
         bool changesMade;
@@ -252,11 +292,14 @@ public sealed class FormulaReducer
             }
 
             // Update working set for next iteration, removing any null entries
-            workingSet = mergeResults.Where(dict => dict != null).ToList();
+            workingSet = mergeResults;
 
         } while (changesMade);
 
-        return new StateGroup(workingSet);
+        HashSet<ReadOnlyFluentDict> result = new(new FluentDictComparer());
+        result.UnionWith(workingSet);
+
+        return new StateGroup(result.ToList());
     }
 
     /// <summary>

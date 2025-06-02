@@ -36,25 +36,25 @@ public sealed class ProblemDefinitionParser
     /// <returns>
     /// 	True if parsing was successful, false otherwise
     /// </returns>
-    public ProblemDefinition CreateProblemDefinition(
+    public static ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyList<ActionStatement> actionStatements,
-        IReadOnlyDictionary<Fluent, bool> initials,
+        IReadOnlyList<Formula> initials,
         IReadOnlyList<Formula> always)
     {
         IReadOnlyDictionary<string, Action> actions = ProcessActionStatements(actionStatements);
         return CreateProblemDefinition(fluents, actions, initials, always);
     }
 
-    private ProblemDefinition CreateProblemDefinition(
+    public static ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyDictionary<string, Action> actions,
-        IReadOnlyDictionary<Fluent, bool> initials,
+        IReadOnlyList<Formula> initials,
         IReadOnlyList<Formula> always)
         
     {
-        StateGroup validStates = ProcessValidStates(always);
-        StateGroup initialStates = ProcessInitialStates(validStates, initials);
+        StateGroup validStates = ProcessStatesFromFormulas(always);
+        StateGroup initialStates = StateGroup.And(validStates, ProcessStatesFromFormulas(initials));
         return new ProblemDefinition
         {
             Fluents = fluents,
@@ -110,7 +110,7 @@ public sealed class ProblemDefinitionParser
         return actions;
     }
 
-    private static StateGroup ProcessValidStates(IReadOnlyList<Formula> always)
+    private static StateGroup ProcessStatesFromFormulas(IReadOnlyList<Formula> always)
     {
         FormulaReducer formulaReducer = new();
         Formula finalFormula = new True();
@@ -119,45 +119,4 @@ public sealed class ProblemDefinitionParser
         }
         return formulaReducer.Reduce(finalFormula);
     }
-
-    private static StateGroup ProcessInitialStates(StateGroup validStates, IReadOnlyDictionary<Fluent, bool> initials)
-    {
-        List<Dictionary<Fluent, bool>> initialStates = [];
-        HashSet<string> stateSignatures = [];
-
-        foreach (IReadOnlyDictionary<Fluent, bool> state in validStates.SpecifiedFluentGroups)
-        {
-            IEnumerable<Dictionary<Fluent, bool>> mergedStates;
-            if (state.Count <= initials.Count)
-                mergedStates = AndMergeStrategy.Merge(state, initials);
-            else
-                mergedStates = AndMergeStrategy.Merge(initials, state);
-
-            foreach (var mergedState in mergedStates)
-            {
-                // Create a signature for this state to check for duplicates
-                string signature = CreateStateSignature(mergedState);
-
-                // Only add if we haven't seen this state before
-                if (!stateSignatures.Contains(signature))
-                {
-                    stateSignatures.Add(signature);
-                    initialStates.Add(mergedState);
-                }
-            }
-        }
-        return new StateGroup(initialStates);
-    }
-
-    // Helper method to create a consistent string representation of a state for duplicate checking
-    private static string CreateStateSignature(IReadOnlyDictionary<Fluent, bool> state)
-    {
-        // Sort fluents by name to ensure consistent ordering
-        var sortedEntries = state
-            .OrderBy(kv => kv.Key.Name)
-            .Select(kv => $"{kv.Key.Name}={kv.Value}");
-
-        return string.Join(",", sortedEntries);
-    }
-
 }

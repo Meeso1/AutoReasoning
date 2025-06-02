@@ -234,9 +234,9 @@ public sealed class QueryParser(
             return false;
         }
 
-        if (!int.TryParse(split[1], out var budget))
+        if (!uint.TryParse(split[1], out var budget))
         {
-            errors = [$"Budget specification is not an integer: \"{split[1]}\""];
+            errors = [$"Budget specification is not an unsigned integer: \"{split[1]}\""];
             return false;
         }
 
