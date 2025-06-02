@@ -14,7 +14,6 @@ public sealed class App
 {
     public FormulaParser FormulaParser { get; } = new FormulaParser(new FormulaTokenizer());
     public FormulaReducer FormulaReducer { get; } = new FormulaReducer();
-    public ProblemDefinitionParser ProblemParser { get; } = new();
     public QueryEvaluator? QueryEvaluator { get; private set; }
     public ProblemSpecificStuff? ProblemDependent { get; private set; }
 
@@ -23,7 +22,7 @@ public sealed class App
         IReadOnlyList<Formula> initials,
         IReadOnlyList<Formula> always)
     {
-        ProblemDefinition problem = ProblemParser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        ProblemDefinition problem = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, initials, always);
         QueryEvaluator = new QueryEvaluator(problem, FormulaReducer);
 
         ProblemDependent = new(problem, QueryEvaluator);

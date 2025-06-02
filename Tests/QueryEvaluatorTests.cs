@@ -1,3 +1,4 @@
+using Logic.Problem;
 using Logic.Problem.Models;
 using Logic.Queries;
 using Logic.Queries.Models;
@@ -9,9 +10,31 @@ namespace Tests;
 
 public sealed class QueryEvaluatorTests
 {
+    private static List<Formula> ParseParams(IReadOnlyDictionary<string, Fluent> fluentsDict, params (string Fluent, bool Value)[][] initialStates)
+    {
+        List<Formula> initialStatesFormulas = new();
+        foreach (var initialState in initialStates)
+        {
+            Formula formula;
+            if (initialState[0].Value) { formula = new FluentIsSet(fluentsDict[initialState[0].Fluent]); }
+            else { formula = new Not(new FluentIsSet(fluentsDict[initialState[0].Fluent])); }
+
+            foreach (var condition in initialState[1..])
+            {
+                Formula tmp;
+                if (condition.Value) { tmp = new FluentIsSet(fluentsDict[condition.Fluent]); }
+                else { tmp = new Not(new FluentIsSet(fluentsDict[condition.Fluent])); }
+                formula = new And(tmp, formula);
+            }
+            initialStatesFormulas.Add(formula);
+        }
+        return initialStatesFormulas;
+    }
+
     private static ProblemDefinition CreateYaleShootingProblem(params (string Fluent, bool Value)[][] initialStates)
     {
-        var fluents = new[] { "alive", "loaded", "walking" }.Select(name => new Fluent(name, true)).ToList();
+        var fluentsDict = new[] { "alive", "loaded", "walking" }.ToDictionary(name => name, name => new Fluent(name, true));
+        var fluents = fluentsDict.Values.ToList();
         var actions = new List<Action>
         {
             new Action("load",
@@ -27,23 +50,18 @@ public sealed class QueryEvaluatorTests
                 [], []),
         };
 
-        return new ProblemDefinition
-        {
-            Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            InitialStates = new StateGroup(
-                initialStates.Select(states =>
-                    states.ToDictionary(s => fluents.First(f => f.Name == s.Fluent), s => s.Value)).ToList()),
-            ValidStates = new StateGroup([
-                new Dictionary<Fluent, bool>(){ [fluents[2]] = false },
-                new Dictionary<Fluent, bool>(){ [fluents[0]] = true }
-            ]), // always (walking => alive)
-            Actions = actions.ToDictionary(a => a.Name, a => a)
-        };
+        return ProblemDefinitionParser.CreateProblemDefinition(
+            fluents.ToDictionary(f => f.Name, f => f),
+            actions.ToDictionary(a => a.Name, a => a),
+            ParseParams(fluentsDict, initialStates),
+            [new Implies(new FluentIsSet(fluents[2]), new FluentIsSet(fluents[0]))]
+            );
     }
 
     private static ProblemDefinition CreateYaleShootingProblemWithReleases(params (string Fluent, bool Value)[][] initialStates)
     {
-        var fluents = new[] { "alive", "loaded", "walking" }.Select(name => new Fluent(name, true)).ToList();
+        var fluentsDict = new[] { "alive", "loaded", "walking" }.ToDictionary(name => name, name => new Fluent(name, true));
+        var fluents = fluentsDict.Values.ToList();
         var actions = new List<Action>
         {
             new Action("load",
@@ -61,23 +79,20 @@ public sealed class QueryEvaluatorTests
                 [new ActionCondition(new FluentIsSet(fluents[0]))]), // impossible walk if not alive
         };
 
-        return new ProblemDefinition
-        {
-            Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            InitialStates = new StateGroup(
-                initialStates.Select(states =>
-                    states.ToDictionary(s => fluents.First(f => f.Name == s.Fluent), s => s.Value)).ToList()),
-            ValidStates = new StateGroup([
-                new Dictionary<Fluent, bool>(){ [fluents[2]] = false },
-                new Dictionary<Fluent, bool>(){ [fluents[0]] = true }
-            ]), // always (walking => alive)
-            Actions = actions.ToDictionary(a => a.Name, a => a)
-        };
+        
+
+        return ProblemDefinitionParser.CreateProblemDefinition(
+            fluents.ToDictionary(f => f.Name, f => f),
+            actions.ToDictionary(a => a.Name, a => a),
+            ParseParams(fluentsDict, initialStates),
+            [new Implies(new FluentIsSet(fluents[2]), new FluentIsSet(fluents[0]))]
+            );
     }
 
     private static ProblemDefinition CreateYaleShootingProblemWithNoninertialFluents(params (string Fluent, bool Value)[][] initialStates)
     {
         var fluents = new[] { new Fluent("alive", true), new Fluent("loaded", true), new Fluent("walking", false) };
+        var fluentsDict = fluents.ToDictionary(f => f.Name, f => f);
         var actions = new List<Action>
         {
             new Action("load",
@@ -94,18 +109,12 @@ public sealed class QueryEvaluatorTests
                 [new ActionCondition(new Not(new FluentIsSet(fluents[2])))]), // impossible walk if walking
         };
 
-        return new ProblemDefinition
-        {
-            Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            InitialStates = new StateGroup(
-                initialStates.Select(states =>
-                    states.ToDictionary(s => fluents.First(f => f.Name == s.Fluent), s => s.Value)).ToList()),
-            ValidStates = new StateGroup([
-                new Dictionary<Fluent, bool>(){ [fluents[2]] = false },
-                new Dictionary<Fluent, bool>(){ [fluents[0]] = true }
-            ]), // always (walking => alive)
-            Actions = actions.ToDictionary(a => a.Name, a => a)
-        };
+        return ProblemDefinitionParser.CreateProblemDefinition(
+            fluents.ToDictionary(f => f.Name, f => f),
+            actions.ToDictionary(a => a.Name, a => a),
+            ParseParams(fluentsDict, initialStates),
+            [new Implies(new FluentIsSet(fluents[2]), new FluentIsSet(fluents[0]))]
+            );
     }
 
     [Fact]

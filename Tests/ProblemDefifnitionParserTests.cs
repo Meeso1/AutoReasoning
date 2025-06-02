@@ -15,7 +15,7 @@ public sealed class ProblemDefinitionParserTests
     private static readonly Fluent FluentB = new Fluent("B", true);
     private static readonly Fluent FluentC = new Fluent("C", true);
 
-    private readonly ProblemDefinitionParser _parser = new ProblemDefinitionParser();
+    private readonly ProblemDefinitionParser ProblemDefinitionParser = new ProblemDefinitionParser();
 
     #region CreateProblemDefinition Tests
 
@@ -43,7 +43,7 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
+        var result = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -84,7 +84,7 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
+        var result = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -127,7 +127,7 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
+        var result = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -170,7 +170,7 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
+        var result = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -209,7 +209,7 @@ public sealed class ProblemDefinitionParserTests
     };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
+        var result = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -268,7 +268,7 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
+        var result = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -304,7 +304,7 @@ public sealed class ProblemDefinitionParserTests
     };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
+        var result = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -345,7 +345,7 @@ public sealed class ProblemDefinitionParserTests
     };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
+        var result = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -396,7 +396,7 @@ public sealed class ProblemDefinitionParserTests
         };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
+        var result = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);
@@ -426,7 +426,7 @@ public sealed class ProblemDefinitionParserTests
         var always = new List<Formula> { new True() };
 
         // Act
-        var result = _parser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
+        var result = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, [initials], always);
 
         // Assert
         Assert.NotNull(result);

@@ -36,7 +36,7 @@ public sealed class ProblemDefinitionParser
     /// <returns>
     /// 	True if parsing was successful, false otherwise
     /// </returns>
-    public ProblemDefinition CreateProblemDefinition(
+    public static ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyList<ActionStatement> actionStatements,
         IReadOnlyList<Formula> initials,
@@ -46,7 +46,7 @@ public sealed class ProblemDefinitionParser
         return CreateProblemDefinition(fluents, actions, initials, always);
     }
 
-    private ProblemDefinition CreateProblemDefinition(
+    public static ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyDictionary<string, Action> actions,
         IReadOnlyList<Formula> initials,
@@ -119,16 +119,4 @@ public sealed class ProblemDefinitionParser
         }
         return formulaReducer.Reduce(finalFormula);
     }
-
-    // Helper method to create a consistent string representation of a state for duplicate checking
-    private static string CreateStateSignature(IReadOnlyDictionary<Fluent, bool> state)
-    {
-        // Sort fluents by name to ensure consistent ordering
-        var sortedEntries = state
-            .OrderBy(kv => kv.Key.Name)
-            .Select(kv => $"{kv.Key.Name}={kv.Value}");
-
-        return string.Join(",", sortedEntries);
-    }
-
 }

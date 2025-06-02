@@ -21,7 +21,7 @@ namespace Logic.Queries;
 public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer formulaReducer)
 {
     private readonly History _history = new(problem, formulaReducer);
-    private readonly StateGroup _validInitialStates = StateGroup.And(problem.InitialStates, problem.ValidStates);
+    private readonly StateGroup _validInitialStates = problem.InitialStates;
 
     public bool Evaluate(Query query)
     {
