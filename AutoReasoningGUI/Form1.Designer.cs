@@ -72,8 +72,6 @@
             alwaysTextBox = new TextBox();
             alwaysLabel = new Label();
             initiallyPanel = new Panel();
-            initiallyFluentComboBox = new ComboBox();
-            InitialCheckBox = new CheckBox();
             initiallyLabel = new Label();
             addStatementButton = new Button();
             statementsCheckedListBox = new CheckedListBox();
@@ -81,6 +79,7 @@
             statementsLabel = new Label();
             removeStatementsButton = new Button();
             errorProvider1 = new ErrorProvider(components);
+            initiallyTextBox = new TextBox();
             ((System.ComponentModel.ISupportInitialize)contFluentsActions).BeginInit();
             contFluentsActions.Panel1.SuspendLayout();
             contFluentsActions.Panel2.SuspendLayout();
@@ -540,8 +539,7 @@
             // 
             // initiallyPanel
             // 
-            initiallyPanel.Controls.Add(initiallyFluentComboBox);
-            initiallyPanel.Controls.Add(InitialCheckBox);
+            initiallyPanel.Controls.Add(initiallyTextBox);
             initiallyPanel.Controls.Add(initiallyLabel);
             initiallyPanel.Dock = DockStyle.Fill;
             initiallyPanel.Location = new Point(0, 23);
@@ -550,31 +548,10 @@
             initiallyPanel.TabIndex = 8;
             initiallyPanel.Visible = false;
             // 
-            // initiallyFluentComboBox
-            // 
-            initiallyFluentComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            initiallyFluentComboBox.FormattingEnabled = true;
-            initiallyFluentComboBox.Location = new Point(26, 59);
-            initiallyFluentComboBox.Name = "initiallyFluentComboBox";
-            initiallyFluentComboBox.Size = new Size(157, 23);
-            initiallyFluentComboBox.TabIndex = 9;
-            // 
-            // InitialCheckBox
-            // 
-            InitialCheckBox.AutoSize = true;
-            InitialCheckBox.Checked = true;
-            InitialCheckBox.CheckState = CheckState.Checked;
-            InitialCheckBox.Location = new Point(79, 100);
-            InitialCheckBox.Name = "InitialCheckBox";
-            InitialCheckBox.Size = new Size(49, 19);
-            InitialCheckBox.TabIndex = 9;
-            InitialCheckBox.Text = "True";
-            InitialCheckBox.UseVisualStyleBackColor = true;
-            // 
             // initiallyLabel
             // 
             initiallyLabel.AutoSize = true;
-            initiallyLabel.Location = new Point(79, 28);
+            initiallyLabel.Location = new Point(85, 33);
             initiallyLabel.Name = "initiallyLabel";
             initiallyLabel.Size = new Size(45, 15);
             initiallyLabel.TabIndex = 0;
@@ -634,6 +611,15 @@
             // errorProvider1
             // 
             errorProvider1.ContainerControl = this;
+            // 
+            // initiallyTextBox
+            // 
+            initiallyTextBox.Location = new Point(23, 65);
+            initiallyTextBox.Multiline = true;
+            initiallyTextBox.Name = "initiallyTextBox";
+            initiallyTextBox.PlaceholderText = "Expression";
+            initiallyTextBox.Size = new Size(167, 65);
+            initiallyTextBox.TabIndex = 5;
             // 
             // Form1
             // 
@@ -711,8 +697,6 @@
         private Label statementsLabel;
         private Panel initiallyPanel;
         private Label initiallyLabel;
-        private CheckBox InitialCheckBox;
-        private ComboBox initiallyFluentComboBox;
         private Panel alwaysPanel;
         private TextBox alwaysTextBox;
         private Label alwaysLabel;
@@ -738,5 +722,6 @@
         private ComboBox releasesFluentComboBox;
         private ErrorProvider errorProvider1;
         private TextBox causesTextBox1;
+        private TextBox initiallyTextBox;
     }
 }

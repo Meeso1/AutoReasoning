@@ -228,7 +228,7 @@ namespace AutoReasoningGUI
                     queryResultValueLabel.Text = "";
                     return null;
                 }
-                return new AffordableQuery(queryType, _actionProgram, (int)_budget);
+                return new AffordableQuery(queryType, _actionProgram, (uint)_budget);
             }
             else
             {
