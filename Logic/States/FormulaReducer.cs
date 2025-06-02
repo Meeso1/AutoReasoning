@@ -157,7 +157,7 @@ public sealed class FormulaReducer
             if (obj == null) return 0;
 
             int hash = 0;
-            foreach (var kvp in obj.OrderBy(x => x.Key.GetHashCode()))
+            foreach (var kvp in obj.OrderBy(x => x.Key.Name))
             {
                 hash ^= kvp.Key.GetHashCode() ^ kvp.Value.GetHashCode();
             }
