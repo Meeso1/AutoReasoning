@@ -240,7 +240,7 @@ public sealed class QueryParserTests
         Assert.Null(query);
         Assert.NotNull(errors);
         Assert.NotEmpty(errors);
-        Assert.Matches("Budget specification is not an integer.*", errors[0]);
+        Assert.Matches("Budget specification is not an unsigned integer.*", errors[0]);
     }
 
     [Fact]
@@ -271,21 +271,6 @@ public sealed class QueryParserTests
     }
 
     [Fact]
-    public void TryParse_WithNegativeBudget_ReturnsFalse()
-    {
-        var result = _parser.TryParse(
-            "necessarily affordable act1, act2 with budget -100",
-            out var query,
-            out var errors);
-
-        Assert.False(result);
-        Assert.Null(query);
-        Assert.NotNull(errors);
-        Assert.NotEmpty(errors);
-        Assert.Matches("Budget must be non-negative", errors[0]);
-    }
-
-    [Fact]
     public void TryParse_AffordableQueryWithValidProgram_ReturnsTrue()
     {
         var result = _parser.TryParse(
@@ -302,7 +287,7 @@ public sealed class QueryParserTests
             affordableQuery.Program,
             strict: true);
 
-        Assert.Equal(100, affordableQuery.CostLimit);
+        Assert.Equal(100u, affordableQuery.CostLimit);
     }
 
     [Fact]
@@ -319,6 +304,6 @@ public sealed class QueryParserTests
             affordableQuery.Program,
             strict: true);
 
-        Assert.Equal(0, affordableQuery.CostLimit);
+        Assert.Equal(0u, affordableQuery.CostLimit);
     }
 }

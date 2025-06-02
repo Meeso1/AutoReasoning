@@ -61,7 +61,7 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
 
 
 
-    private bool AffordablePredicate(int costLimit, ActionProgram actions, IReadOnlyList<State> trajectory)
+    private bool AffordablePredicate(uint costLimit, ActionProgram actions, IReadOnlyList<State> trajectory)
     {
         int cost = 0;
         for(int i=0; i<actions.Actions.Count; i++)

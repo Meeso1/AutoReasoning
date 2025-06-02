@@ -15,4 +15,4 @@ public sealed record ExecutableQuery(QueryType Type, ActionProgram Program) : Qu
 
 public sealed record AccessibleQuery(QueryType Type, ActionProgram Program, StateGroup States) : Query(Type, Program);
 
-public sealed record AffordableQuery(QueryType Type, ActionProgram Program, int CostLimit) : Query(Type, Program);
+public sealed record AffordableQuery(QueryType Type, ActionProgram Program, uint CostLimit) : Query(Type, Program);
