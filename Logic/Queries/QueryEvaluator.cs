@@ -25,6 +25,7 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
 
     public bool Evaluate(Query query)
     {
+        if (_validInitialStates.SpecifiedFluentGroups.Count == 0) {  return false; }
         return query switch
         {
             ExecutableQuery q => EvaluateExecutable(q),

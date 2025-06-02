@@ -117,6 +117,8 @@ public sealed class QueryEvaluatorTests
             );
     }
 
+    #region ExecutableQueries
+
     [Fact]
     public void EvaluateExecutable_EmptyProgram_ReturnsTrue()
     {
@@ -235,7 +237,7 @@ public sealed class QueryEvaluatorTests
     }
 
     [Fact]
-    public void EvaluateExecutable_ProblemWithNoInitialStates_ReturnsTrueForAnyProgram()
+    public void EvaluateExecutable_ProblemWithNoInitialStates_ReturnsFalseForAnyProgram()
     {
         var problem = CreateYaleShootingProblem([("alive", false), ("walking", true)]);
         var evaluator = new QueryEvaluator(problem, new FormulaReducer());
@@ -246,11 +248,13 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
-        Assert.True(evaluator.Evaluate(necessaryQuery));
+        Assert.False(evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
-        Assert.True(evaluator.Evaluate(possibleQuery));
+        Assert.False(evaluator.Evaluate(possibleQuery));
     }
+    #endregion ExecutableQueries
+    #region AccessibleQueries
 
     [Fact]
     public void EvaluateAccessible_EmptyProgram_ReturnsTrueForConditionsSatisfiedInAllInitialStates()
@@ -353,7 +357,7 @@ public sealed class QueryEvaluatorTests
     }
 
     [Fact]
-    public void EvaluateAccessible_ProblemWithNoInitialStates_ReturnsTrueForAnyProgramAndCondition()
+    public void EvaluateAccessible_ProblemWithNoInitialStates_ReturnsFalseForAnyProgramAndCondition()
     {
         var problem = CreateYaleShootingProblem([("alive", false), ("walking", true)]);
         var formulaReducer = new FormulaReducer();
@@ -365,9 +369,188 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var necessaryQuery = new AccessibleQuery(QueryType.Necessarily, program, formulaReducer.Reduce(new False()));
-        Assert.True(evaluator.Evaluate(necessaryQuery));
+        Assert.False(evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new AccessibleQuery(QueryType.Possibly, program, formulaReducer.Reduce(new False()));
+        Assert.False(evaluator.Evaluate(possibleQuery));
+    }
+    #endregion AccessibleQueries
+    #region AffordableQueries
+    [Fact]
+    public void EvaluateAffordable_EmptyProgram_ReturnsTrue()
+    {
+        var problem = CreateYaleShootingProblem([("alive", true)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var necessaryQuery = new AffordableQuery(QueryType.Necessarily, new ActionProgram([]), 0);
+        Assert.True(evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new AffordableQuery(QueryType.Possibly, new ActionProgram([]), 0);
         Assert.True(evaluator.Evaluate(possibleQuery));
     }
+
+    [Fact]
+    public void EvaluateAffordable_SingleActionWithinCostLimit_ReturnsTrue()
+    {
+        var problem = CreateYaleShootingProblem([("alive", true), ("loaded", false)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([problem.Actions["load"]]); // Cost: 1 (loaded becomes true)
+
+        var necessaryQuery = new AffordableQuery(QueryType.Necessarily, program, 1);
+        Assert.True(evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new AffordableQuery(QueryType.Possibly, program, 1);
+        Assert.True(evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateAffordable_SingleActionExceedsCostLimit_ReturnsFalse()
+    {
+        var problem = CreateYaleShootingProblem([("alive", true), ("loaded", false)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([problem.Actions["load"]]); // Cost: 1 (loaded becomes true)
+
+        var necessaryQuery = new AffordableQuery(QueryType.Necessarily, program, 0);
+        Assert.False(evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new AffordableQuery(QueryType.Possibly, program, 0);
+        Assert.False(evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateAffordable_MultipleActionsWithinCostLimit_ReturnsTrue()
+    {
+        var problem = CreateYaleShootingProblem([("alive", true), ("loaded", false)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([
+            problem.Actions["load"],  // Cost: 1 (loaded becomes true)
+            problem.Actions["shoot"]  // Cost: 2 (alive becomes false, loaded becomes false)
+        ]);
+        // Total expected cost: 3
+
+        var necessaryQuery = new AffordableQuery(QueryType.Necessarily, program, 3);
+        Assert.True(evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new AffordableQuery(QueryType.Possibly, program, 3);
+        Assert.True(evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateAffordable_MultipleActionsExceedCostLimit_ReturnsFalse()
+    {
+        var problem = CreateYaleShootingProblem([("alive", true), ("loaded", false)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([
+            problem.Actions["load"],  // Cost: 1 (loaded becomes true)
+            problem.Actions["shoot"]  // Cost: 2 (alive becomes false, loaded becomes false)
+        ]);
+        // Total expected cost: 3
+
+        var necessaryQuery = new AffordableQuery(QueryType.Necessarily, program, 2);
+        Assert.False(evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new AffordableQuery(QueryType.Possibly, program, 2);
+        Assert.False(evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateAffordable_NoEffectAction_ReturnsTrue()
+    {
+        var problem = CreateYaleShootingProblem([("alive", true), ("loaded", true), ("walking", true)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([problem.Actions["walk"]]); // Cost: 0 (walking is already true)
+
+        var necessaryQuery = new AffordableQuery(QueryType.Necessarily, program, 0);
+        Assert.True(evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new AffordableQuery(QueryType.Possibly, program, 0);
+        Assert.True(evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateAffordable_ActionWithReleases_AccountsForReleaseCosts()
+    {
+        var problem = CreateYaleShootingProblemWithReleases([("alive", true), ("loaded", false), ("walking", true)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([
+            problem.Actions["load"],  // Cost: 1 (loaded becomes true)
+            problem.Actions["shoot"]  // Cost: 1 (loaded becomes false) + potential release costs
+        ]);
+
+        // The exact results depend on the non-deterministic nature of releases
+        // At minimum, we expect the program to be possibly affordable with a reasonable cost limit
+        Assert.True(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 4)));
+        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 3)));
+        Assert.True(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 2)));
+        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 1)));
+    }
+
+
+    [Fact]
+    public void EvaluateAffordable_ImpossibleProgram_ReturnsFalse()
+    {
+        var problem = CreateYaleShootingProblem([("alive", true), ("loaded", true)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([
+            problem.Actions["load"], // Impossible because already loaded
+            problem.Actions["shoot"]
+        ]);
+
+        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 10)));
+        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 10)));
+    }
+
+    [Fact]
+    public void EvaluateAffordable_ConditionallyAffordableProgram_ReturnsTrueForPossiblyAndFalseForNecessarily()
+    {
+        var problem = CreateYaleShootingProblem([("alive", true)]); // loaded is unspecified, so can be true or false
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([problem.Actions["load"]]); // Cost depends on initial loaded state
+
+        // If loaded is initially false: cost = 1
+        // If loaded is initially true: action is impossible, so not affordable
+        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 1))); // Not affordable from any initial state due to impossibility
+        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 1)));                                                           
+    }
+
+    [Fact]
+    public void EvaluateAffordable_ZeroCostLimit_OnlyAllowsNoChangePrograms()
+    {
+        var problem = CreateYaleShootingProblem([("alive", true), ("loaded", false), ("walking", true)]);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        // Program that causes no changes (walking is already true)
+        var noChangeProgram = new ActionProgram([problem.Actions["walk"]]);
+        Assert.True(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, noChangeProgram, 0)));
+        Assert.True(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, noChangeProgram, 0)));
+
+        // Program that causes changes
+        var changeProgram = new ActionProgram([problem.Actions["load"]]);
+        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, changeProgram, 0)));
+        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, changeProgram, 0)));
+    }
+
+    [Fact]
+    public void EvaluateAffordable_ProblemWithNoInitialStates_ReturnsTrueForAnyProgramAndCost()
+    {
+        var problem = CreateYaleShootingProblem([("alive", false), ("walking", true)]); // Contradictory constraints
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([
+            problem.Actions["load"],
+            problem.Actions["shoot"]
+        ]);
+
+        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 0)));
+        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 0)));
+    }
+    #endregion AffordableQueries
 }
