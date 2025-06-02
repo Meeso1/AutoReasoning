@@ -302,7 +302,7 @@ public sealed class QueryParserTests
             affordableQuery.Program,
             strict: true);
 
-        Assert.Equal(100, affordableQuery.CostLimit);
+        Assert.Equal(100u, affordableQuery.CostLimit);
     }
 
     [Fact]
@@ -319,6 +319,6 @@ public sealed class QueryParserTests
             affordableQuery.Program,
             strict: true);
 
-        Assert.Equal(0, affordableQuery.CostLimit);
+        Assert.Equal(0u, affordableQuery.CostLimit);
     }
 }
