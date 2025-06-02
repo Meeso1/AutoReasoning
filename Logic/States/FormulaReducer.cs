@@ -138,7 +138,7 @@ public sealed class FormulaReducer
 
     public class FluentDictComparer : IEqualityComparer<ReadOnlyFluentDict>
     {
-        public bool Equals(ReadOnlyFluentDict x, ReadOnlyFluentDict y)
+        public bool Equals(ReadOnlyFluentDict? x, ReadOnlyFluentDict? y)
         {
             if (x == null || y == null) return false;
             if (x == y) return true;
