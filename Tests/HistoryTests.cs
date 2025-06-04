@@ -17,7 +17,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
             new Action("load",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[1]), 1)], // load causes loaded
                 [],
-                [new ActionCondition(new Not(new FluentIsSet(fluents[1])))]), // impossible load if loaded
+                [new ActionCondition(new FluentIsSet(fluents[1]))]), // impossible load if loaded
             new Action("shoot",
                 [new ActionEffect(new FluentIsSet(fluents[1]), new Not(new FluentIsSet(fluents[0])), 1), // shoot causes not alive if loaded
                  new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1)], // shoot causes not loaded
@@ -47,7 +47,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
             new Action("load",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[1]), 1)], // load causes loaded
                 [],
-                [new ActionCondition(new Not(new FluentIsSet(fluents[1])))]), // impossible load if loaded
+                [new ActionCondition(new FluentIsSet(fluents[1]))]), // impossible load if loaded
             new Action("shoot",
                 [new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1)], // shoot causes not loaded
                 [new ActionRelease(new And(new FluentIsSet(fluents[1]), new FluentIsSet(fluents[0])), fluents[0], 1)], // shoot releases alive if loaded and alive
@@ -55,7 +55,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
             new Action("walk",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[2]), 1)], // walk causes walking
                 [],
-                [new ActionCondition(new FluentIsSet(fluents[0]))]), // impossible walk if not alive
+                [new ActionCondition(new Not(new FluentIsSet(fluents[0])))]), // impossible walk if not alive
         };
 
         return new ProblemDefinition
@@ -75,14 +75,14 @@ public sealed class HistoryTests(ITestOutputHelper output)
             new Action("load",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[1]), 1)], // load causes loaded
                 [],
-                [new ActionCondition(new Not(new FluentIsSet(fluents[1])))]), // impossible load if loaded
+                [new ActionCondition(new FluentIsSet(fluents[1]))]), // impossible load if loaded
             new Action("shoot",
                 [new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1)], // shoot causes not loaded
                 [new ActionRelease(new And(new FluentIsSet(fluents[1]), new FluentIsSet(fluents[0])), fluents[0], 1)], // shoot releases alive if loaded and alive
                 []),
             new Action("walk",
                 [new ActionEffect(new True(), new FluentIsSet(fluents[2]), 1)], // walk causes walking
-                [], []), // impossible walk if not alive
+                [], []),
         };
 
         return new ProblemDefinition

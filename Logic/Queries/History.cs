@@ -48,7 +48,8 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
 
         var possibleEndStates = ResZero(state, action);
         var notCountedFluents = GetNotCountedForMinimalization(state, action);
-        var minChangeStates = GetMinimalChangeStates(state, possibleEndStates, notCountedFluents);
+        var releasedFluents = GetReleasedFluents(state, action);
+        var minChangeStates = GetMinimalChangeStates(state, possibleEndStates, notCountedFluents, releasedFluents);
         return formulaReducer.CompressStateGroup(minChangeStates);
     }
 
@@ -76,15 +77,22 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
         var result = new HashSet<Fluent>();
         result.UnionWith(problem.FluentUniverse.Where(f => !f.IsInertial));
 
+        return result;
+    }
+
+    private HashSet<Fluent> GetReleasedFluents(State state, Action action)
+    {
+        var result = new HashSet<Fluent>();
         var relevantReleaseStatements = action.Releases.Where(e => e.Condition.IsSatisfiedBy(state));
         result.UnionWith(relevantReleaseStatements.Select(e => e.ReleasedFluent));
 
         return result;
     }
 
-    private static int Changed(State start, State end, HashSet<Fluent> notCountedFluents)
+    private static HashSet<Fluent> GetChangedFluents(State start, State end, HashSet<Fluent> notCountedFluents, HashSet<Fluent> releasedFluents)
     {
-        var result = 0;
+        var changedFluents = new HashSet<Fluent>();
+        changedFluents.UnionWith(releasedFluents);
         foreach (var fluent in start.FluentValues)
         {
             if (!end.FluentValues.ContainsKey(fluent.Key))
@@ -99,32 +107,51 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
 
             if (start.FluentValues[fluent.Key] != end.FluentValues[fluent.Key])
             {
-                result += 1;
+                changedFluents.Add(fluent.Key);
             }
         }
 
-        return result;
+        return changedFluents;
     }
 
-    private StateGroup GetMinimalChangeStates(State start, StateGroup possibleEnds, HashSet<Fluent> notCountedFluents)
+    private StateGroup GetMinimalChangeStates(State start, StateGroup possibleEnds, HashSet<Fluent> notCountedFluents, HashSet<Fluent> releasedFluents)
     {
-        var smallestChange = int.MaxValue;
-        var minChangeStates = new List<State>();
+        var statesWithChanges = new List<(State state, HashSet<Fluent> changedFluents)>();
+        
+        // First, collect all states with their corresponding changed fluent sets
         foreach (var endState in possibleEnds.EnumerateStates(problem.FluentUniverse))
         {
-            var change = Changed(start, endState, notCountedFluents);
-            if (change < smallestChange)
+            var changedFluents = GetChangedFluents(start, endState, notCountedFluents, releasedFluents);
+            statesWithChanges.Add((endState, changedFluents));
+        }
+
+        // Find minimal states based on set inclusion
+        var minimalStates = new List<State>();
+
+        foreach (var (candidateState, candidateChanges) in statesWithChanges)
+        {
+            bool isMinimal = true;
+
+            // Check if there exists another state with a subset of changes
+            foreach (var (otherState, otherChanges) in statesWithChanges)
             {
-                smallestChange = change;
-                minChangeStates.Clear();
-                minChangeStates.Add(endState);
+                if (candidateState.Equals(otherState))
+                    continue;
+
+                // If otherChanges is a proper subset of candidateChanges, then candidate is not minimal
+                if (otherChanges.IsProperSubsetOf(candidateChanges))
+                {
+                    isMinimal = false;
+                    break;
+                }
             }
-            else if (change == smallestChange)
+
+            if (isMinimal)
             {
-                minChangeStates.Add(endState);
+                minimalStates.Add(candidateState);
             }
         }
 
-        return new StateGroup(minChangeStates.Select(s => s.FluentValues).ToList());
+        return new StateGroup(minimalStates.Select(s => s.FluentValues).ToList());
     }
 }
