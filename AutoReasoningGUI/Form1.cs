@@ -373,6 +373,7 @@ namespace AutoReasoningGUI
                     actionName = causesActionComboBox.SelectedItem.ToString();
                     expression = causesTextBox2.Text.ToString();
                     expression = expression.Trim().ToLower();
+                    causesNumericUpDown_ValueChanged(sender, e);
                     cost = causesNumericUpDown.Value;
                     if (expression == "")
                     {
@@ -403,6 +404,7 @@ namespace AutoReasoningGUI
                         UpdateStatementsList();
                         causesTextBox1.Clear();
                         causesTextBox2.Clear();
+                        
                         causesNumericUpDown.Value = 1;
                     }
                     break;
@@ -415,6 +417,7 @@ namespace AutoReasoningGUI
                     fluentName = releasesFluentComboBox.SelectedItem.ToString();
                     expression = releasesTextBox2.Text.ToString();
                     expression = expression.Trim().ToLower();
+                    releasesNumericUpDown_ValueChanged(sender, e);
                     cost = releasesNumericUpDown.Value;
                     if (expression == "")
                     {
@@ -490,6 +493,22 @@ namespace AutoReasoningGUI
                 removeStatementsButton_Click(sender, EventArgs.Empty);
                 e.Handled = true;
                 e.SuppressKeyPress = true;
+            }
+        }
+
+        private void releasesNumericUpDown_ValueChanged(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(releasesNumericUpDown.Text))
+            {
+                releasesNumericUpDown.Value = releasesNumericUpDown.Minimum;
+            }
+        }
+
+        private void causesNumericUpDown_ValueChanged(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(causesNumericUpDown.Text))
+            {
+                causesNumericUpDown.Value = causesNumericUpDown.Minimum;
             }
         }
     }
