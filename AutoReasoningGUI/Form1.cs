@@ -142,7 +142,7 @@ namespace AutoReasoningGUI
                 string statementText = statement.DisplayText;
                 statementText = statementText.Trim();
                 string firstWord = statementText.Split(' ')[0];
-                if (statementType is Formula initiallyStatement && firstWord=="initially")
+                if (statementType is Formula initiallyStatement && firstWord == "initially")
                 {
                     _initialStatements.Add(initiallyStatement);
                 }
@@ -403,6 +403,7 @@ namespace AutoReasoningGUI
                         UpdateStatementsList();
                         causesTextBox1.Clear();
                         causesTextBox2.Clear();
+                        causesNumericUpDown.Value = 1;
                     }
                     break;
                 case "Action Releases":
@@ -444,6 +445,7 @@ namespace AutoReasoningGUI
                         Statements.Add(displayItem);
                         UpdateStatementsList();
                         releasesTextBox2.Clear();
+                        releasesNumericUpDown.Value = 1;
                     }
                     break;
             }
