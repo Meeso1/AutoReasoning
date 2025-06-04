@@ -157,6 +157,9 @@ namespace AutoReasoningGUI
             if (queryClass == typeof(AccessibleQuery))
                 createFormulaButton_Click(sender, e);
 
+            if (queryClass == typeof(AffordableQuery))
+                _budget = (int)budgetNumericUpDown.Value;
+
             _actionProgram = CreateActionProgram();
             _query = CreateQuery();
             if (_query == null)
@@ -228,7 +231,7 @@ namespace AutoReasoningGUI
                     queryResultValueLabel.Text = "";
                     return null;
                 }
-                return new AffordableQuery(queryType, _actionProgram, (int)_budget);
+                return new AffordableQuery(queryType, _actionProgram, (uint)_budget);
             }
             else
             {

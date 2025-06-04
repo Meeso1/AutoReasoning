@@ -48,7 +48,7 @@ namespace AutoReasoningGUI
         public BindingList<string> ActionNames = new();
         public BindingList<DisplayItem> Statements = new();
         private List<Formula> _alwaysStatements = new List<Formula>();
-        private Dictionary<Fluent, bool> _initialFluents = new Dictionary<Fluent, bool>();
+        private List<Formula> _initialStatements = new List<Formula>();
         private List<ActionStatement> _actionStatements = new List<ActionStatement>();
         private Form2 form2;
         public Form1()
@@ -68,7 +68,7 @@ namespace AutoReasoningGUI
             form2.PrepareToShow();
             form2.Visible = true;
 
-            App.SetModel(Fluents.ToDictionary(f => f.Name), _actionStatements, _initialFluents, _alwaysStatements);
+            App.SetModel(Fluents.ToDictionary(f => f.Name), _actionStatements, _initialStatements, _alwaysStatements);
         }
 
         private void addFluentButton_Click(object sender, EventArgs e)
@@ -89,14 +89,12 @@ namespace AutoReasoningGUI
         private void UpdateFluentList()
         {
             this.fluentCheckedListBox.Items.Clear();
-            this.initiallyFluentComboBox.Items.Clear();
             this.releasesFluentComboBox.Items.Clear();
             foreach (var fluent in Fluents)
             {
                 var fluentName = fluent.Name;
                 var isInertialString = fluent.IsInertial ? "INERTIAL" : "NOT INERTIAL";
                 this.fluentCheckedListBox.Items.Add($"{fluentName} {isInertialString}");
-                this.initiallyFluentComboBox.Items.Add($"{fluentName}");
                 if (fluent.IsInertial == true)
                 {
                     this.releasesFluentComboBox.Items.Add($"{fluentName}");
@@ -133,22 +131,26 @@ namespace AutoReasoningGUI
 
         private void UpdateStatementsList()
         {
-            _initialFluents.Clear();
+            _initialStatements.Clear();
             _alwaysStatements.Clear();
             _actionStatements.Clear();
             statementsCheckedListBox.Items.Clear();
             foreach (DisplayItem statement in Statements)
             {
                 statementsCheckedListBox.Items.Add(statement);
-                if (statement.Value is (Fluent fluent, bool flag))
+                object statementType = statement.Value;
+                string statementText = statement.DisplayText;
+                statementText = statementText.Trim();
+                string firstWord = statementText.Split(' ')[0];
+                if (statementType is Formula initiallyStatement && firstWord == "initially")
                 {
-                    _initialFluents[fluent] = flag;
+                    _initialStatements.Add(initiallyStatement);
                 }
-                else if (statement.Value is Formula alwaysStatement)
+                else if (statementType is Formula alwaysStatement && firstWord == "always")
                 {
                     _alwaysStatements.Add(alwaysStatement);
                 }
-                else if (statement.Value is ActionStatement actionStatement)
+                else if (statementType is ActionStatement actionStatement)
                 {
                     _actionStatements.Add(actionStatement);
                 }
@@ -235,6 +237,7 @@ namespace AutoReasoningGUI
         {
             if (typeOfStatementComboBox.SelectedItem == null) return;
 
+            this.errorProvider1.SetError(initiallyTextBox, "");
             this.errorProvider1.SetError(alwaysTextBox, "");
             this.errorProvider1.SetError(impossibleTextBox, "");
             this.errorProvider1.SetError(causesTextBox1, "");
@@ -258,20 +261,30 @@ namespace AutoReasoningGUI
                 case "":
                     return;
                 case "Initial Fluent Value":
-                    if (initiallyFluentComboBox.SelectedItem == null)
+                    expression = initiallyTextBox.Text.ToString();
+                    expression = expression.Trim().ToLower();
+                    if (expression == "")
                     {
                         return;
                     }
-                    fluentName = initiallyFluentComboBox.SelectedItem.ToString();
-                    fluent = Fluents.FirstOrDefault(f => f.Name == fluentName);
-                    bool startValue = InitialCheckBox.Checked;
-                    statement = $"initially {(startValue ? "" : "not ")}{fluentName}";
-                    (Fluent, bool) dictEntry = (fluent, startValue);
-                    displayItem = new DisplayItem(dictEntry, statement);
+                    if (!App.FormulaParser.TryParse(
+                            expression,
+                            Fluents.ToDictionary(f => f.Name),
+                            out parsedFormula,
+                            out errors))
+                    {
+                        combinedError = string.Join(Environment.NewLine, errors);
+                        this.errorProvider1.SetError(initiallyTextBox, combinedError);
+                        return;
+                    }
+                    formula = parsedFormula;
+                    statement = $"initially {expression}";
+                    displayItem = new DisplayItem(formula, statement);
                     if (!Statements.Contains(displayItem))
                     {
                         Statements.Add(displayItem);
                         UpdateStatementsList();
+                        initiallyTextBox.Clear();
                     }
                     break;
                 case "Always":
@@ -390,6 +403,7 @@ namespace AutoReasoningGUI
                         UpdateStatementsList();
                         causesTextBox1.Clear();
                         causesTextBox2.Clear();
+                        causesNumericUpDown.Value = 1;
                     }
                     break;
                 case "Action Releases":
@@ -431,6 +445,7 @@ namespace AutoReasoningGUI
                         Statements.Add(displayItem);
                         UpdateStatementsList();
                         releasesTextBox2.Clear();
+                        releasesNumericUpDown.Value = 1;
                     }
                     break;
             }
