@@ -39,7 +39,8 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
 
     private StateGroup ExecuteAction(State state, Action action)
     {
-        if (action.Conditions.Any(c => !c.Condition.IsSatisfiedBy(state)))
+        // If condition is satisfied then the action is impossible
+        if (action.Conditions.Any(c => c.Condition.IsSatisfiedBy(state)))
         {
             // Action cannot be executed in this state
             return StateGroup.Empty;
