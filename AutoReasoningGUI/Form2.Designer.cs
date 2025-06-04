@@ -168,7 +168,7 @@
             // 
             budgetNumericUpDown.Location = new Point(737, 131);
             budgetNumericUpDown.Margin = new Padding(3, 4, 3, 4);
-            budgetNumericUpDown.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            budgetNumericUpDown.Minimum = new decimal(new int[] { 0, 0, 0, 0 });
             budgetNumericUpDown.Name = "budgetNumericUpDown";
             budgetNumericUpDown.Size = new Size(137, 27);
             budgetNumericUpDown.TabIndex = 14;
