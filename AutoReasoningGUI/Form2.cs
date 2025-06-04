@@ -158,7 +158,10 @@ namespace AutoReasoningGUI
                 createFormulaButton_Click(sender, e);
 
             if (queryClass == typeof(AffordableQuery))
+            {
                 _budget = (int)budgetNumericUpDown.Value;
+            }
+
 
             _actionProgram = CreateActionProgram();
             _query = CreateQuery();
@@ -364,6 +367,12 @@ namespace AutoReasoningGUI
                 e.SuppressKeyPress = true;
             }
         }
-
+        private void budgetNumericUpDown_Validating(object sender, CancelEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(budgetNumericUpDown.Text))
+            {
+                budgetNumericUpDown.Value = budgetNumericUpDown.Minimum;
+            }
+        }
     }
 }

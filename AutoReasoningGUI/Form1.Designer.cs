@@ -353,6 +353,7 @@
             releasesNumericUpDown.Size = new Size(191, 27);
             releasesNumericUpDown.TabIndex = 6;
             releasesNumericUpDown.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            releasesNumericUpDown.ValueChanged += releasesNumericUpDown_ValueChanged;
             // 
             // releasesCostLabel
             // 
@@ -437,6 +438,7 @@
             causesNumericUpDown.Size = new Size(191, 27);
             causesNumericUpDown.TabIndex = 6;
             causesNumericUpDown.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            causesNumericUpDown.ValueChanged += causesNumericUpDown_ValueChanged;
             // 
             // casuesCostLabel
             // 
