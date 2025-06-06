@@ -10,9 +10,9 @@ namespace Tests;
 
 public sealed class QueryEvaluatorTests
 {
-    private static List<Formula> ParseParams(IReadOnlyDictionary<string, Fluent> fluentsDict, params (string Fluent, bool Value)[][] initialStates)
+    private static List<SatisfiabilityStatement> ParseParams(IReadOnlyDictionary<string, Fluent> fluentsDict, params (string Fluent, bool Value)[][] initialStates)
     {
-        List<Formula> initialStatesFormulas = new();
+        List<SatisfiabilityStatement> initiaslList = new();
         foreach (var initialState in initialStates)
         {
             Formula formula;
@@ -26,9 +26,9 @@ public sealed class QueryEvaluatorTests
                 else { tmp = new Not(new FluentIsSet(fluentsDict[condition.Fluent])); }
                 formula = new And(tmp, formula);
             }
-            initialStatesFormulas.Add(formula);
+            initiaslList.Add(new AfterStatement(new ActionProgram([]), formula));
         }
-        return initialStatesFormulas;
+        return initiaslList;
     }
 
     private static ProblemDefinition CreateYaleShootingProblem(params (string Fluent, bool Value)[][] initialStates)

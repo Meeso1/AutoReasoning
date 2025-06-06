@@ -30,7 +30,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         return new ProblemDefinition
         {
             Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            InitialStates = new StateGroup([new Dictionary<Fluent, bool>() { [fluents[0]] = true }]), // initially alive
+            SatisfiabilityStatements = [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0]))], // initially alive
             ValidStates = new StateGroup([
                 new Dictionary<Fluent, bool>(){ [fluents[2]] = false },
                 new Dictionary<Fluent, bool>(){ [fluents[0]] = true }
@@ -61,7 +61,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         return new ProblemDefinition
         {
             Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            InitialStates = new StateGroup([new Dictionary<Fluent, bool>() { [fluents[0]] = true }]), // initially alive
+            SatisfiabilityStatements = [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0]))], // initially alive
             ValidStates = StateGroup.All,
             Actions = actions.ToDictionary(a => a.Name, a => a)
         };
@@ -88,7 +88,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         return new ProblemDefinition
         {
             Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            InitialStates = new StateGroup([new Dictionary<Fluent, bool>() { [fluents[0]] = true }]), // initially alive
+            SatisfiabilityStatements = [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0]))], // initially alive
             ValidStates = new StateGroup([
                 new Dictionary<Fluent, bool>(){ [fluents[2]] = false },
                 new Dictionary<Fluent, bool>(){ [fluents[0]] = true }

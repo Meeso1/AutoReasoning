@@ -24,7 +24,6 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
 
     public bool Evaluate(Query query)
     {
-        if (problem.InitialStates.SpecifiedFluentGroups.Count == 0) {  return false; }
         return query switch
         {
             ExecutableQuery q => EvaluateExecutable(q),
@@ -36,7 +35,7 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
 
     private bool CheckTrajectories(Query query, Func<IReadOnlyList<State>, bool> predicate)
     {
-        var histories = problem.InitialStates.EnumerateStates(problem.FluentUniverse)
+        var histories = problem.ValidStates.EnumerateStates(problem.FluentUniverse)
                                            .Select(start => _history.ComputeHistories(start, query.Program.Actions.ToList(), []));
 
         return histories.All(history => query.Type switch

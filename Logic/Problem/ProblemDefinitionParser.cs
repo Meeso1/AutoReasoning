@@ -39,27 +39,26 @@ public sealed class ProblemDefinitionParser
     public static ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyList<ActionStatement> actionStatements,
-        IReadOnlyList<Formula> initials,
+        IReadOnlyList<SatisfiabilityStatement> satisfiabilities,
         IReadOnlyList<Formula> always)
     {
         IReadOnlyDictionary<string, Action> actions = ProcessActionStatements(actionStatements);
-        return CreateProblemDefinition(fluents, actions, initials, always);
+        return CreateProblemDefinition(fluents, actions, satisfiabilities, always);
     }
 
     public static ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyDictionary<string, Action> actions,
-        IReadOnlyList<Formula> initials,
+        IReadOnlyList<SatisfiabilityStatement> satisfiabilities,
         IReadOnlyList<Formula> always)
         
     {
         StateGroup validStates = ProcessStatesFromFormulas(always);
-        StateGroup initialStates = StateGroup.And(validStates, ProcessStatesFromFormulas(initials));
         return new ProblemDefinition
         {
             Fluents = fluents,
             Actions = actions,
-            InitialStates = initialStates,
+            SatisfiabilityStatements = satisfiabilities,
             ValidStates = validStates
         };
     }
