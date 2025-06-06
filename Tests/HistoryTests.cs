@@ -112,7 +112,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
                 ("alive", true),
                 ("loaded", false),
                 ("walking", false))),
-            []);
+            [], []);
 
         var singleTrajectory = Assert.Single(histories);
         var singleState = Assert.Single(singleTrajectory);
@@ -129,7 +129,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
                 ("alive", true),
                 ("loaded", false),
                 ("walking", false))),
-            [problem.Actions["load"]]).ToList();
+            [problem.Actions["load"]], []).ToList();
 
         var singleTrajectory = Assert.Single(histories);
 
@@ -145,7 +145,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))),
-            [problem.Actions["walk"], problem.Actions["load"], problem.Actions["shoot"]]).ToList();
+            [problem.Actions["walk"], problem.Actions["load"], problem.Actions["shoot"]], []).ToList();
 
         var singleTrajectory = Assert.Single(histories);
         Assert.Equal(4, singleTrajectory.Count);
@@ -162,7 +162,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))),
-            [problem.Actions["walk"], problem.Actions["load"], problem.Actions["load"]]).ToList();
+            [problem.Actions["walk"], problem.Actions["load"], problem.Actions["load"]], []).ToList();
 
         var singleTrajectory = Assert.Single(histories);
         Assert.Equal(3, singleTrajectory.Count);
@@ -178,7 +178,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))),
-            [problem.Actions["shoot"]]).ToList();
+            [problem.Actions["shoot"]], []).ToList();
 
         Assert.Equal(2, histories.Count);
 
@@ -197,11 +197,11 @@ public sealed class HistoryTests(ITestOutputHelper output)
     [Fact]
     public void ComputeHistories_ManyNondeterministicActions_ReturnsManyTrajectories()
     {
-        var problem = CreateYaleShootingProblemWithReleases();
+         var problem = CreateYaleShootingProblemWithReleases();
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))),
-            [problem.Actions["shoot"], problem.Actions["load"], problem.Actions["shoot"]]).ToList();
+            [problem.Actions["shoot"], problem.Actions["load"], problem.Actions["shoot"]], []).ToList();
 
         Assert.Equal(3, histories.Count);
 
@@ -235,7 +235,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))),
-            [problem.Actions["shoot"], problem.Actions["load"], problem.Actions["shoot"], problem.Actions["walk"]]).ToList();
+            [problem.Actions["shoot"], problem.Actions["load"], problem.Actions["shoot"], problem.Actions["walk"]], []).ToList();
 
         Assert.Equal(3, histories.Count);
 
@@ -270,7 +270,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))),
-            [problem.Actions["shoot"]]).ToList();
+            [problem.Actions["shoot"]], []).ToList();
 
         Assert.Equal(3, histories.Count);
 
