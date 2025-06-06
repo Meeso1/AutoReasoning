@@ -2,6 +2,6 @@
 
 namespace Logic.Problem.Models;
 
-public record SatisfiabilityStatement();
-public sealed record AfterStatement(ActionProgram ActionChain, Formula Effect) : SatisfiabilityStatement;
-public sealed record ObservableStatement(ActionProgram ActionChain, Formula Effect) : SatisfiabilityStatement;
+public record SatisfiabilityStatement(ActionProgram ActionChain, Formula Effect);
+public sealed record AfterStatement(ActionProgram ActionChain, Formula Effect) : SatisfiabilityStatement(ActionChain, Effect);
+public sealed record ObservableStatement(ActionProgram ActionChain, Formula Effect) : SatisfiabilityStatement(ActionChain, Effect);
