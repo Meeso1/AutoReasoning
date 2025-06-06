@@ -10,7 +10,7 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
 {
     private readonly Dictionary<Formula, StateGroup> _cachedReducedStates = [];
 
-    public IEnumerable<IReadOnlyList<State>> ComputeHistories(State initialState, List<Action> actions)
+    public IEnumerable<IReadOnlyList<State>> ComputeHistories(State initialState, List<Action> actions, IReadOnlyList<Action> pastActions)
     {
         if (actions.Count == 0)
         {
@@ -28,9 +28,12 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
             yield break;
         }
 
+         List<Action> executedActions = new List<Action>(pastActions);
+        executedActions.Append(firstAction);
+
         foreach (var endState in endStates)
         {
-            foreach (var history in ComputeHistories(endState, actions[1..]))
+            foreach (var history in ComputeHistories(endState, actions[1..], executedActions))
             {
                 yield return history.Prepend(initialState).ToList();
             }

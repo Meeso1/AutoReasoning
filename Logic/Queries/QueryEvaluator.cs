@@ -21,7 +21,6 @@ namespace Logic.Queries;
 public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer formulaReducer)
 {
     private readonly History _history = new(problem, formulaReducer);
-    private readonly StateGroup _validInitialStates = problem.InitialStates;
 
     public bool Evaluate(Query query)
     {
@@ -38,7 +37,7 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
     private bool CheckTrajectories(Query query, Func<IReadOnlyList<State>, bool> predicate)
     {
         var histories = problem.InitialStates.EnumerateStates(problem.FluentUniverse)
-                                           .Select(start => _history.ComputeHistories(start, query.Program.Actions.ToList()));
+                                           .Select(start => _history.ComputeHistories(start, query.Program.Actions.ToList(), []));
 
         return histories.All(history => query.Type switch
         {
