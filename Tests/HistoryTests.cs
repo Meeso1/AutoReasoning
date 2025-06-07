@@ -30,7 +30,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         return new ProblemDefinition
         {
             Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            SatisfiabilityStatements = [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0]))], // initially alive
+            ValueStatements = [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0]))], // initially alive
             ValidStates = new StateGroup([
                 new Dictionary<Fluent, bool>(){ [fluents[2]] = false },
                 new Dictionary<Fluent, bool>(){ [fluents[0]] = true }
@@ -61,7 +61,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         return new ProblemDefinition
         {
             Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            SatisfiabilityStatements = [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0]))], // initially alive
+            ValueStatements = [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0]))], // initially alive
             ValidStates = StateGroup.All,
             Actions = actions.ToDictionary(a => a.Name, a => a)
         };
@@ -88,7 +88,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         return new ProblemDefinition
         {
             Fluents = fluents.ToDictionary(f => f.Name, f => f),
-            SatisfiabilityStatements = [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0]))], // initially alive
+            ValueStatements = [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0]))], // initially alive
             ValidStates = new StateGroup([
                 new Dictionary<Fluent, bool>(){ [fluents[2]] = false },
                 new Dictionary<Fluent, bool>(){ [fluents[0]] = true }
@@ -112,7 +112,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
                 ("alive", true),
                 ("loaded", false),
                 ("walking", false))),
-            [], []);
+            []);
 
         var singleTrajectory = Assert.Single(histories);
         var singleState = Assert.Single(singleTrajectory);
@@ -129,7 +129,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
                 ("alive", true),
                 ("loaded", false),
                 ("walking", false))),
-            [problem.Actions["load"]], []).ToList();
+            [problem.Actions["load"]]).ToList();
 
         var singleTrajectory = Assert.Single(histories);
 
@@ -145,7 +145,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))),
-            [problem.Actions["walk"], problem.Actions["load"], problem.Actions["shoot"]], []).ToList();
+            [problem.Actions["walk"], problem.Actions["load"], problem.Actions["shoot"]]).ToList();
 
         var singleTrajectory = Assert.Single(histories);
         Assert.Equal(4, singleTrajectory.Count);
@@ -162,7 +162,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", false), ("walking", false))),
-            [problem.Actions["walk"], problem.Actions["load"], problem.Actions["load"]], []).ToList();
+            [problem.Actions["walk"], problem.Actions["load"], problem.Actions["load"]]).ToList();
 
         var singleTrajectory = Assert.Single(histories);
         Assert.Equal(3, singleTrajectory.Count);
@@ -178,7 +178,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))),
-            [problem.Actions["shoot"]], []).ToList();
+            [problem.Actions["shoot"]]).ToList();
 
         Assert.Equal(2, histories.Count);
 
@@ -201,7 +201,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))),
-            [problem.Actions["shoot"], problem.Actions["load"], problem.Actions["shoot"]], []).ToList();
+            [problem.Actions["shoot"], problem.Actions["load"], problem.Actions["shoot"]]).ToList();
 
         Assert.Equal(3, histories.Count);
 
@@ -235,7 +235,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))),
-            [problem.Actions["shoot"], problem.Actions["load"], problem.Actions["shoot"], problem.Actions["walk"]], []).ToList();
+            [problem.Actions["shoot"], problem.Actions["load"], problem.Actions["shoot"], problem.Actions["walk"]]).ToList();
 
         Assert.Equal(3, histories.Count);
 
@@ -270,7 +270,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", true))),
-            [problem.Actions["shoot"]], []).ToList();
+            [problem.Actions["shoot"]]).ToList();
 
         Assert.Equal(3, histories.Count);
 

@@ -39,17 +39,17 @@ public sealed class ProblemDefinitionParser
     public static ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyList<ActionStatement> actionStatements,
-        IReadOnlyList<SatisfiabilityStatement> satisfiabilities,
+        IReadOnlyList<ValueStatement> valueStatements,
         IReadOnlyList<Formula> always)
     {
         IReadOnlyDictionary<string, Action> actions = ProcessActionStatements(actionStatements);
-        return CreateProblemDefinition(fluents, actions, satisfiabilities, always);
+        return CreateProblemDefinition(fluents, actions, valueStatements, always);
     }
 
     public static ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyDictionary<string, Action> actions,
-        IReadOnlyList<SatisfiabilityStatement> satisfiabilities,
+        IReadOnlyList<ValueStatement> valueStatements,
         IReadOnlyList<Formula> always)
         
     {
@@ -58,7 +58,7 @@ public sealed class ProblemDefinitionParser
         {
             Fluents = fluents,
             Actions = actions,
-            SatisfiabilityStatements = satisfiabilities,
+            ValueStatements = valueStatements,
             ValidStates = validStates
         };
     }

@@ -10,9 +10,9 @@ namespace Tests;
 
 public sealed class QueryEvaluatorTests
 {
-    private static List<SatisfiabilityStatement> ParseParams(IReadOnlyDictionary<string, Fluent> fluentsDict, params (string Fluent, bool Value)[][] initialStates)
+    private static List<ValueStatement> ParseParams(IReadOnlyDictionary<string, Fluent> fluentsDict, params (string Fluent, bool Value)[][] initialStates)
     {
-        List<SatisfiabilityStatement> initiaslList = new();
+        List<ValueStatement> initiaslList = new();
         foreach (var initialState in initialStates)
         {
             Formula formula;
