@@ -19,10 +19,10 @@ public sealed class App
 
     public SetModelResult SetModel(IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyList<ActionStatement> actionStatements,
-        IReadOnlyList<Formula> initials,
+        IReadOnlyList<ValueStatement> valueStatements,
         IReadOnlyList<Formula> always)
     {
-        ProblemDefinition problem = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        ProblemDefinition problem = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, valueStatements, always);
         QueryEvaluator = new QueryEvaluator(problem, FormulaReducer);
 
         ProblemDependent = new(problem, QueryEvaluator);
