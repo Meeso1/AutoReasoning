@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using Logic.Problem.Models;
@@ -21,6 +22,14 @@ namespace Logic.Queries;
 public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer formulaReducer)
 {
     private readonly History _history = new(problem, formulaReducer);
+    private readonly Dictionary<ImmutableList<Action>, IReadOnlyList<AfterStatement>> afterDict = problem.ValueStatements
+    .OfType<AfterStatement>()
+    .GroupBy(s => s.ActionChain.Actions.ToImmutableList())
+    .ToDictionary(g => g.Key, g => (IReadOnlyList<AfterStatement>)g.ToList().AsReadOnly());
+    private readonly Dictionary<ImmutableList<Action>, IReadOnlyList<ObservableStatement>> observableDict = problem.ValueStatements
+        .OfType<ObservableStatement>()
+        .GroupBy(s => s.ActionChain.Actions.ToImmutableList())
+        .ToDictionary(g => g.Key, g => (IReadOnlyList<ObservableStatement>)g.ToList().AsReadOnly());
 
     public bool Evaluate(Query query)
     {
@@ -33,10 +42,79 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
         };
     }
 
+    private bool HistoryIsModel(List<Action> sequence, IEnumerable<IReadOnlyList<State>> trajectories)
+    {
+        int actionCount = sequence.Count;
+
+        // Get states at position actionCount from all trajectories
+        var statesAtPosition = trajectories
+            .Where(trajectory => trajectory.Count > actionCount)
+            .Select(trajectory => trajectory[actionCount])
+            .ToList();
+
+        if (!statesAtPosition.Any())
+            return true; // No valid states to check against
+
+        ImmutableList<Action> sequenceKey = sequence.ToImmutableList();
+
+        // Check "after" statements - must be true in EVERY state at the position
+        if (afterDict.TryGetValue(sequenceKey, out var matchingAfterStatements))
+        {
+            bool allAfterSatisfied = matchingAfterStatements.All(afterStmt =>
+                statesAtPosition.All(state => afterStmt.Effect.IsSatisfiedBy(state)));
+
+            if (!allAfterSatisfied)
+                return false;
+        }
+
+        // Check "observable" statements - must be true in AT LEAST ONE state at the position
+        if (observableDict.TryGetValue(sequenceKey, out var matchingObservableStatements))
+        {
+            bool anyObservableSatisfied = matchingObservableStatements.All(obsStmt =>
+                statesAtPosition.Any(state => obsStmt.Effect.IsSatisfiedBy(state)));
+
+            if (!anyObservableSatisfied)
+                return false;
+        }
+
+        return true;
+    }
+
+    private IEnumerable<IEnumerable<IReadOnlyList<State>>> SelectModels(ActionProgram fullProgram, IEnumerable<IEnumerable<IReadOnlyList<State>>> possibleModels)
+    {
+        List<Action> sequence = [];
+        var candidates = possibleModels.ToList();
+
+        for(int actionInd=-1; actionInd < fullProgram.Actions.Count; actionInd++)
+        {
+            if (actionInd != -1)
+            {
+                sequence.Add(fullProgram.Actions[actionInd]);
+            }
+
+            int removedCount = 0;
+
+            for (int i=0; i<candidates.Count; i++) //
+            {
+                if (!HistoryIsModel(sequence, candidates[i]))
+                {
+                    candidates.RemoveAt(i);
+                    removedCount++;
+                    i--;
+                }
+            }
+        }
+        return candidates;
+    }
+
     private bool CheckTrajectories(Query query, Func<IReadOnlyList<State>, bool> predicate)
     {
-        var histories = problem.ValidStates.EnumerateStates(problem.FluentUniverse)
-                                           .Select(start => _history.ComputeHistories(start, query.Program.Actions.ToList(), []));
+        var potentialHistories = problem.ValidStates.EnumerateStates(problem.FluentUniverse)
+                                           .Select(start => _history.ComputeHistories(start, query.Program.Actions.ToList()));
+
+        var histories = SelectModels(query.Program ,potentialHistories);
+
+        if (histories.Count() == 0) { return false; } //TODO: This should be an enum and we should say the model is unconclusive
 
         return histories.All(history => query.Type switch
         {

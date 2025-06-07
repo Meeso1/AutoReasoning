@@ -9,35 +9,9 @@ namespace Logic.Queries;
 public sealed class History(ProblemDefinition problem, FormulaReducer formulaReducer)
 {
     private readonly Dictionary<Formula, StateGroup> _cachedReducedStates = [];
-    private readonly Dictionary<IReadOnlyList<Action>, IReadOnlyList<AfterStatement>> afterDict = problem.SatisfiabilityStatements
-        .OfType<AfterStatement>()
-        .GroupBy(s => s.ActionChain.Actions)
-        .ToDictionary(g => g.Key, g => (IReadOnlyList<AfterStatement>)g.ToList().AsReadOnly());
-    private readonly Dictionary<IReadOnlyList<Action>, IReadOnlyList<ObservableStatement>> observableDict = problem.SatisfiabilityStatements
-        .OfType<ObservableStatement>()
-        .GroupBy(s => s.ActionChain.Actions)
-        .ToDictionary(g => g.Key, g => (IReadOnlyList<ObservableStatement>)g.ToList().AsReadOnly());
 
-    public IEnumerable<IReadOnlyList<State>> ComputeHistories(State initialState, List<Action> actions, IReadOnlyList<Action> pastActions)
+    public IEnumerable<IReadOnlyList<State>> ComputeHistories(State initialState, List<Action> actions)
     {
-        IReadOnlyList<AfterStatement>? matchingAfterStatements;
-        bool modelsAfter = true;
-        if (afterDict.TryGetValue(pastActions, out matchingAfterStatements))
-        {
-            modelsAfter = matchingAfterStatements.All(s => s.Effect.IsSatisfiedBy(initialState));
-        }
-
-        // If modelsAfter is false we need to remove this whole trajectory tree
-
-        IReadOnlyList<ObservableStatement>? matchingObservableStatements;
-        HashSet<ObservableStatement> failedObservaleStatements = [];
-        if (observableDict.TryGetValue(pastActions, out matchingObservableStatements))
-        {
-            failedObservaleStatements.UnionWith(matchingObservableStatements.Where(s => !s.Effect.IsSatisfiedBy(initialState)).ToList());
-        }
-
-        // We need union this with the intersection of all children matchingObservableStatements sets. At root if the intersection is non empty that means an observable statement failed in every branch so remove the whole trajectory tree
-
         if (actions.Count == 0)
         {
             yield return [initialState];
@@ -54,11 +28,9 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
             yield break;
         }
 
-         List<Action> executedActions = [.. pastActions, firstAction];
-
         foreach (var endState in endStates)
         {
-            foreach (var history in ComputeHistories(endState, actions[1..], executedActions))
+            foreach (var history in ComputeHistories(endState, actions[1..]))
             {
                 yield return history.Prepend(initialState).ToList();
             }
@@ -145,7 +117,7 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
     private StateGroup GetMinimalChangeStates(State start, StateGroup possibleEnds, HashSet<Fluent> notCountedFluents, HashSet<Fluent> releasedFluents)
     {
         var statesWithChanges = new List<(State state, HashSet<Fluent> changedFluents)>();
-        
+
         // First, collect all states with their corresponding changed fluent sets
         foreach (var endState in possibleEnds.EnumerateStates(problem.FluentUniverse))
         {
