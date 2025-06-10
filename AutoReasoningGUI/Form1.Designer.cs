@@ -47,6 +47,12 @@
             removeActionsButton = new Button();
             typeOfStatementComboBox = new ComboBox();
             panel1 = new Panel();
+            afterPanel = new Panel();
+            afterActionProgramLabel = new Label();
+            afterCheckedListBox = new CheckedListBox();
+            afterListBox = new ListBox();
+            afterLabel = new Label();
+            afterTextBox = new TextBox();
             releasesPanel = new Panel();
             releasesFluentComboBox = new ComboBox();
             releasesNumericUpDown = new NumericUpDown();
@@ -55,6 +61,13 @@
             releasesIfLabel = new Label();
             releasesActionComboBox = new ComboBox();
             releasesLabel = new Label();
+            observablePanel = new Panel();
+            observableAfterLabel = new Label();
+            actionProgramLabel = new Label();
+            observableCheckedListBox = new CheckedListBox();
+            observableListBox = new ListBox();
+            observableLabel = new Label();
+            observableTextBox = new TextBox();
             causesPanel = new Panel();
             causesTextBox1 = new TextBox();
             causesNumericUpDown = new NumericUpDown();
@@ -75,12 +88,6 @@
             initiallyTextBox = new TextBox();
             initiallyLabel = new Label();
             addStatementButton = new Button();
-            observablePanel = new Panel();
-            observableLabel = new Label();
-            observableTextBox = new TextBox();
-            afterPanel = new Panel();
-            afterLabel = new Label();
-            afterTextBox = new TextBox();
             statementsCheckedListBox = new CheckedListBox();
             panel2 = new Panel();
             statementsLabel = new Label();
@@ -95,15 +102,15 @@
             fluentActionListContainer.Panel2.SuspendLayout();
             fluentActionListContainer.SuspendLayout();
             panel1.SuspendLayout();
+            afterPanel.SuspendLayout();
             releasesPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)releasesNumericUpDown).BeginInit();
+            observablePanel.SuspendLayout();
             causesPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)causesNumericUpDown).BeginInit();
             alwaysPanel.SuspendLayout();
             impossiblePanel.SuspendLayout();
             initiallyPanel.SuspendLayout();
-            observablePanel.SuspendLayout();
-            afterPanel.SuspendLayout();
             panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)errorProvider1).BeginInit();
             SuspendLayout();
@@ -297,7 +304,9 @@
             // 
             // panel1
             // 
+            panel1.Controls.Add(afterPanel);
             panel1.Controls.Add(releasesPanel);
+            panel1.Controls.Add(observablePanel);
             panel1.Controls.Add(causesPanel);
             panel1.Controls.Add(alwaysPanel);
             panel1.Controls.Add(impossiblePanel);
@@ -308,6 +317,65 @@
             panel1.Name = "panel1";
             panel1.Size = new Size(218, 223);
             panel1.TabIndex = 5;
+            // 
+            // afterPanel
+            // 
+            afterPanel.Controls.Add(afterActionProgramLabel);
+            afterPanel.Controls.Add(afterCheckedListBox);
+            afterPanel.Controls.Add(afterListBox);
+            afterPanel.Controls.Add(afterLabel);
+            afterPanel.Controls.Add(afterTextBox);
+            afterPanel.Dock = DockStyle.Fill;
+            afterPanel.Location = new Point(0, 23);
+            afterPanel.Name = "afterPanel";
+            afterPanel.Size = new Size(218, 177);
+            afterPanel.TabIndex = 8;
+            afterPanel.Visible = false;
+            // 
+            // afterActionProgramLabel
+            // 
+            afterActionProgramLabel.AutoSize = true;
+            afterActionProgramLabel.Location = new Point(115, 153);
+            afterActionProgramLabel.Name = "afterActionProgramLabel";
+            afterActionProgramLabel.Size = new Size(89, 15);
+            afterActionProgramLabel.TabIndex = 17;
+            afterActionProgramLabel.Text = "action program";
+            // 
+            // afterCheckedListBox
+            // 
+            afterCheckedListBox.FormattingEnabled = true;
+            afterCheckedListBox.Location = new Point(109, 59);
+            afterCheckedListBox.Name = "afterCheckedListBox";
+            afterCheckedListBox.Size = new Size(105, 94);
+            afterCheckedListBox.TabIndex = 16;
+            afterCheckedListBox.KeyDown += afterCheckedListBox_KeyDown;
+            // 
+            // afterListBox
+            // 
+            afterListBox.FormattingEnabled = true;
+            afterListBox.Location = new Point(3, 59);
+            afterListBox.Name = "afterListBox";
+            afterListBox.Size = new Size(100, 109);
+            afterListBox.TabIndex = 15;
+            afterListBox.KeyDown += afterListBox_KeyDown;
+            // 
+            // afterLabel
+            // 
+            afterLabel.AutoSize = true;
+            afterLabel.Location = new Point(90, 41);
+            afterLabel.Name = "afterLabel";
+            afterLabel.Size = new Size(31, 15);
+            afterLabel.TabIndex = 11;
+            afterLabel.Text = "after";
+            // 
+            // afterTextBox
+            // 
+            afterTextBox.Location = new Point(26, 3);
+            afterTextBox.Multiline = true;
+            afterTextBox.Name = "afterTextBox";
+            afterTextBox.PlaceholderText = "Expression";
+            afterTextBox.Size = new Size(167, 35);
+            afterTextBox.TabIndex = 10;
             // 
             // releasesPanel
             // 
@@ -388,6 +456,75 @@
             releasesLabel.Size = new Size(48, 15);
             releasesLabel.TabIndex = 0;
             releasesLabel.Text = "releases";
+            // 
+            // observablePanel
+            // 
+            observablePanel.Controls.Add(observableAfterLabel);
+            observablePanel.Controls.Add(actionProgramLabel);
+            observablePanel.Controls.Add(observableCheckedListBox);
+            observablePanel.Controls.Add(observableListBox);
+            observablePanel.Controls.Add(observableLabel);
+            observablePanel.Controls.Add(observableTextBox);
+            observablePanel.Dock = DockStyle.Fill;
+            observablePanel.Location = new Point(0, 23);
+            observablePanel.Name = "observablePanel";
+            observablePanel.Size = new Size(218, 177);
+            observablePanel.TabIndex = 8;
+            observablePanel.Visible = false;
+            // 
+            // observableAfterLabel
+            // 
+            observableAfterLabel.AutoSize = true;
+            observableAfterLabel.Location = new Point(93, 47);
+            observableAfterLabel.Name = "observableAfterLabel";
+            observableAfterLabel.Size = new Size(31, 15);
+            observableAfterLabel.TabIndex = 17;
+            observableAfterLabel.Text = "after";
+            // 
+            // actionProgramLabel
+            // 
+            actionProgramLabel.AutoSize = true;
+            actionProgramLabel.Location = new Point(115, 159);
+            actionProgramLabel.Name = "actionProgramLabel";
+            actionProgramLabel.Size = new Size(89, 15);
+            actionProgramLabel.TabIndex = 16;
+            actionProgramLabel.Text = "action program";
+            // 
+            // observableCheckedListBox
+            // 
+            observableCheckedListBox.FormattingEnabled = true;
+            observableCheckedListBox.Location = new Point(109, 65);
+            observableCheckedListBox.Name = "observableCheckedListBox";
+            observableCheckedListBox.Size = new Size(105, 94);
+            observableCheckedListBox.TabIndex = 15;
+            observableCheckedListBox.KeyDown += observableCheckedListBox_KeyDown;
+            // 
+            // observableListBox
+            // 
+            observableListBox.FormattingEnabled = true;
+            observableListBox.Location = new Point(3, 65);
+            observableListBox.Name = "observableListBox";
+            observableListBox.Size = new Size(100, 109);
+            observableListBox.TabIndex = 14;
+            observableListBox.KeyDown += observableListBox_KeyDown;
+            // 
+            // observableLabel
+            // 
+            observableLabel.AutoSize = true;
+            observableLabel.Location = new Point(76, 3);
+            observableLabel.Name = "observableLabel";
+            observableLabel.Size = new Size(64, 15);
+            observableLabel.TabIndex = 13;
+            observableLabel.Text = "observable";
+            // 
+            // observableTextBox
+            // 
+            observableTextBox.Location = new Point(24, 18);
+            observableTextBox.Multiline = true;
+            observableTextBox.Name = "observableTextBox";
+            observableTextBox.PlaceholderText = "Expression";
+            observableTextBox.Size = new Size(167, 27);
+            observableTextBox.TabIndex = 11;
             // 
             // causesPanel
             // 
@@ -587,63 +724,6 @@
             addStatementButton.UseVisualStyleBackColor = true;
             addStatementButton.Click += addStatementButton_Click;
             // 
-            // observablePanel
-            // 
-            observablePanel.Controls.Add(observableLabel);
-            observablePanel.Controls.Add(observableTextBox);
-            observablePanel.Location = new Point(55, 66);
-            observablePanel.Name = "observablePanel";
-            observablePanel.Size = new Size(218, 177);
-            observablePanel.TabIndex = 8;
-            observablePanel.Visible = false;
-            // 
-            // observableLabel
-            // 
-            observableLabel.AutoSize = true;
-            observableLabel.Location = new Point(81, 41);
-            observableLabel.Name = "observableLabel";
-            observableLabel.Size = new Size(64, 15);
-            observableLabel.TabIndex = 13;
-            observableLabel.Text = "observable";
-            // 
-            // observableTextBox
-            // 
-            observableTextBox.Location = new Point(26, 3);
-            observableTextBox.Multiline = true;
-            observableTextBox.Name = "observableTextBox";
-            observableTextBox.PlaceholderText = "Expression";
-            observableTextBox.Size = new Size(167, 35);
-            observableTextBox.TabIndex = 11;
-            observableTextBox.Visible = false;
-            // 
-            // afterPanel
-            // 
-            afterPanel.Controls.Add(afterLabel);
-            afterPanel.Controls.Add(afterTextBox);
-            afterPanel.Location = new Point(252, 262);
-            afterPanel.Name = "afterPanel";
-            afterPanel.Size = new Size(218, 177);
-            afterPanel.TabIndex = 8;
-            afterPanel.Visible = false;
-            // 
-            // afterLabel
-            // 
-            afterLabel.AutoSize = true;
-            afterLabel.Location = new Point(90, 41);
-            afterLabel.Name = "afterLabel";
-            afterLabel.Size = new Size(31, 15);
-            afterLabel.TabIndex = 11;
-            afterLabel.Text = "after";
-            // 
-            // afterTextBox
-            // 
-            afterTextBox.Location = new Point(26, 3);
-            afterTextBox.Multiline = true;
-            afterTextBox.Name = "afterTextBox";
-            afterTextBox.PlaceholderText = "Expression";
-            afterTextBox.Size = new Size(167, 35);
-            afterTextBox.TabIndex = 10;
-            // 
             // statementsCheckedListBox
             // 
             statementsCheckedListBox.FormattingEnabled = true;
@@ -693,8 +773,6 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 461);
-            Controls.Add(afterPanel);
-            Controls.Add(observablePanel);
             Controls.Add(panel2);
             Controls.Add(panel1);
             Controls.Add(removeActionsButton);
@@ -720,9 +798,13 @@
             ((System.ComponentModel.ISupportInitialize)fluentActionListContainer).EndInit();
             fluentActionListContainer.ResumeLayout(false);
             panel1.ResumeLayout(false);
+            afterPanel.ResumeLayout(false);
+            afterPanel.PerformLayout();
             releasesPanel.ResumeLayout(false);
             releasesPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)releasesNumericUpDown).EndInit();
+            observablePanel.ResumeLayout(false);
+            observablePanel.PerformLayout();
             causesPanel.ResumeLayout(false);
             causesPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)causesNumericUpDown).EndInit();
@@ -732,10 +814,6 @@
             impossiblePanel.PerformLayout();
             initiallyPanel.ResumeLayout(false);
             initiallyPanel.PerformLayout();
-            observablePanel.ResumeLayout(false);
-            observablePanel.PerformLayout();
-            afterPanel.ResumeLayout(false);
-            afterPanel.PerformLayout();
             panel2.ResumeLayout(false);
             panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)errorProvider1).EndInit();
@@ -802,5 +880,12 @@
         private TextBox observableTextBox;
         private Label afterLabel;
         private Label observableLabel;
+        private ListBox observableListBox;
+        private CheckedListBox observableCheckedListBox;
+        private Label actionProgramLabel;
+        private Label observableAfterLabel;
+        private Label afterActionProgramLabel;
+        private CheckedListBox afterCheckedListBox;
+        private ListBox afterListBox;
     }
 }
