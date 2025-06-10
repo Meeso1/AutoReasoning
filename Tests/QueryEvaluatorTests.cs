@@ -248,10 +248,10 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
-        Assert.Equal(QueryResult.Unconsistent, evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
-        Assert.Equal(QueryResult.Unconsistent, evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(possibleQuery));
     }
     #endregion ExecutableQueries
     #region AccessibleQueries
@@ -369,10 +369,10 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var necessaryQuery = new AccessibleQuery(QueryType.Necessarily, program, formulaReducer.Reduce(new False()));
-        Assert.Equal(QueryResult.Unconsistent, evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new AccessibleQuery(QueryType.Possibly, program, formulaReducer.Reduce(new False()));
-        Assert.Equal(QueryResult.Unconsistent, evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(possibleQuery));
     }
     #endregion AccessibleQueries
     #region AffordableQueries
@@ -549,8 +549,8 @@ public sealed class QueryEvaluatorTests
             problem.Actions["shoot"]
         ]);
 
-        Assert.Equal(QueryResult.Unconsistent, evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 0)));
-        Assert.Equal(QueryResult.Unconsistent, evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 0)));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 0)));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 0)));
     }
     #endregion AffordableQueries
 }

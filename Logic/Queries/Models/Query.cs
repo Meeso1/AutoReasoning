@@ -6,7 +6,7 @@ namespace Logic.Queries.Models;
 public enum QueryResult
 {
     Consequence,
-    Unconsistent,
+    Inconsistent,
     NotConsequence
 }
 

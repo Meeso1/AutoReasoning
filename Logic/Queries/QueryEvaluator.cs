@@ -114,7 +114,7 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
 
         var histories = SelectModels(query.Program ,potentialHistories);
 
-        if (histories.Count() == 0) { return QueryResult.Unconsistent; } //TODO: This should be an enum and we should say the model is unconclusive
+        if (histories.Count() == 0) { return QueryResult.Inconsistent; } //TODO: This should be an enum and we should say the model is unconclusive
 
         var consequence = histories.All(history => query.Type switch
         {
