@@ -48,4 +48,4 @@ public sealed class App
 
 public sealed record SetModelResult(bool IsValid, IReadOnlyList<string> Errors);
 
-public sealed record EvaluateQueryResult(bool? Success, bool IsValid, IReadOnlyList<string> Errors);
+public sealed record EvaluateQueryResult(QueryResult? Success, bool IsValid, IReadOnlyList<string> Errors);

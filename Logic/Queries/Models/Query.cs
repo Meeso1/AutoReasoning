@@ -3,6 +3,13 @@ using Logic.States.Models;
 
 namespace Logic.Queries.Models;
 
+public enum QueryResult
+{
+    Consequence,
+    Unconsistent,
+    NotConsequence
+}
+
 public enum QueryType
 {
     Necessarily,

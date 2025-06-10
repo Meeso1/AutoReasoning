@@ -171,7 +171,7 @@ namespace AutoReasoningGUI
                 return;
             }
 
-            bool? result;
+            QueryResult? result;
             EvaluateQueryResult evalResult;
             // not implemented yet - try usage to avoid runtime exceptions
             try
@@ -192,7 +192,14 @@ namespace AutoReasoningGUI
                 evalResult = new(null, false, ["Not implemented."]);
             }
 
-            queryResultValueLabel.Text = evalResult.Success == null ? "NOT IMPLEMENTED" : evalResult.Success.ToString().ToUpper();
+            queryResultValueLabel.Text = evalResult.Success switch
+            {
+                null => "NOT IMPLEMENTED",
+                QueryResult.Consequence => "TRUE",
+                QueryResult.NotConsequence => "FALSE",
+                QueryResult.Unconsistent => "DOMAIN IS INCONSISTENT",
+                _ => "NOT IMPLEMENTED QUERY RESULT (?)"
+            };
 
             _states = null;
         }
