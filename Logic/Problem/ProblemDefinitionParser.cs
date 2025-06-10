@@ -39,11 +39,12 @@ public sealed class ProblemDefinitionParser
     public static ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyList<ActionStatement> actionStatements,
-        IReadOnlyList<ValueStatement> valueStatements,
+        IReadOnlyList<(List<string> actionChain, Formula effect, bool isAfter)> valueStatements,
         IReadOnlyList<Formula> always)
     {
         IReadOnlyDictionary<string, Action> actions = ProcessActionStatements(actionStatements);
-        return CreateProblemDefinition(fluents, actions, valueStatements, always);
+        IReadOnlyList<ValueStatement> cleanValueStatements = ProcessValueStatements(valueStatements);
+        return CreateProblemDefinition(fluents, actions, cleanValueStatements, always);
     }
 
     public static ProblemDefinition CreateProblemDefinition(
@@ -107,6 +108,11 @@ public sealed class ProblemDefinitionParser
         }
 
         return actions;
+    }
+
+    private static IReadOnlyList<ValueStatement> ProcessValueStatements(IReadOnlyList<(List<string> actionChain, Formula effect, bool isAfter)> inValues)
+    {
+        return [];
     }
 
     private static StateGroup ProcessStatesFromFormulas(IReadOnlyList<Formula> always)
