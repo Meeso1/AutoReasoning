@@ -48,7 +48,7 @@ namespace AutoReasoningGUI
         public BindingList<string> ActionNames = new();
         public BindingList<DisplayItem> Statements = new();
         private List<Formula> _alwaysStatements = new List<Formula>();
-        private List<Formula> _initialStatements = new List<Formula>();
+        private List<ValueStatement> _valueStatements = new List<ValueStatement>();
         private List<ActionStatement> _actionStatements = new List<ActionStatement>();
         private Form2 form2;
         public Form1()
@@ -68,7 +68,7 @@ namespace AutoReasoningGUI
             form2.PrepareToShow();
             form2.Visible = true;
 
-            App.SetModel(Fluents.ToDictionary(f => f.Name), _actionStatements, _initialStatements, _alwaysStatements);
+            App.SetModel(Fluents.ToDictionary(f => f.Name), _actionStatements, _valueStatements, _alwaysStatements);
         }
 
         private void addFluentButton_Click(object sender, EventArgs e)
@@ -114,7 +114,7 @@ namespace AutoReasoningGUI
             }
         }
 
-        private void UpdateActionList()
+        private void UpdateActionList() // TODO:
         {
             this.actionCheckedListBox.Items.Clear();
             this.impossibleActionComboBox.Items.Clear();
@@ -131,7 +131,7 @@ namespace AutoReasoningGUI
 
         private void UpdateStatementsList()
         {
-            _initialStatements.Clear();
+            _valueStatements.Clear();
             _alwaysStatements.Clear();
             _actionStatements.Clear();
             statementsCheckedListBox.Items.Clear();
@@ -144,7 +144,11 @@ namespace AutoReasoningGUI
                 string firstWord = statementText.Split(' ')[0];
                 if (statementType is Formula initiallyStatement && firstWord == "initially")
                 {
-                    _initialStatements.Add(initiallyStatement);
+                    _valueStatements.Add(new AfterStatement(new ActionProgram([]), initiallyStatement));
+                }
+                else if (statementType is ValueStatement valueStatement)
+                {
+                    _valueStatements.Add(valueStatement);
                 }
                 else if (statementType is Formula alwaysStatement && firstWord == "always")
                 {
@@ -179,7 +183,7 @@ namespace AutoReasoningGUI
             UpdateStatementsList();
         }
 
-        private void removeActionsButton_Click(object sender, EventArgs e)
+        private void removeActionsButton_Click(object sender, EventArgs e) // TODO:
         {
             for (int i = actionCheckedListBox.Items.Count - 1; i >= 0; i--)
             {
@@ -206,6 +210,8 @@ namespace AutoReasoningGUI
         private void typeOfStatementComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             initiallyPanel.Visible = false;
+            afterPanel.Visible = false;
+            observablePanel.Visible = false;
             alwaysPanel.Visible = false;
             impossiblePanel.Visible = false;
             causesPanel.Visible = false;
@@ -215,8 +221,14 @@ namespace AutoReasoningGUI
             {
                 case "":
                     return;
-                case "Initial Fluent Value":
+                case "Initially":
                     initiallyPanel.Visible = true;
+                    break;
+                case "After":
+                    afterPanel.Visible = true;
+                    break;
+                case "Observable":
+                    observablePanel.Visible = true;
                     break;
                 case "Always":
                     alwaysPanel.Visible = true;
@@ -233,11 +245,13 @@ namespace AutoReasoningGUI
             }
         }
 
-        private void addStatementButton_Click(object sender, EventArgs e)
+        private void addStatementButton_Click(object sender, EventArgs e) // TODO
         {
             if (typeOfStatementComboBox.SelectedItem == null) return;
 
             this.errorProvider1.SetError(initiallyTextBox, "");
+            this.errorProvider1.SetError(afterTextBox, "");
+            this.errorProvider1.SetError(observableTextBox, "");
             this.errorProvider1.SetError(alwaysTextBox, "");
             this.errorProvider1.SetError(impossibleTextBox, "");
             this.errorProvider1.SetError(causesTextBox1, "");
@@ -260,7 +274,7 @@ namespace AutoReasoningGUI
             {
                 case "":
                     return;
-                case "Initial Fluent Value":
+                case "Initially":
                     expression = initiallyTextBox.Text.ToString();
                     expression = expression.Trim().ToLower();
                     if (expression == "")
@@ -287,6 +301,10 @@ namespace AutoReasoningGUI
                         initiallyTextBox.Clear();
                     }
                     break;
+                case "After":
+
+                case "Observable":
+
                 case "Always":
                     expression = alwaysTextBox.Text.ToString();
                     expression = expression.Trim().ToLower();
