@@ -22,13 +22,14 @@ namespace Logic.Queries;
 public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer formulaReducer)
 {
     private readonly History _history = new(problem, formulaReducer);
-    private readonly Dictionary<ImmutableList<Action>, IReadOnlyList<AfterStatement>> afterDict = problem.ValueStatements
+    private readonly Dictionary<string, IReadOnlyList<AfterStatement>> afterDict = problem.ValueStatements
     .OfType<AfterStatement>()
-    .GroupBy(s => s.ActionChain.Actions.ToImmutableList())
+    .GroupBy(s => string.Join(",", s.ActionChain.Actions.Select(a => a.ToString())))
     .ToDictionary(g => g.Key, g => (IReadOnlyList<AfterStatement>)g.ToList().AsReadOnly());
-    private readonly Dictionary<ImmutableList<Action>, IReadOnlyList<ObservableStatement>> observableDict = problem.ValueStatements
+
+    private readonly Dictionary<string, IReadOnlyList<ObservableStatement>> observableDict = problem.ValueStatements
         .OfType<ObservableStatement>()
-        .GroupBy(s => s.ActionChain.Actions.ToImmutableList())
+        .GroupBy(s => string.Join(",", s.ActionChain.Actions.Select(a => a.ToString())))
         .ToDictionary(g => g.Key, g => (IReadOnlyList<ObservableStatement>)g.ToList().AsReadOnly());
 
     public QueryResult Evaluate(Query query)
@@ -55,7 +56,7 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
         if (!statesAtPosition.Any())
             return true; // No valid states to check against
 
-        ImmutableList<Action> sequenceKey = sequence.ToImmutableList();
+        string sequenceKey = string.Join(",", sequence.Select(a => a.ToString()));
 
         // Check "after" statements - must be true in EVERY state at the position
         if (afterDict.TryGetValue(sequenceKey, out var matchingAfterStatements))
@@ -114,7 +115,7 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
 
         var histories = SelectModels(query.Program ,potentialHistories);
 
-        if (histories.Count() == 0) { return QueryResult.Inconsistent; } //TODO: This should be an enum and we should say the model is unconclusive
+        if (histories.Count() == 0) { return QueryResult.Inconsistent; }
 
         var consequence = histories.All(history => query.Type switch
         {
