@@ -43,7 +43,7 @@ public sealed class ProblemDefinitionParser
         IReadOnlyList<Formula> always)
     {
         IReadOnlyDictionary<string, Action> actions = ProcessActionStatements(actionStatements);
-        IReadOnlyList<ValueStatement> cleanValueStatements = ProcessValueStatements(valueStatements);
+        IReadOnlyList<ValueStatement> cleanValueStatements = ProcessValueStatements(valueStatements, actions);
         return CreateProblemDefinition(fluents, actions, cleanValueStatements, always);
     }
 
@@ -110,9 +110,28 @@ public sealed class ProblemDefinitionParser
         return actions;
     }
 
-    private static IReadOnlyList<ValueStatement> ProcessValueStatements(IReadOnlyList<(List<string> actionChain, Formula effect, bool isAfter)> inValues)
+    private static IReadOnlyList<ValueStatement> ProcessValueStatements(IReadOnlyList<(List<string> actionChain, Formula effect, bool isAfter)> inValues, IReadOnlyDictionary<string, Action> actions)
     {
-        return [];
+        var result = new List<ValueStatement>();
+
+        foreach (var (actionChain, effect, isAfter) in inValues)
+        {
+            // Convert string action names to Action objects
+            var actionObjects = actionChain
+                .Select(actionName => actions[actionName])
+                .ToList();
+
+            var actionProgram = new ActionProgram(actionObjects);
+
+            // Create appropriate ValueStatement based on isAfter flag
+            ValueStatement statement = isAfter
+                ? new AfterStatement(actionProgram, effect)
+                : new ObservableStatement(actionProgram, effect);
+
+            result.Add(statement);
+        }
+
+        return result;
     }
 
     private static StateGroup ProcessStatesFromFormulas(IReadOnlyList<Formula> always)
