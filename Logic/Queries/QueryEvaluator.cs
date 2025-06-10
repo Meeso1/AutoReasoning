@@ -31,7 +31,7 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
         .GroupBy(s => s.ActionChain.Actions.ToImmutableList())
         .ToDictionary(g => g.Key, g => (IReadOnlyList<ObservableStatement>)g.ToList().AsReadOnly());
 
-    public bool Evaluate(Query query)
+    public QueryResult Evaluate(Query query)
     {
         return query switch
         {
@@ -107,29 +107,31 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
         return candidates;
     }
 
-    private bool CheckTrajectories(Query query, Func<IReadOnlyList<State>, bool> predicate)
+    private QueryResult CheckTrajectories(Query query, Func<IReadOnlyList<State>, bool> predicate)
     {
         var potentialHistories = problem.ValidStates.EnumerateStates(problem.FluentUniverse)
                                            .Select(start => _history.ComputeHistories(start, query.Program.Actions.ToList()));
 
         var histories = SelectModels(query.Program ,potentialHistories);
 
-        if (histories.Count() == 0) { return false; } //TODO: This should be an enum and we should say the model is unconclusive
+        if (histories.Count() == 0) { return QueryResult.Inconsistent; } //TODO: This should be an enum and we should say the model is unconclusive
 
-        return histories.All(history => query.Type switch
+        var consequence = histories.All(history => query.Type switch
         {
             QueryType.Possibly => history.Any(predicate),
             QueryType.Necessarily => history.All(predicate),
             _ => throw new UnreachableException($"Query type not implemented: {query.Type}")
         });
+
+        return consequence ? QueryResult.Consequence : QueryResult.NotConsequence;
     }
 
-    private bool EvaluateExecutable(ExecutableQuery query)
+    private QueryResult EvaluateExecutable(ExecutableQuery query)
     {
         return CheckTrajectories(query, trajectory => trajectory.Count == query.Program.Actions.Count + 1);
     }
 
-    private bool EvaluateAccessible(AccessibleQuery query)
+    private QueryResult EvaluateAccessible(AccessibleQuery query)
     {
         return CheckTrajectories(query, trajectory =>
             trajectory.Count == query.Program.Actions.Count + 1
@@ -169,7 +171,7 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
         return cost <= costLimit;
     }
 
-    private bool EvaluateAffordable(AffordableQuery query)
+    private QueryResult EvaluateAffordable(AffordableQuery query)
     {
         return CheckTrajectories(query, trajectory =>
             trajectory.Count == query.Program.Actions.Count + 1
