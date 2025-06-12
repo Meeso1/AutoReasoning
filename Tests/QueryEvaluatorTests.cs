@@ -313,6 +313,76 @@ public sealed class QueryEvaluatorTests
         Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(possibleQuery));
     }
 
+    [Fact]
+    public void EvaluateExecutable_NonExacutableAfterProgram_ReturnsTrue()
+    {
+        var fluents = new[] { new Fluent("alive", true), new Fluent("loaded", true) };
+        var fluentsDict = fluents.ToDictionary(f => f.Name, f => f);
+        var actions = new List<Action>
+        {
+            new Action("load",
+                [new ActionEffect(new True(), new FluentIsSet(fluents[1]), 1)], // load causes loaded
+                [],
+                [new ActionCondition(new FluentIsSet(fluents[1]))]), // impossible load if loaded
+            new Action("shoot",
+                [new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1), // shoot causes not loaded
+                 new ActionEffect(new FluentIsSet(fluents[1]), new Not(new FluentIsSet(fluents[0])), 1)], // shoot causes not alive if loaded
+                [],
+                []),
+        };
+
+        var problem = ProblemDefinitionParser.CreateProblemDefinition(
+            fluents.ToDictionary(f => f.Name, f => f),
+            actions.ToDictionary(a => a.Name, a => a),
+            [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0])),
+             new AfterStatement(new ActionProgram([actions[0], actions[0]]), new False())],
+            []);
+
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([actions[1]]);
+        var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateExecutable_NonExacutableObservableProgram_ReturnsInconsistent()
+    {
+        var fluents = new[] { new Fluent("alive", true), new Fluent("loaded", true) };
+        var fluentsDict = fluents.ToDictionary(f => f.Name, f => f);
+        var actions = new List<Action>
+        {
+            new Action("load",
+                [new ActionEffect(new True(), new FluentIsSet(fluents[1]), 1)], // load causes loaded
+                [],
+                [new ActionCondition(new FluentIsSet(fluents[1]))]), // impossible load if loaded
+            new Action("shoot",
+                [new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1), // shoot causes not loaded
+                 new ActionEffect(new FluentIsSet(fluents[1]), new Not(new FluentIsSet(fluents[0])), 1)], // shoot causes not alive if loaded
+                [],
+                []),
+        };
+
+        var problem = ProblemDefinitionParser.CreateProblemDefinition(
+            fluents.ToDictionary(f => f.Name, f => f),
+            actions.ToDictionary(a => a.Name, a => a),
+            [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0])),
+             new ObservableStatement(new ActionProgram([actions[0], actions[0]]), new True())],
+            []);
+
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([actions[1]]);
+        var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(possibleQuery));
+    }
+
     #endregion ExecutableQueries
     #region AccessibleQueries
 
