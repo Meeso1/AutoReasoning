@@ -50,7 +50,7 @@ public class AndMergeStrategy : IFluentDictionaryMergeStrategy
         {
             mergedDict[kvp.Key] = kvp.Value;
         }
-        
+
         return new List<FluentDict> { mergedDict };
     }
 }

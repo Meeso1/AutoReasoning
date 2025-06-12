@@ -21,7 +21,7 @@ public sealed class ProblemDefinition
 {
     public required IReadOnlyDictionary<string, Fluent> Fluents { get; init; }
     public required IReadOnlyDictionary<string, Action> Actions { get; init; }
-    public required StateGroup InitialStates { get; init; }
+    public required IReadOnlyList<ValueStatement> ValueStatements { get; init; }
     public required StateGroup ValidStates { get; init; }
     public IReadOnlyList<Fluent> FluentUniverse => Fluents.Values.ToList();
 }

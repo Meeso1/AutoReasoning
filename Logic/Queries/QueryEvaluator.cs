@@ -21,23 +21,27 @@ namespace Logic.Queries;
 public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer formulaReducer)
 {
     private readonly History _history = new(problem, formulaReducer);
-    private readonly StateGroup _validInitialStates = problem.InitialStates;
+    private StateGroup? _startingStates = null;
 
-    public bool Evaluate(Query query)
+    public QueryResult Evaluate(Query query)
     {
-        if (_validInitialStates.SpecifiedFluentGroups.Count == 0) {  return false; }
+        if (GetStartingStates().SpecifiedFluentGroups.Count == 0)
+        {
+            return QueryResult.Inconsistent;
+        }
+
         return query switch
         {
             ExecutableQuery q => EvaluateExecutable(q),
             AccessibleQuery q => EvaluateAccessible(q),
             AffordableQuery q => EvaluateAffordable(q),
             _ => throw new UnreachableException($"Query type not implemented: {query.GetType()}")
-        };
+        } ? QueryResult.Consequence : QueryResult.NotConsequence;
     }
 
     private bool CheckTrajectories(Query query, Func<IReadOnlyList<State>, bool> predicate)
     {
-        var histories = _validInitialStates.EnumerateStates(problem.FluentUniverse)
+        var histories = GetStartingStates().EnumerateStates(problem.FluentUniverse)
                                            .Select(start => _history.ComputeHistories(start, query.Program.Actions.ToList()));
 
         return histories.All(history => query.Type switch
@@ -60,30 +64,32 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
             && query.States.Contains(trajectory[^1]));
     }
 
-
-
-    private bool AffordablePredicate(uint costLimit, ActionProgram actions, IReadOnlyList<State> trajectory)
+    private static bool AffordablePredicate(uint costLimit, ActionProgram actions, IReadOnlyList<State> trajectory)
     {
-        int cost = 0;
-        for(int i=0; i<actions.Actions.Count; i++)
+        var cost = 0;
+        foreach (var (action, i) in actions.Actions.Select((action, i) => (action, i)))
         {
-            var action = actions.Actions[i];
-
             foreach (var cause in action.Effects)
             {
-                if (!cause.Condition.IsSatisfiedBy(trajectory[i])) { continue; }
+                if (!cause.Condition.IsSatisfiedBy(trajectory[i]))
+                {
+                    continue;
+                }
 
-                if (!cause.Effect.IsSatisfiedBy(trajectory[i]) && cause.Effect.IsSatisfiedBy(trajectory[i+1])) {
+                if (!cause.Effect.IsSatisfiedBy(trajectory[i]) && cause.Effect.IsSatisfiedBy(trajectory[i + 1]))
+                {
                     cost += cause.CostIfChanged;
                 }
             }
 
             foreach (var release in action.Releases)
             {
-                if (!release.Condition.IsSatisfiedBy(trajectory[i])) { continue; }
+                if (!release.Condition.IsSatisfiedBy(trajectory[i]))
+                {
+                    continue;
+                }
 
-                Formula fluentState = new FluentIsSet(release.ReleasedFluent);
-
+                var fluentState = new FluentIsSet(release.ReleasedFluent);
                 if (fluentState.IsSatisfiedBy(trajectory[i]) != fluentState.IsSatisfiedBy(trajectory[i + 1]))
                 {
                     cost += release.CostIfChanged;
@@ -98,5 +104,50 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
         return CheckTrajectories(query, trajectory =>
             trajectory.Count == query.Program.Actions.Count + 1
             && AffordablePredicate(query.CostLimit, query.Program, trajectory));
+    }
+
+    private StateGroup GetStartingStates()
+    {
+        if (_startingStates is not null)
+        {
+            return _startingStates;
+        }
+
+        var initialStates = problem.ValidStates;
+
+        var initialStatements = problem.ValueStatements.Where(statement => statement.ActionChain.Actions.Count == 0);
+        foreach (var statement in initialStatements)
+        {
+            var matchingStates = formulaReducer.Reduce(statement.Effect);
+            initialStates = StateGroup.And(initialStates, matchingStates);
+        }
+
+        var otherStatements = problem.ValueStatements.Where(statement => statement.ActionChain.Actions.Count > 0);
+        foreach (var statement in otherStatements)
+        {
+            var matchingStates = new List<State>();
+            foreach (var initialState in initialStates.EnumerateStates(problem.FluentUniverse))
+            {
+                var trajectories = _history.ComputeHistories(initialState, statement.ActionChain.Actions.ToList())
+                                           .Where(trajectory => trajectory.Count == statement.ActionChain.Actions.Count + 1);
+
+                var isSatisfied = statement switch
+                {
+                    AfterStatement s => trajectories.All(trajectory => s.Effect.IsSatisfiedBy(trajectory[^1])),
+                    ObservableStatement s => trajectories.Any(trajectory => s.Effect.IsSatisfiedBy(trajectory[^1])),
+                    _ => throw new UnreachableException($"Value statement type not implemented: {statement.GetType()}")
+                };
+
+                if (isSatisfied)
+                {
+                    matchingStates.Add(initialState);
+                }
+            }
+
+            initialStates = formulaReducer.CompressStateGroup(new StateGroup(matchingStates.Select(state => state.FluentValues).ToList()));
+        }
+
+        _startingStates = initialStates;
+        return initialStates;
     }
 }

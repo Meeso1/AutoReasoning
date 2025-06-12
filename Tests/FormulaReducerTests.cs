@@ -600,7 +600,6 @@ public sealed class FormulaReducerTests
         Assert.Contains(result.SpecifiedFluentGroups, dict =>
             dict.ContainsKey(FluentB) && dict[FluentB] == true &&
             dict.ContainsKey(FluentC) && dict[FluentC] == true);
-            
     }
 
     #endregion

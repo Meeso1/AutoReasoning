@@ -22,7 +22,7 @@ public sealed class QueryParserTests
             ["act1"] = new Action("act1", [], [], []),
             ["act2"] = new Action("act2", [], [], []),
         },
-        InitialStates = new StateGroup([]),
+        ValueStatements = [],
         ValidStates = new StateGroup([]),
     };
     private readonly QueryParser _parser;

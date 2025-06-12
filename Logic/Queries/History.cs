@@ -117,7 +117,7 @@ public sealed class History(ProblemDefinition problem, FormulaReducer formulaRed
     private StateGroup GetMinimalChangeStates(State start, StateGroup possibleEnds, HashSet<Fluent> notCountedFluents, HashSet<Fluent> releasedFluents)
     {
         var statesWithChanges = new List<(State state, HashSet<Fluent> changedFluents)>();
-        
+
         // First, collect all states with their corresponding changed fluent sets
         foreach (var endState in possibleEnds.EnumerateStates(problem.FluentUniverse))
         {

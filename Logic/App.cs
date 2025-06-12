@@ -19,10 +19,10 @@ public sealed class App
 
     public SetModelResult SetModel(IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyList<ActionStatement> actionStatements,
-        IReadOnlyList<Formula> initials,
+        IReadOnlyList<(List<string> actionChain, Formula effect, bool isAfter)> valueStatements,
         IReadOnlyList<Formula> always)
     {
-        ProblemDefinition problem = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, initials, always);
+        ProblemDefinition problem = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, valueStatements, always);
         QueryEvaluator = new QueryEvaluator(problem, FormulaReducer);
 
         ProblemDependent = new(problem, QueryEvaluator);
@@ -48,4 +48,4 @@ public sealed class App
 
 public sealed record SetModelResult(bool IsValid, IReadOnlyList<string> Errors);
 
-public sealed record EvaluateQueryResult(bool? Success, bool IsValid, IReadOnlyList<string> Errors);
+public sealed record EvaluateQueryResult(QueryResult? Success, bool IsValid, IReadOnlyList<string> Errors);

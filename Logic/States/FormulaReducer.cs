@@ -134,8 +134,6 @@ public sealed class FormulaReducer
         return CompressMergeWithStrategy(stateGroup, stateGroup, OrMergeStrategy.Merge);
     }
 
-
-
     public class FluentDictComparer : IEqualityComparer<ReadOnlyFluentDict>
     {
         public bool Equals(ReadOnlyFluentDict? x, ReadOnlyFluentDict? y)
