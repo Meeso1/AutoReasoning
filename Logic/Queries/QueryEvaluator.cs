@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using Logic.Problem.Models;
@@ -22,147 +21,75 @@ namespace Logic.Queries;
 public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer formulaReducer)
 {
     private readonly History _history = new(problem, formulaReducer);
-    private readonly Dictionary<string, IReadOnlyList<AfterStatement>> afterDict = problem.ValueStatements
-    .OfType<AfterStatement>()
-    .GroupBy(s => string.Join(",", s.ActionChain.Actions.Select(a => a.ToString())))
-    .ToDictionary(g => g.Key, g => (IReadOnlyList<AfterStatement>)g.ToList().AsReadOnly());
-
-    private readonly Dictionary<string, IReadOnlyList<ObservableStatement>> observableDict = problem.ValueStatements
-        .OfType<ObservableStatement>()
-        .GroupBy(s => string.Join(",", s.ActionChain.Actions.Select(a => a.ToString())))
-        .ToDictionary(g => g.Key, g => (IReadOnlyList<ObservableStatement>)g.ToList().AsReadOnly());
+    private StateGroup? _startingStates = null;
 
     public QueryResult Evaluate(Query query)
     {
+        if (GetStartingStates().SpecifiedFluentGroups.Count == 0) 
+        {  
+            return QueryResult.Inconsistent; 
+        }
+
         return query switch
         {
             ExecutableQuery q => EvaluateExecutable(q),
             AccessibleQuery q => EvaluateAccessible(q),
             AffordableQuery q => EvaluateAffordable(q),
             _ => throw new UnreachableException($"Query type not implemented: {query.GetType()}")
-        };
+        } ? QueryResult.Consequence : QueryResult.NotConsequence;
     }
 
-    private bool HistoryIsModel(List<Action> sequence, IEnumerable<IReadOnlyList<State>> trajectories)
+    private bool CheckTrajectories(Query query, Func<IReadOnlyList<State>, bool> predicate)
     {
-        int actionCount = sequence.Count;
-
-        // Get states at position actionCount from all trajectories
-        var statesAtPosition = trajectories
-            .Where(trajectory => trajectory.Count > actionCount)
-            .Select(trajectory => trajectory[actionCount])
-            .ToList();
-
-        if (!statesAtPosition.Any())
-            return true; // No valid states to check against
-
-        string sequenceKey = string.Join(",", sequence.Select(a => a.ToString()));
-
-        // Check "after" statements - must be true in EVERY state at the position
-        if (afterDict.TryGetValue(sequenceKey, out var matchingAfterStatements))
-        {
-            bool allAfterSatisfied = matchingAfterStatements.All(afterStmt =>
-                statesAtPosition.All(state => afterStmt.Effect.IsSatisfiedBy(state)));
-
-            if (!allAfterSatisfied)
-                return false;
-        }
-
-        // Check "observable" statements - must be true in AT LEAST ONE state at the position
-        if (observableDict.TryGetValue(sequenceKey, out var matchingObservableStatements))
-        {
-            bool anyObservableSatisfied = matchingObservableStatements.All(obsStmt =>
-                statesAtPosition.Any(state => obsStmt.Effect.IsSatisfiedBy(state)));
-
-            if (!anyObservableSatisfied)
-                return false;
-        }
-
-        return true;
-    }
-
-    private IEnumerable<IEnumerable<IReadOnlyList<State>>> SelectModels(ActionProgram fullProgram, IEnumerable<IEnumerable<IReadOnlyList<State>>> possibleModels)
-    {
-        List<Action> sequence = [];
-        var candidates = possibleModels.ToList();
-
-        for(int actionInd=-1; actionInd < fullProgram.Actions.Count; actionInd++)
-        {
-            if (actionInd != -1)
-            {
-                sequence.Add(fullProgram.Actions[actionInd]);
-            }
-
-            int removedCount = 0;
-
-            for (int i=0; i<candidates.Count; i++) //
-            {
-                if (!HistoryIsModel(sequence, candidates[i]))
-                {
-                    candidates.RemoveAt(i);
-                    removedCount++;
-                    i--;
-                }
-            }
-        }
-        return candidates;
-    }
-
-    private QueryResult CheckTrajectories(Query query, Func<IReadOnlyList<State>, bool> predicate)
-    {
-        var potentialHistories = problem.ValidStates.EnumerateStates(problem.FluentUniverse)
+        var histories = GetStartingStates().EnumerateStates(problem.FluentUniverse)
                                            .Select(start => _history.ComputeHistories(start, query.Program.Actions.ToList()));
 
-        var histories = SelectModels(query.Program ,potentialHistories);
-
-        if (histories.Count() == 0) { return QueryResult.Inconsistent; }
-
-        var consequence = histories.All(history => query.Type switch
+        return histories.All(history => query.Type switch
         {
             QueryType.Possibly => history.Any(predicate),
             QueryType.Necessarily => history.All(predicate),
             _ => throw new UnreachableException($"Query type not implemented: {query.Type}")
         });
-
-        return consequence ? QueryResult.Consequence : QueryResult.NotConsequence;
     }
 
-    private QueryResult EvaluateExecutable(ExecutableQuery query)
+    private bool EvaluateExecutable(ExecutableQuery query)
     {
         return CheckTrajectories(query, trajectory => trajectory.Count == query.Program.Actions.Count + 1);
     }
 
-    private QueryResult EvaluateAccessible(AccessibleQuery query)
+    private bool EvaluateAccessible(AccessibleQuery query)
     {
         return CheckTrajectories(query, trajectory =>
             trajectory.Count == query.Program.Actions.Count + 1
             && query.States.Contains(trajectory[^1]));
     }
 
-
-
-    private bool AffordablePredicate(uint costLimit, ActionProgram actions, IReadOnlyList<State> trajectory)
+    private static bool AffordablePredicate(uint costLimit, ActionProgram actions, IReadOnlyList<State> trajectory)
     {
-        int cost = 0;
-        for(int i=0; i<actions.Actions.Count; i++)
+        var cost = 0;
+        foreach (var (action, i) in actions.Actions.Select((action, i) => (action, i)))
         {
-            var action = actions.Actions[i];
-
             foreach (var cause in action.Effects)
             {
-                if (!cause.Condition.IsSatisfiedBy(trajectory[i])) { continue; }
+                if (!cause.Condition.IsSatisfiedBy(trajectory[i])) 
+                { 
+                    continue;
+                }
 
-                if (!cause.Effect.IsSatisfiedBy(trajectory[i]) && cause.Effect.IsSatisfiedBy(trajectory[i+1])) {
+                if (!cause.Effect.IsSatisfiedBy(trajectory[i]) && cause.Effect.IsSatisfiedBy(trajectory[i+1])) 
+                {
                     cost += cause.CostIfChanged;
                 }
             }
 
             foreach (var release in action.Releases)
             {
-                if (!release.Condition.IsSatisfiedBy(trajectory[i])) { continue; }
+                if (!release.Condition.IsSatisfiedBy(trajectory[i])) 
+                { 
+                    continue;
+                }
 
-                Formula fluentState = new FluentIsSet(release.ReleasedFluent);
-
+                var fluentState = new FluentIsSet(release.ReleasedFluent);
                 if (fluentState.IsSatisfiedBy(trajectory[i]) != fluentState.IsSatisfiedBy(trajectory[i + 1]))
                 {
                     cost += release.CostIfChanged;
@@ -172,10 +99,55 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
         return cost <= costLimit;
     }
 
-    private QueryResult EvaluateAffordable(AffordableQuery query)
+    private bool EvaluateAffordable(AffordableQuery query)
     {
         return CheckTrajectories(query, trajectory =>
             trajectory.Count == query.Program.Actions.Count + 1
             && AffordablePredicate(query.CostLimit, query.Program, trajectory));
+    }
+
+    private StateGroup GetStartingStates()
+    {
+        if (_startingStates is not null)
+        {
+            return _startingStates;
+        }
+
+        var initialStates = problem.ValidStates;
+
+        var initialStatements = problem.ValueStatements.Where(statement => statement.ActionChain.Actions.Count == 0);
+        foreach (var statement in initialStatements)
+        {
+            var matchingStates = formulaReducer.Reduce(statement.Effect);
+            initialStates = StateGroup.And(initialStates, matchingStates);
+        }
+
+        var otherStatements = problem.ValueStatements.Where(statement => statement.ActionChain.Actions.Count > 0);
+        foreach (var statement in otherStatements)
+        {
+            var matchingStates = new List<State>();
+            foreach (var initialState in initialStates.EnumerateStates(problem.FluentUniverse))
+            {
+                var trajectories = _history.ComputeHistories(initialState, statement.ActionChain.Actions.ToList())
+                                           .Where(trajectory => trajectory.Count == statement.ActionChain.Actions.Count + 1);
+                
+                var isSatisfied = statement switch
+                {
+                    AfterStatement s => trajectories.All(trajectory => s.Effect.IsSatisfiedBy(trajectory[^1])),
+                    ObservableStatement s => trajectories.Any(trajectory => s.Effect.IsSatisfiedBy(trajectory[^1])),
+                    _ => throw new UnreachableException($"Value statement type not implemented: {statement.GetType()}")
+                };
+
+                if (isSatisfied)
+                {
+                    matchingStates.Add(initialState);
+                }
+            }
+
+            initialStates = formulaReducer.CompressStateGroup(new StateGroup(matchingStates.Select(state => state.FluentValues).ToList()));
+        }
+
+        _startingStates = initialStates;
+        return initialStates;
     }
 }

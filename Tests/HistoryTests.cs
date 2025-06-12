@@ -197,7 +197,7 @@ public sealed class HistoryTests(ITestOutputHelper output)
     [Fact]
     public void ComputeHistories_ManyNondeterministicActions_ReturnsManyTrajectories()
     {
-         var problem = CreateYaleShootingProblemWithReleases();
+        var problem = CreateYaleShootingProblemWithReleases();
         var history = new History(problem, new FormulaReducer());
         var histories = history.ComputeHistories(
             new State(CreateState(problem.FluentUniverse, ("alive", true), ("loaded", true), ("walking", false))),
