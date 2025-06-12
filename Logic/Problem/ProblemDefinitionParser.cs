@@ -52,7 +52,7 @@ public sealed class ProblemDefinitionParser
         IReadOnlyDictionary<string, Action> actions,
         IReadOnlyList<ValueStatement> valueStatements,
         IReadOnlyList<Formula> always)
-        
+
     {
         StateGroup validStates = ProcessStatesFromFormulas(always);
         return new ProblemDefinition
@@ -138,7 +138,8 @@ public sealed class ProblemDefinitionParser
     {
         FormulaReducer formulaReducer = new();
         Formula finalFormula = new True();
-        foreach (Formula formula in always) {
+        foreach (Formula formula in always)
+        {
             finalFormula = new And(finalFormula, formula);
         }
         return formulaReducer.Reduce(finalFormula);

@@ -25,9 +25,9 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
 
     public QueryResult Evaluate(Query query)
     {
-        if (GetStartingStates().SpecifiedFluentGroups.Count == 0) 
-        {  
-            return QueryResult.Inconsistent; 
+        if (GetStartingStates().SpecifiedFluentGroups.Count == 0)
+        {
+            return QueryResult.Inconsistent;
         }
 
         return query switch
@@ -71,12 +71,12 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
         {
             foreach (var cause in action.Effects)
             {
-                if (!cause.Condition.IsSatisfiedBy(trajectory[i])) 
-                { 
+                if (!cause.Condition.IsSatisfiedBy(trajectory[i]))
+                {
                     continue;
                 }
 
-                if (!cause.Effect.IsSatisfiedBy(trajectory[i]) && cause.Effect.IsSatisfiedBy(trajectory[i+1])) 
+                if (!cause.Effect.IsSatisfiedBy(trajectory[i]) && cause.Effect.IsSatisfiedBy(trajectory[i + 1]))
                 {
                     cost += cause.CostIfChanged;
                 }
@@ -84,8 +84,8 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
 
             foreach (var release in action.Releases)
             {
-                if (!release.Condition.IsSatisfiedBy(trajectory[i])) 
-                { 
+                if (!release.Condition.IsSatisfiedBy(trajectory[i]))
+                {
                     continue;
                 }
 
@@ -130,7 +130,7 @@ public sealed class QueryEvaluator(ProblemDefinition problem, FormulaReducer for
             {
                 var trajectories = _history.ComputeHistories(initialState, statement.ActionChain.Actions.ToList())
                                            .Where(trajectory => trajectory.Count == statement.ActionChain.Actions.Count + 1);
-                
+
                 var isSatisfied = statement switch
                 {
                     AfterStatement s => trajectories.All(trajectory => s.Effect.IsSatisfiedBy(trajectory[^1])),
