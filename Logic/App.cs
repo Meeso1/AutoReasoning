@@ -18,11 +18,12 @@ public sealed class App
     public ProblemSpecificStuff? ProblemDependent { get; private set; }
 
     public SetModelResult SetModel(IReadOnlyDictionary<string, Fluent> fluents,
+        IReadOnlyList<string> actionNames,
         IReadOnlyList<ActionStatement> actionStatements,
         IReadOnlyList<(List<string> actionChain, Formula effect, bool isAfter)> valueStatements,
         IReadOnlyList<Formula> always)
     {
-        ProblemDefinition problem = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionStatements, valueStatements, always);
+        ProblemDefinition problem = ProblemDefinitionParser.CreateProblemDefinition(fluents, actionNames, actionStatements, valueStatements, always);
         QueryEvaluator = new QueryEvaluator(problem, FormulaReducer);
 
         ProblemDependent = new(problem, QueryEvaluator);
