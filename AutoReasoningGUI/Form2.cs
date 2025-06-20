@@ -197,7 +197,7 @@ namespace AutoReasoningGUI
                 null => "NOT IMPLEMENTED",
                 QueryResult.Consequence => "TRUE",
                 QueryResult.NotConsequence => "FALSE",
-                QueryResult.Inconsistent => "TRUE(DOMAIN IS INCONSISTENT)",
+                QueryResult.Inconsistent => "TRUE (DOMAIN IS INCONSISTENT)",
                 _ => "NOT IMPLEMENTED QUERY RESULT (?)"
             };
 
