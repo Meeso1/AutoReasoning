@@ -47,8 +47,8 @@ namespace AutoReasoningGUI
         public BindingList<Fluent> Fluents = new();
         public BindingList<string> ActionNames = new();
         public BindingList<DisplayItem> Statements = new();
+        private List<(List<string>, Formula, bool)> _valueStatements = new List<(List<string>, Formula, bool)>();
         private List<Formula> _alwaysStatements = new List<Formula>();
-        private List<Formula> _initialStatements = new List<Formula>();
         private List<ActionStatement> _actionStatements = new List<ActionStatement>();
         private Form2 form2;
         public Form1()
@@ -68,7 +68,7 @@ namespace AutoReasoningGUI
             form2.PrepareToShow();
             form2.Visible = true;
 
-            App.SetModel(Fluents.ToDictionary(f => f.Name), _actionStatements, _initialStatements, _alwaysStatements);
+            App.SetModel(Fluents.ToDictionary(f => f.Name), ActionNames.ToList(),_actionStatements, _valueStatements, _alwaysStatements);
         }
 
         private void addFluentButton_Click(object sender, EventArgs e)
@@ -117,12 +117,16 @@ namespace AutoReasoningGUI
         private void UpdateActionList()
         {
             this.actionCheckedListBox.Items.Clear();
+            this.afterListBox.Items.Clear();
+            this.observableListBox.Items.Clear();
             this.impossibleActionComboBox.Items.Clear();
             this.causesActionComboBox.Items.Clear();
             this.releasesActionComboBox.Items.Clear();
             foreach (string action in ActionNames)
             {
                 this.actionCheckedListBox.Items.Add(action);
+                this.afterListBox.Items.Add(action);
+                this.observableListBox.Items.Add(action);
                 this.impossibleActionComboBox.Items.Add(action);
                 this.causesActionComboBox.Items.Add(action);
                 this.releasesActionComboBox.Items.Add(action);
@@ -131,7 +135,7 @@ namespace AutoReasoningGUI
 
         private void UpdateStatementsList()
         {
-            _initialStatements.Clear();
+            _valueStatements.Clear();
             _alwaysStatements.Clear();
             _actionStatements.Clear();
             statementsCheckedListBox.Items.Clear();
@@ -144,7 +148,11 @@ namespace AutoReasoningGUI
                 string firstWord = statementText.Split(' ')[0];
                 if (statementType is Formula initiallyStatement && firstWord == "initially")
                 {
-                    _initialStatements.Add(initiallyStatement);
+                    _valueStatements.Add((new List<string>(), initiallyStatement, true));
+                }
+                else if (statementType is ValueTuple<List<string>, Formula, bool> valueStatement)
+                {
+                    _valueStatements.Add(valueStatement);
                 }
                 else if (statementType is Formula alwaysStatement && firstWord == "always")
                 {
@@ -189,12 +197,10 @@ namespace AutoReasoningGUI
                     ActionNames.RemoveAt(i);
                     for (int j = Statements.Count - 1; j >= 0; j--)
                     {
-                        if (Statements[j].Value is ActionStatement actionStatement)
+                        string statement = Statements[j].DisplayText;
+                        if (statement.Contains(" " + actionName) || statement.Contains(actionName + " "))
                         {
-                            if (actionStatement.ActionName == actionName)
-                            {
-                                Statements.RemoveAt(j);
-                            }
+                            Statements.RemoveAt(j);
                         }
                     }
                 }
@@ -206,6 +212,8 @@ namespace AutoReasoningGUI
         private void typeOfStatementComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             initiallyPanel.Visible = false;
+            afterPanel.Visible = false;
+            observablePanel.Visible = false;
             alwaysPanel.Visible = false;
             impossiblePanel.Visible = false;
             causesPanel.Visible = false;
@@ -215,8 +223,14 @@ namespace AutoReasoningGUI
             {
                 case "":
                     return;
-                case "Initial Fluent Value":
+                case "Initially":
                     initiallyPanel.Visible = true;
+                    break;
+                case "After":
+                    afterPanel.Visible = true;
+                    break;
+                case "Observable":
+                    observablePanel.Visible = true;
                     break;
                 case "Always":
                     alwaysPanel.Visible = true;
@@ -233,11 +247,13 @@ namespace AutoReasoningGUI
             }
         }
 
-        private void addStatementButton_Click(object sender, EventArgs e)
+        private void addStatementButton_Click(object sender, EventArgs e) // TODO
         {
             if (typeOfStatementComboBox.SelectedItem == null) return;
 
             this.errorProvider1.SetError(initiallyTextBox, "");
+            this.errorProvider1.SetError(afterTextBox, "");
+            this.errorProvider1.SetError(observableTextBox, "");
             this.errorProvider1.SetError(alwaysTextBox, "");
             this.errorProvider1.SetError(impossibleTextBox, "");
             this.errorProvider1.SetError(causesTextBox1, "");
@@ -252,6 +268,8 @@ namespace AutoReasoningGUI
             Formula? parsedFormula;
             Formula formula;
             Fluent fluent;
+            ActionProgram actionProgram;
+            ValueStatement valueStatement;
             ActionStatement actionStatement;
             DisplayItem displayItem;
             IReadOnlyList<string>? errors = null;
@@ -260,7 +278,7 @@ namespace AutoReasoningGUI
             {
                 case "":
                     return;
-                case "Initial Fluent Value":
+                case "Initially":
                     expression = initiallyTextBox.Text.ToString();
                     expression = expression.Trim().ToLower();
                     if (expression == "")
@@ -285,6 +303,84 @@ namespace AutoReasoningGUI
                         Statements.Add(displayItem);
                         UpdateStatementsList();
                         initiallyTextBox.Clear();
+                    }
+                    break;
+                case "After":
+                    expression = afterTextBox.Text.ToString();
+                    expression = expression.Trim().ToLower();
+                    if (expression == "")
+                    {
+                        return;
+                    }
+                    if (!App.FormulaParser.TryParse(
+                            expression,
+                            Fluents.ToDictionary(f => f.Name),
+                            out parsedFormula,
+                            out errors))
+                    {
+                        combinedError = string.Join(Environment.NewLine, errors);
+                        this.errorProvider1.SetError(afterTextBox, combinedError);
+                        return;
+                    }
+                    formula = parsedFormula;
+                    if (afterCheckedListBox.Items.Count == 0)
+                    {
+                        return;
+                    }
+                    statement = $"{expression} after ";
+                    List<string> afterActionChain = new List<string>();
+                    foreach (string action in afterCheckedListBox.Items)
+                    {
+                        statement = string.Concat(statement, action, ", ");
+                        afterActionChain.Add(action);
+                    }
+                    statement = statement.Remove(statement.Length - 2);
+                    displayItem = new DisplayItem((afterActionChain, formula, true), statement);
+                    if (!Statements.Contains(displayItem))
+                    {
+                        Statements.Add(displayItem);
+                        UpdateStatementsList();
+                        afterTextBox.Clear();
+                        afterCheckedListBox.Items.Clear();
+                    }
+                    break;
+                case "Observable":
+                    expression = observableTextBox.Text.ToString();
+                    expression = expression.Trim().ToLower();
+                    if (expression == "")
+                    {
+                        return;
+                    }
+                    if (!App.FormulaParser.TryParse(
+                            expression,
+                            Fluents.ToDictionary(f => f.Name),
+                            out parsedFormula,
+                            out errors))
+                    {
+                        combinedError = string.Join(Environment.NewLine, errors);
+                        this.errorProvider1.SetError(observableTextBox, combinedError);
+                        return;
+                    }
+                    formula = parsedFormula;
+                    if (observableCheckedListBox.Items.Count == 0)
+                    {
+                        return;
+                    }
+                    statement = $"observable {expression} after ";
+                    List<string> observableActionChain = new List<string>();
+                    foreach (string action in observableCheckedListBox.Items)
+                    {
+                        statement = string.Concat(statement, action, ", ");
+                        observableActionChain.Add(action);
+                    }
+                    statement = statement.Remove(statement.Length - 2);
+                    displayItem = new DisplayItem((observableActionChain, formula, false), statement);
+                    if (!Statements.Contains(displayItem))
+                    {
+                        Statements.Add(displayItem);
+                        UpdateStatementsList();
+                        observableTextBox.Clear();
+                        observableCheckedListBox.Items.Clear();
                     }
                     break;
                 case "Always":
@@ -404,7 +500,7 @@ namespace AutoReasoningGUI
                         UpdateStatementsList();
                         causesTextBox1.Clear();
                         causesTextBox2.Clear();
-                        
+
                         causesNumericUpDown.Value = 1;
                     }
                     break;
@@ -509,6 +605,78 @@ namespace AutoReasoningGUI
             if (string.IsNullOrWhiteSpace(causesNumericUpDown.Text))
             {
                 causesNumericUpDown.Value = causesNumericUpDown.Minimum;
+            }
+        }
+
+        private void afterListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                int index = afterListBox.SelectedIndex;
+                if (index != ListBox.NoMatches)
+                {
+                    var item = afterListBox.Items[index];
+                    afterCheckedListBox.Items.Add(item);
+                }
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void observableListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                int index = observableListBox.SelectedIndex;
+                if (index != ListBox.NoMatches)
+                {
+                    var item = observableListBox.Items[index];
+                    observableCheckedListBox.Items.Add(item);
+                }
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void afterCheckedListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                List<int> checkedIndices = new();
+
+                foreach (int index in afterCheckedListBox.CheckedIndices)
+                {
+                    checkedIndices.Add(index);
+                }
+
+                checkedIndices.Reverse();
+                foreach (int index in checkedIndices)
+                {
+                    afterCheckedListBox.Items.RemoveAt(index);
+                }
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void observableCheckedListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                List<int> checkedIndices = new();
+
+                foreach (int index in observableCheckedListBox.CheckedIndices)
+                {
+                    checkedIndices.Add(index);
+                }
+
+                checkedIndices.Reverse();
+                foreach (int index in checkedIndices)
+                {
+                    observableCheckedListBox.Items.RemoveAt(index);
+                }
+                e.Handled = true;
+                e.SuppressKeyPress = true;
             }
         }
     }

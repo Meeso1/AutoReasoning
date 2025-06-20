@@ -38,35 +38,47 @@ public sealed class ProblemDefinitionParser
     /// </returns>
     public static ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
+        IReadOnlyList<string> actionNames,
         IReadOnlyList<ActionStatement> actionStatements,
-        IReadOnlyList<Formula> initials,
+        IReadOnlyList<(List<string> actionChain, Formula effect, bool isAfter)> valueStatements,
         IReadOnlyList<Formula> always)
     {
-        IReadOnlyDictionary<string, Action> actions = ProcessActionStatements(actionStatements);
-        return CreateProblemDefinition(fluents, actions, initials, always);
+        IReadOnlyDictionary<string, Action> actions = ProcessActionStatements(actionNames, actionStatements);
+        IReadOnlyList<ValueStatement> cleanValueStatements = ProcessValueStatements(valueStatements, actions);
+        return CreateProblemDefinition(fluents, actions, cleanValueStatements, always);
+    }
+
+    public static ProblemDefinition CreateProblemDefinition(
+        IReadOnlyDictionary<string, Fluent> fluents,
+        IReadOnlyList<ActionStatement> actionStatements,
+        IReadOnlyList<(List<string> actionChain, Formula effect, bool isAfter)> valueStatements,
+        IReadOnlyList<Formula> always)
+    {
+        List<string> actionNames = actionStatements.Select(a => a.ActionName).Distinct().ToList();
+        return CreateProblemDefinition(fluents, actionNames, actionStatements, valueStatements, always);
     }
 
     public static ProblemDefinition CreateProblemDefinition(
         IReadOnlyDictionary<string, Fluent> fluents,
         IReadOnlyDictionary<string, Action> actions,
-        IReadOnlyList<Formula> initials,
+        IReadOnlyList<ValueStatement> valueStatements,
         IReadOnlyList<Formula> always)
-        
+
     {
         StateGroup validStates = ProcessStatesFromFormulas(always);
-        StateGroup initialStates = StateGroup.And(validStates, ProcessStatesFromFormulas(initials));
         return new ProblemDefinition
         {
             Fluents = fluents,
             Actions = actions,
-            InitialStates = initialStates,
+            ValueStatements = valueStatements,
             ValidStates = validStates
         };
     }
 
-    private static Dictionary<string, Action> ProcessActionStatements(IReadOnlyList<ActionStatement> actionStatements)
+    private static Dictionary<string, Action> ProcessActionStatements(IReadOnlyList<string> actionNames, IReadOnlyList<ActionStatement> actionStatements)
     {
         Dictionary<string, Action> actions = [];
+        HashSet<string> names = new(actionNames);
 
         var groupedStatements = actionStatements
             .GroupBy(statement => statement.ActionName)
@@ -77,6 +89,12 @@ public sealed class ProblemDefinitionParser
             string actionName = group.Key;
             var statements = group.Value;
 
+            if (!names.Contains(actionName))
+            {
+                throw new ArgumentException($"actionNames does not contain: {actionName}");
+            }
+
+            names.Remove(actionName);
             // Sort elements into appropriate lists
             List<ActionEffect> effects = [];
             List<ActionRelease> releases = [];
@@ -106,15 +124,43 @@ public sealed class ProblemDefinitionParser
                 conditions
             );
         }
+        foreach (var name in names) {
+            actions[name] = new Action(name, [], [], []);
+        }
 
         return actions;
+    }
+
+    private static IReadOnlyList<ValueStatement> ProcessValueStatements(IReadOnlyList<(List<string> actionChain, Formula effect, bool isAfter)> inValues, IReadOnlyDictionary<string, Action> actions)
+    {
+        var result = new List<ValueStatement>();
+
+        foreach (var (actionChain, effect, isAfter) in inValues)
+        {
+            // Convert string action names to Action objects
+            var actionObjects = actionChain
+                .Select(actionName => actions[actionName])
+                .ToList();
+
+            var actionProgram = new ActionProgram(actionObjects);
+
+            // Create appropriate ValueStatement based on isAfter flag
+            ValueStatement statement = isAfter
+                ? new AfterStatement(actionProgram, effect)
+                : new ObservableStatement(actionProgram, effect);
+
+            result.Add(statement);
+        }
+
+        return result;
     }
 
     private static StateGroup ProcessStatesFromFormulas(IReadOnlyList<Formula> always)
     {
         FormulaReducer formulaReducer = new();
         Formula finalFormula = new True();
-        foreach (Formula formula in always) {
+        foreach (Formula formula in always)
+        {
             finalFormula = new And(finalFormula, formula);
         }
         return formulaReducer.Reduce(finalFormula);

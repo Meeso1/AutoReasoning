@@ -10,25 +10,27 @@ namespace Tests;
 
 public sealed class QueryEvaluatorTests
 {
-    private static List<Formula> ParseParams(IReadOnlyDictionary<string, Fluent> fluentsDict, params (string Fluent, bool Value)[][] initialStates)
+    private static List<ValueStatement> ParseParams(IReadOnlyDictionary<string, Fluent> fluentsDict, params (string Fluent, bool Value)[][] initialStates)
     {
-        List<Formula> initialStatesFormulas = new();
+        List<ValueStatement> initiaslList = new();
         foreach (var initialState in initialStates)
         {
-            Formula formula;
-            if (initialState[0].Value) { formula = new FluentIsSet(fluentsDict[initialState[0].Fluent]); }
-            else { formula = new Not(new FluentIsSet(fluentsDict[initialState[0].Fluent])); }
+            Formula formula = initialState[0].Value
+                ? new FluentIsSet(fluentsDict[initialState[0].Fluent])
+                : new Not(new FluentIsSet(fluentsDict[initialState[0].Fluent]));
 
             foreach (var condition in initialState[1..])
             {
-                Formula tmp;
-                if (condition.Value) { tmp = new FluentIsSet(fluentsDict[condition.Fluent]); }
-                else { tmp = new Not(new FluentIsSet(fluentsDict[condition.Fluent])); }
-                formula = new And(tmp, formula);
+                formula = new And(formula,
+                    condition.Value
+                        ? new FluentIsSet(fluentsDict[condition.Fluent])
+                        : new Not(new FluentIsSet(fluentsDict[condition.Fluent])));
             }
-            initialStatesFormulas.Add(formula);
+
+            initiaslList.Add(new AfterStatement(new ActionProgram([]), formula));
         }
-        return initialStatesFormulas;
+
+        return initiaslList;
     }
 
     private static ProblemDefinition CreateYaleShootingProblem(params (string Fluent, bool Value)[][] initialStates)
@@ -79,7 +81,7 @@ public sealed class QueryEvaluatorTests
                 [new ActionCondition(new Not(new FluentIsSet(fluents[0])))]), // impossible walk if not alive
         };
 
-        
+
 
         return ProblemDefinitionParser.CreateProblemDefinition(
             fluents.ToDictionary(f => f.Name, f => f),
@@ -117,6 +119,33 @@ public sealed class QueryEvaluatorTests
             );
     }
 
+    private static ProblemDefinition CreateYaleShootingProblemWithAfterStatements(bool aliveAfterShoot)
+    {
+        var fluents = new[] { new Fluent("alive", true), new Fluent("loaded", true) };
+        var fluentsDict = fluents.ToDictionary(f => f.Name, f => f);
+        var actions = new List<Action>
+        {
+            new Action("load",
+                [new ActionEffect(new True(), new FluentIsSet(fluents[1]), 1)], // load causes loaded
+                [],
+                [new ActionCondition(new FluentIsSet(fluents[1]))]), // impossible load if loaded
+            new Action("shoot",
+                [new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1), // shoot causes not loaded
+                 new ActionEffect(new FluentIsSet(fluents[1]), new Not(new FluentIsSet(fluents[0])), 1)], // shoot causes not alive if loaded
+                [],
+                []),
+        };
+
+        return ProblemDefinitionParser.CreateProblemDefinition(
+            fluents.ToDictionary(f => f.Name, f => f),
+            actions.ToDictionary(a => a.Name, a => a),
+            [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0])),
+             new AfterStatement(new ActionProgram([actions[1]]), aliveAfterShoot
+                ? new FluentIsSet(fluents[0])
+                : new Not(new FluentIsSet(fluents[0])))],
+            []);
+    }
+
     #region ExecutableQueries
 
     [Fact]
@@ -126,10 +155,10 @@ public sealed class QueryEvaluatorTests
         var evaluator = new QueryEvaluator(problem, new FormulaReducer());
 
         var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, new ActionProgram([]));
-        Assert.True(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new ExecutableQuery(QueryType.Possibly, new ActionProgram([]));
-        Assert.True(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -144,10 +173,10 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
-        Assert.True(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
-        Assert.True(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -162,10 +191,10 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
-        Assert.False(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
-        Assert.False(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -175,10 +204,10 @@ public sealed class QueryEvaluatorTests
         var evaluator = new QueryEvaluator(problem, new FormulaReducer());
 
         var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, new ActionProgram([problem.Actions["load"]]));
-        Assert.False(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new ExecutableQuery(QueryType.Possibly, new ActionProgram([problem.Actions["load"]]));
-        Assert.False(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -194,10 +223,10 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
-        Assert.False(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
-        Assert.True(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -212,10 +241,10 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
-        Assert.True(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
-        Assert.True(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -230,14 +259,14 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
-        Assert.False(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
-        Assert.True(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
-    public void EvaluateExecutable_ProblemWithNoInitialStates_ReturnsFalseForAnyProgram()
+    public void EvaluateExecutable_ProblemWithNoInitialStates_ReturnsInconsistentForAnyProgram()
     {
         var problem = CreateYaleShootingProblem([("alive", false), ("walking", true)]);
         var evaluator = new QueryEvaluator(problem, new FormulaReducer());
@@ -248,11 +277,112 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
-        Assert.False(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
-        Assert.False(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(possibleQuery));
     }
+
+    [Fact]
+    public void EvaluateExecutable_ProblemWithAfterStatements_ReturnsTrue()
+    {
+        var problem = CreateYaleShootingProblemWithAfterStatements(true);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([problem.Actions["load"]]);
+
+        var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateExecutable_ProblemWithAfterStatements_ReturnsFalse()
+    {
+        var problem = CreateYaleShootingProblemWithAfterStatements(false);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([problem.Actions["load"]]);
+
+        var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateExecutable_NonExacutableAfterProgram_ReturnsTrue()
+    {
+        var fluents = new[] { new Fluent("alive", true), new Fluent("loaded", true) };
+        var fluentsDict = fluents.ToDictionary(f => f.Name, f => f);
+        var actions = new List<Action>
+        {
+            new Action("load",
+                [new ActionEffect(new True(), new FluentIsSet(fluents[1]), 1)], // load causes loaded
+                [],
+                [new ActionCondition(new FluentIsSet(fluents[1]))]), // impossible load if loaded
+            new Action("shoot",
+                [new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1), // shoot causes not loaded
+                 new ActionEffect(new FluentIsSet(fluents[1]), new Not(new FluentIsSet(fluents[0])), 1)], // shoot causes not alive if loaded
+                [],
+                []),
+        };
+
+        var problem = ProblemDefinitionParser.CreateProblemDefinition(
+            fluents.ToDictionary(f => f.Name, f => f),
+            actions.ToDictionary(a => a.Name, a => a),
+            [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0])),
+             new AfterStatement(new ActionProgram([actions[0], actions[0]]), new False())],
+            []);
+
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([actions[1]]);
+        var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateExecutable_NonExacutableObservableProgram_ReturnsInconsistent()
+    {
+        var fluents = new[] { new Fluent("alive", true), new Fluent("loaded", true) };
+        var fluentsDict = fluents.ToDictionary(f => f.Name, f => f);
+        var actions = new List<Action>
+        {
+            new Action("load",
+                [new ActionEffect(new True(), new FluentIsSet(fluents[1]), 1)], // load causes loaded
+                [],
+                [new ActionCondition(new FluentIsSet(fluents[1]))]), // impossible load if loaded
+            new Action("shoot",
+                [new ActionEffect(new True(), new Not(new FluentIsSet(fluents[1])), 1), // shoot causes not loaded
+                 new ActionEffect(new FluentIsSet(fluents[1]), new Not(new FluentIsSet(fluents[0])), 1)], // shoot causes not alive if loaded
+                [],
+                []),
+        };
+
+        var problem = ProblemDefinitionParser.CreateProblemDefinition(
+            fluents.ToDictionary(f => f.Name, f => f),
+            actions.ToDictionary(a => a.Name, a => a),
+            [new AfterStatement(new ActionProgram([]), new FluentIsSet(fluents[0])),
+             new ObservableStatement(new ActionProgram([actions[0], actions[0]]), new True())],
+            []);
+
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([actions[1]]);
+        var necessaryQuery = new ExecutableQuery(QueryType.Necessarily, program);
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new ExecutableQuery(QueryType.Possibly, program);
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(possibleQuery));
+    }
+
     #endregion ExecutableQueries
     #region AccessibleQueries
 
@@ -264,12 +394,12 @@ public sealed class QueryEvaluatorTests
         var evaluator = new QueryEvaluator(problem, formulaReducer);
 
         var satisfiedCondition = formulaReducer.Reduce(new FluentIsSet(problem.Fluents["alive"]));
-        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, new ActionProgram([]), satisfiedCondition)));
-        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, new ActionProgram([]), satisfiedCondition)));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, new ActionProgram([]), satisfiedCondition)));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, new ActionProgram([]), satisfiedCondition)));
 
         var unsatisfiedCondition = formulaReducer.Reduce(new FluentIsSet(problem.Fluents["loaded"]));
-        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, new ActionProgram([]), unsatisfiedCondition)));
-        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, new ActionProgram([]), unsatisfiedCondition)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, new ActionProgram([]), unsatisfiedCondition)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, new ActionProgram([]), unsatisfiedCondition)));
     }
 
     [Fact]
@@ -285,8 +415,8 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var condition = formulaReducer.Reduce(new FluentIsSet(problem.Fluents["loaded"]));
-        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
-        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
     }
 
     [Fact]
@@ -303,8 +433,8 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var condition = formulaReducer.Reduce(new Not(new FluentIsSet(problem.Fluents["loaded"])));
-        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
-        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
     }
 
     [Fact]
@@ -319,8 +449,8 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var condition = formulaReducer.Reduce(new FluentIsSet(problem.Fluents["walking"]));
-        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
-        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
     }
 
     [Fact]
@@ -335,8 +465,8 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var condition = formulaReducer.Reduce(new FluentIsSet(problem.Fluents["loaded"]));
-        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
-        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
     }
 
     [Fact]
@@ -352,12 +482,12 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var condition = formulaReducer.Reduce(new Not(new FluentIsSet(problem.Fluents["walking"])));
-        Assert.False(evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
-        Assert.True(evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Necessarily, program, condition)));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(new AccessibleQuery(QueryType.Possibly, program, condition)));
     }
 
     [Fact]
-    public void EvaluateAccessible_ProblemWithNoInitialStates_ReturnsFalseForAnyProgramAndCondition()
+    public void EvaluateAccessible_ProblemWithNoInitialStates_ReturnsInconsistentForAnyProgramAndCondition()
     {
         var problem = CreateYaleShootingProblem([("alive", false), ("walking", true)]);
         var formulaReducer = new FormulaReducer();
@@ -369,11 +499,44 @@ public sealed class QueryEvaluatorTests
         ]);
 
         var necessaryQuery = new AccessibleQuery(QueryType.Necessarily, program, formulaReducer.Reduce(new False()));
-        Assert.False(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new AccessibleQuery(QueryType.Possibly, program, formulaReducer.Reduce(new False()));
-        Assert.False(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(possibleQuery));
     }
+
+    [Fact]
+    public void EvaluateAccessible_ProblemWithAfterStatements_ReturnsTrue()
+    {
+        var problem = CreateYaleShootingProblemWithAfterStatements(false);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([problem.Actions["shoot"]]);
+        var condition = new FormulaReducer().Reduce(new Not(new FluentIsSet(problem.Fluents["alive"])));
+
+        var necessaryQuery = new AccessibleQuery(QueryType.Necessarily, program, condition);
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new AccessibleQuery(QueryType.Possibly, program, condition);
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
+    }
+
+    [Fact]
+    public void EvaluateAccessible_ProblemWithAfterStatements_ReturnsFalse()
+    {
+        var problem = CreateYaleShootingProblemWithAfterStatements(true);
+        var evaluator = new QueryEvaluator(problem, new FormulaReducer());
+
+        var program = new ActionProgram([problem.Actions["shoot"]]);
+        var condition = new FormulaReducer().Reduce(new Not(new FluentIsSet(problem.Fluents["alive"])));
+
+        var necessaryQuery = new AccessibleQuery(QueryType.Necessarily, program, condition);
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(necessaryQuery));
+
+        var possibleQuery = new AccessibleQuery(QueryType.Possibly, program, condition);
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(possibleQuery));
+    }
+
     #endregion AccessibleQueries
     #region AffordableQueries
     [Fact]
@@ -383,10 +546,10 @@ public sealed class QueryEvaluatorTests
         var evaluator = new QueryEvaluator(problem, new FormulaReducer());
 
         var necessaryQuery = new AffordableQuery(QueryType.Necessarily, new ActionProgram([]), 0);
-        Assert.True(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new AffordableQuery(QueryType.Possibly, new ActionProgram([]), 0);
-        Assert.True(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -398,10 +561,10 @@ public sealed class QueryEvaluatorTests
         var program = new ActionProgram([problem.Actions["load"]]); // Cost: 1 (loaded becomes true)
 
         var necessaryQuery = new AffordableQuery(QueryType.Necessarily, program, 1);
-        Assert.True(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new AffordableQuery(QueryType.Possibly, program, 1);
-        Assert.True(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -413,10 +576,10 @@ public sealed class QueryEvaluatorTests
         var program = new ActionProgram([problem.Actions["load"]]); // Cost: 1 (loaded becomes true)
 
         var necessaryQuery = new AffordableQuery(QueryType.Necessarily, program, 0);
-        Assert.False(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new AffordableQuery(QueryType.Possibly, program, 0);
-        Assert.False(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -432,10 +595,10 @@ public sealed class QueryEvaluatorTests
         // Total expected cost: 3
 
         var necessaryQuery = new AffordableQuery(QueryType.Necessarily, program, 3);
-        Assert.True(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new AffordableQuery(QueryType.Possibly, program, 3);
-        Assert.True(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -451,10 +614,10 @@ public sealed class QueryEvaluatorTests
         // Total expected cost: 3
 
         var necessaryQuery = new AffordableQuery(QueryType.Necessarily, program, 2);
-        Assert.False(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new AffordableQuery(QueryType.Possibly, program, 2);
-        Assert.False(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -466,10 +629,10 @@ public sealed class QueryEvaluatorTests
         var program = new ActionProgram([problem.Actions["walk"]]); // Cost: 0 (walking is already true)
 
         var necessaryQuery = new AffordableQuery(QueryType.Necessarily, program, 0);
-        Assert.True(evaluator.Evaluate(necessaryQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(necessaryQuery));
 
         var possibleQuery = new AffordableQuery(QueryType.Possibly, program, 0);
-        Assert.True(evaluator.Evaluate(possibleQuery));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(possibleQuery));
     }
 
     [Fact]
@@ -485,10 +648,10 @@ public sealed class QueryEvaluatorTests
 
         // The exact results depend on the non-deterministic nature of releases
         // At minimum, we expect the program to be possibly affordable with a reasonable cost limit
-        Assert.True(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 4)));
-        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 3)));
-        Assert.True(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 2)));
-        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 1)));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 4)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 3)));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 2)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 1)));
     }
 
 
@@ -503,8 +666,8 @@ public sealed class QueryEvaluatorTests
             problem.Actions["shoot"]
         ]);
 
-        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 10)));
-        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 10)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 10)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 10)));
     }
 
     [Fact]
@@ -517,8 +680,8 @@ public sealed class QueryEvaluatorTests
 
         // If loaded is initially false: cost = 1
         // If loaded is initially true: action is impossible, so not affordable
-        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 1))); // Not affordable from any initial state due to impossibility
-        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 1)));                                                           
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 1))); // Not affordable from any initial state due to impossibility
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 1)));
     }
 
     [Fact]
@@ -529,17 +692,17 @@ public sealed class QueryEvaluatorTests
 
         // Program that causes no changes (walking is already true)
         var noChangeProgram = new ActionProgram([problem.Actions["walk"]]);
-        Assert.True(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, noChangeProgram, 0)));
-        Assert.True(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, noChangeProgram, 0)));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, noChangeProgram, 0)));
+        Assert.Equal(QueryResult.Consequence, evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, noChangeProgram, 0)));
 
         // Program that causes changes
         var changeProgram = new ActionProgram([problem.Actions["load"]]);
-        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, changeProgram, 0)));
-        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, changeProgram, 0)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, changeProgram, 0)));
+        Assert.Equal(QueryResult.NotConsequence, evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, changeProgram, 0)));
     }
 
     [Fact]
-    public void EvaluateAffordable_ProblemWithNoInitialStates_ReturnsTrueForAnyProgramAndCost()
+    public void EvaluateAffordable_ProblemWithNoInitialStates_ReturnsInconsistentForAnyProgramAndCost()
     {
         var problem = CreateYaleShootingProblem([("alive", false), ("walking", true)]); // Contradictory constraints
         var evaluator = new QueryEvaluator(problem, new FormulaReducer());
@@ -549,8 +712,8 @@ public sealed class QueryEvaluatorTests
             problem.Actions["shoot"]
         ]);
 
-        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 0)));
-        Assert.False(evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 0)));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(new AffordableQuery(QueryType.Necessarily, program, 0)));
+        Assert.Equal(QueryResult.Inconsistent, evaluator.Evaluate(new AffordableQuery(QueryType.Possibly, program, 0)));
     }
     #endregion AffordableQueries
 }
