@@ -120,6 +120,28 @@ public sealed class FormulaReducerTests
     }
 
     [Fact]
+    public void Reduce_NotOrFormula_ReturnsPermutationOfNegatedParts()
+    {
+        // Arrange
+        var formula = new Not(new Or(
+            new And(new FluentIsSet(FluentA), new FluentIsSet(FluentB)), 
+            new And(new Not(new FluentIsSet(FluentA)), new Not(new FluentIsSet(FluentB)))
+            ));
+
+        // Act
+        var result = _reducer.Reduce(formula);
+
+        // Assert
+        Assert.Equal(2, result.SpecifiedFluentGroups.Count);
+        Assert.Contains(result.SpecifiedFluentGroups, dict =>
+            dict.ContainsKey(FluentA) && dict[FluentA] == false &&
+            dict.ContainsKey(FluentA) && dict[FluentB] == true);
+        Assert.Contains(result.SpecifiedFluentGroups, dict =>
+            dict.ContainsKey(FluentA) && dict[FluentA] == true &&
+            dict.ContainsKey(FluentA) && dict[FluentB] == false);
+    }
+
+    [Fact]
     public void Reduce_NotAndFormula_ReturnsOrOfNegatedParts()
     {
         // Arrange

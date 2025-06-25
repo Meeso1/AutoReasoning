@@ -68,49 +68,47 @@ public sealed class FormulaReducer
             return Reduce(new False());
         }
 
-        // negation of a statement consisting only of expressions and ORs consists of negating each expression and converting every OR to AND
-        // if we use CompressMergeWithStrategy with AndMergeStrategy this will deal with simplifying all the ANDs
 
-        // Create a list to hold all the negated fluent dictionaries
-        List<ReadOnlyFluentDict> negatedGroups = [];
+        // Apply De Morgan's law: not(A or B or C) = not A and not B and not C
+        // Each fluent dictionary in the original StateGroup represents a disjunct
+        // We need to negate each disjunct and then AND them all together
+
+        List<StateGroup> negatedGroups = [];
 
         foreach (var fluentDict in stateGroup.SpecifiedFluentGroups)
         {
-            // Create a negated version of the current fluent dictionary
-            FluentDict negatedDict = [];
+            // Negate this disjunct by creating an OR of all negated fluents
+            List<ReadOnlyFluentDict> negatedFluents = [];
 
             foreach (var kvp in fluentDict)
             {
-                // Negate each value in the dictionary
-                negatedDict[kvp.Key] = !kvp.Value;
+                // Create a state where only this fluent is negated
+                negatedFluents.Add(new FluentDict { [kvp.Key] = !kvp.Value });
             }
 
-            negatedGroups.Add(negatedDict);
-        }
-
-        // If there's only one negated group, return it directly
-        if (negatedGroups.Count == 1)
-        {
-            ReadOnlyFluentDict negatedAnd = negatedGroups[0];
-            negatedGroups.Clear();
-
-            foreach (var kvp in negatedAnd)
+            // If the original disjunct was empty (representing True), its negation is False
+            if (fluentDict.Count == 0)
             {
-                negatedGroups.Add(new FluentDict()
-                {
-                    [kvp.Key] = kvp.Value
-                });
+                negatedGroups.Add(Reduce(new False()));
             }
-
-            return new StateGroup(negatedGroups);
+            else
+            {
+                negatedGroups.Add(new StateGroup(negatedFluents));
+            }
         }
 
-        // Create two StateGroups to merge with CompressMergeWithStrategy
-        StateGroup leftGroup = new(new List<ReadOnlyFluentDict> { negatedGroups[0] });
-        StateGroup rightGroup = new(negatedGroups.Skip(1).ToList());
+        // AND all the negated disjuncts together
+        if (negatedGroups.Count == 0)
+        {
+            return Reduce(new False());
+        }
 
-        // Use CompressMergeWithStrategy with AndMergeStrategy to merge all negated dictionaries
-        return CompressMergeWithStrategy(leftGroup, rightGroup, AndMergeStrategy.Merge);
+        StateGroup result = negatedGroups[0];
+        for (int i = 1; i < negatedGroups.Count; i++)
+        {
+            result = PermutationMergeWithStrategy(result, negatedGroups[i], AndMergeStrategy.Merge);
+        }
+        return result;
     }
 
     private StateGroup ReduceAnd(And and)
